@@ -4,6 +4,7 @@ struct ActivitiesView: View {
     @State private var vm = ActivitiesViewModel()
     @Environment(AuthService.self) private var authService
     @State private var showCreate = false
+    @State private var showPlanner = false
     @State private var selectedTab = 0
 
     private var isChild: Bool { authService.currentUser?.role == .child }
@@ -58,15 +59,26 @@ struct ActivitiesView: View {
             .navigationTitle("Challenge")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        if vm.canCreateMore { showCreate = true }
-                    } label: {
-                        if vm.canCreateMore {
-                            Image(systemName: "plus.circle.fill")
+                    HStack(spacing: 4) {
+                        // AI Planner button
+                        Button {
+                            showPlanner = true
+                        } label: {
+                            Image(systemName: "sparkles")
                                 .font(.title3)
-                        } else {
-                            Label("Upgrade", systemImage: "lock.circle.fill")
-                                .font(.caption)
+                                .foregroundStyle(.orange)
+                        }
+                        // Manual create button
+                        Button {
+                            if vm.canCreateMore { showCreate = true }
+                        } label: {
+                            if vm.canCreateMore {
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.title3)
+                            } else {
+                                Label("Upgrade", systemImage: "lock.circle.fill")
+                                    .font(.caption)
+                            }
                         }
                     }
                 }
@@ -75,6 +87,11 @@ struct ActivitiesView: View {
                 Task { await vm.loadActivities() }
             }) {
                 CreateActivityView()
+            }
+            .sheet(isPresented: $showPlanner, onDismiss: {
+                Task { await vm.loadActivities() }
+            }) {
+                GoalPlannerView()
             }
             .alert("Error", isPresented: Binding(
                 get: { vm.errorMessage != nil },
@@ -101,9 +118,14 @@ struct EmptyActivitiesView: View {
                 .font(.headline)
                 .foregroundStyle(.secondary)
             if !isParentTab {
-                Text("Tap + to create an activity")
-                    .font(.subheadline)
-                    .foregroundStyle(.tertiary)
+                VStack(spacing: 4) {
+                    Text("Tap ✦ to let AI build a plan for you")
+                        .font(.subheadline)
+                        .foregroundStyle(.orange)
+                    Text("or + to create manually")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
             }
         }
     }
