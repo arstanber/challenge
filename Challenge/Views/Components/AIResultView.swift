@@ -27,10 +27,11 @@ struct AIResultView: View {
 
     private var color: Color {
         switch result {
-        case .approved: return .green
-        case .rejected: return .red
-        case .pending: return .orange
+        case .approved:      return .green
+        case .rejected:      return .red
+        case .pending:       return .orange
         case .notApplicable: return .blue
+        case .excused:       return .purple
         }
     }
 }

@@ -4,8 +4,10 @@ struct ActivityDetailView: View {
     @State private var vm: ActivityDetailViewModel
     @State private var showSubmitReport = false
 
-    init(activity: Activity) {
-        _vm = State(wrappedValue: ActivityDetailViewModel(activity: activity))
+    init(activity: Activity, onReportSubmitted: (() -> Void)? = nil) {
+        let viewModel = ActivityDetailViewModel(activity: activity)
+        viewModel.onReportSubmitted = onReportSubmitted
+        _vm = State(wrappedValue: viewModel)
     }
 
     var body: some View {
@@ -111,14 +113,6 @@ struct ActivityDetailView: View {
 
     private var statsSection: some View {
         VStack(spacing: 12) {
-            if vm.activity.type.hasStreak {
-                HStack(spacing: 12) {
-                    StatCard(title: "Current streak", value: "\(vm.activity.streakCurrent)", icon: "flame.fill", color: .orange)
-                    StatCard(title: "Best streak", value: "\(vm.activity.streakBest)", icon: "trophy.fill", color: .yellow)
-                }
-                StreakMilestoneView(streak: vm.activity.streakCurrent)
-            }
-
             if vm.activity.type == .goal, let target = vm.activity.goalTarget {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
@@ -242,10 +236,11 @@ struct ReportRowView: View {
 
     private var aiColor: Color {
         switch report.aiResult {
-        case .approved: return .green
-        case .rejected: return .red
-        case .pending: return .orange
+        case .approved:      return .green
+        case .rejected:      return .red
+        case .pending:       return .orange
         case .notApplicable: return .blue
+        case .excused:       return .purple
         }
     }
 }

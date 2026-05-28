@@ -33,7 +33,9 @@ struct ActivitiesView: View {
                 } else {
                     List {
                         ForEach(activities) { activity in
-                            NavigationLink(destination: ActivityDetailView(activity: activity)) {
+                            NavigationLink(destination: ActivityDetailView(activity: activity, onReportSubmitted: {
+                                Task { await vm.recalculateGlobalStreak() }
+                            })) {
                                 ActivityRowView(activity: activity)
                                     .listRowInsets(EdgeInsets())
                             }
@@ -55,6 +57,9 @@ struct ActivitiesView: View {
                     .listStyle(.plain)
                     .refreshable { await vm.loadActivities() }
                 }
+            }
+            .safeAreaInset(edge: .top, spacing: 0) {
+                GlobalStreakBanner(vm: vm)
             }
             .navigationTitle("Challenge")
             .toolbar {
@@ -103,6 +108,67 @@ struct ActivitiesView: View {
             }
         }
         .task { await vm.loadActivities() }
+    }
+}
+
+// MARK: - Global Streak Banner
+
+struct GlobalStreakBanner: View {
+    let vm: ActivitiesViewModel
+    private let minPerDay = Constants.App.minDailyActivitiesForStreak
+
+    var body: some View {
+        HStack(spacing: 12) {
+            // Flame icon with streak count
+            HStack(spacing: 4) {
+                Image(systemName: "flame.fill")
+                    .foregroundStyle(vm.globalStreakCurrent > 0 ? .orange : .gray)
+                Text("\(vm.globalStreakCurrent)")
+                    .font(.title3.bold())
+                    .foregroundStyle(vm.globalStreakCurrent > 0 ? .primary : .secondary)
+                Text("days")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Divider().frame(height: 24)
+
+            // Today's progress toward next streak day
+            VStack(alignment: .leading, spacing: 2) {
+                let done = Swift.min(vm.todayCount, minPerDay)
+                Text("Today: \(done)/\(minPerDay) to keep streak")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(Color(.systemGray5)).frame(height: 4)
+                        Capsule()
+                            .fill(vm.todayCount >= minPerDay ? Color.orange : Color.orange.opacity(0.5))
+                            .frame(width: geo.size.width * Swift.min(Double(vm.todayCount) / Double(minPerDay), 1.0), height: 4)
+                    }
+                }
+                .frame(height: 4)
+            }
+
+            Spacer()
+
+            // Best
+            if vm.globalStreakBest > 0 {
+                VStack(spacing: 0) {
+                    Image(systemName: "trophy.fill")
+                        .font(.caption)
+                        .foregroundStyle(.yellow)
+                    Text("\(vm.globalStreakBest)")
+                        .font(.caption.bold())
+                }
+            }
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+        .background(.bar)
+        .overlay(alignment: .bottom) {
+            Divider()
+        }
     }
 }
 

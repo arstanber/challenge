@@ -13,11 +13,20 @@ final class ActivityDetailViewModel {
     var isSubmittingReport = false
     var errorMessage: String?
 
+    /// Set after photo submission — SubmitReportView uses this to show the verdict screen
+    var lastAIResult: AIVerificationResult?
+    var lastAIExplanation: String?
+
+    /// Called after any successful counted submission so global streak refreshes
+    var onReportSubmitted: (() -> Void)?
+
     private let aiService = AIVerificationService.shared
 
     init(activity: Activity) {
         self.activity = activity
     }
+
+    // MARK: - Load
 
     func loadReports() async {
         isLoading = true
@@ -35,17 +44,22 @@ final class ActivityDetailViewModel {
         isLoading = false
     }
 
-    func submitPhotoReport(image: UIImage, comment: String) async {
+    // MARK: - Photo report (challenge / assignment)
+
+    func submitPhotoReport(image: UIImage, comment: String, isExcuse: Bool = false) async {
         isSubmittingReport = true
         errorMessage = nil
+        lastAIResult = nil
+        lastAIExplanation = nil
+        defer { isSubmittingReport = false }
+
         do {
-            // 1. Upload photo to Supabase Storage
+            // 1. Upload photo
             guard let jpeg = image.jpegData(compressionQuality: 0.8) else { return }
             let path = "\(activity.id.uuidString)/\(UUID().uuidString).jpg"
             try await supabase.storage
                 .from(Constants.Storage.reportsBucket)
                 .upload(path, data: jpeg, options: FileOptions(contentType: "image/jpeg"))
-
             let photoURL = try supabase.storage
                 .from(Constants.Storage.reportsBucket)
                 .getPublicURL(path: path)
@@ -66,37 +80,69 @@ final class ActivityDetailViewModel {
                 .value
             reports.insert(report, at: 0)
 
-            // 3. AI verification if applicable
+            // 3. AI verification
             if activity.type.hasAIVerification, let condition = activity.condition {
                 let aiResponse = try await aiService.verify(
-                    reportId: report.id,
+                    reportId:   report.id,
                     activityId: activity.id,
-                    condition: condition,
-                    photoURL: photoURL
+                    condition:  condition,
+                    photoURL:   photoURL,
+                    isExcuse:   isExcuse
                 )
-                let resultStr = aiResponse.approved ? "approved" : "rejected"
+
+                // Determine result
+                let resultEnum: AIVerificationResult
+                if aiResponse.approved {
+                    resultEnum = .approved
+                } else if aiResponse.excused {
+                    resultEnum = .excused
+                } else {
+                    resultEnum = .rejected
+                }
+
+                let resultStr = resultEnum.rawValue
                 try await supabase
                     .from("reports")
                     .update(["ai_result": resultStr, "ai_explanation": aiResponse.explanation])
                     .eq("id", value: report.id.uuidString)
                     .execute()
+
                 if let idx = reports.firstIndex(where: { $0.id == report.id }) {
-                    reports[idx].aiResult = aiResponse.approved ? .approved : .rejected
+                    reports[idx].aiResult      = resultEnum
                     reports[idx].aiExplanation = aiResponse.explanation
                 }
-                if aiResponse.approved { await updateStreak() }
+
+                lastAIResult      = resultEnum
+                lastAIExplanation = aiResponse.explanation
+
+                switch resultEnum {
+                case .approved:
+                    if activity.frequency == .once { try await markCompleted() }
+                    onReportSubmitted?()
+                case .excused:
+                    // Excuse accepted — activity stays active, streak not counted but not penalised
+                    break
+                default:
+                    // Rejected — nothing
+                    break
+                }
             } else {
-                await updateStreak()
+                // No AI needed — always counts
+                lastAIResult = .notApplicable
+                if activity.frequency == .once { try await markCompleted() }
+                onReportSubmitted?()
             }
         } catch {
             errorMessage = error.localizedDescription
         }
-        isSubmittingReport = false
     }
+
+    // MARK: - Task / Habit report
 
     func submitTaskReport() async {
         isSubmittingReport = true
         errorMessage = nil
+        defer { isSubmittingReport = false }
         do {
             let req = CreateReportRequest(activityId: activity.id)
             let report: Report = try await supabase
@@ -107,24 +153,19 @@ final class ActivityDetailViewModel {
                 .execute()
                 .value
             reports.insert(report, at: 0)
-            await updateStreak()
-            if activity.frequency == .once {
-                try await supabase
-                    .from("activities")
-                    .update(["status": "completed"])
-                    .eq("id", value: activity.id.uuidString)
-                    .execute()
-                activity.status = .completed
-            }
+            if activity.frequency == .once { try await markCompleted() }
+            onReportSubmitted?()
         } catch {
             errorMessage = error.localizedDescription
         }
-        isSubmittingReport = false
     }
+
+    // MARK: - Goal progress
 
     func submitGoalProgress(value: Double, image: UIImage?) async {
         isSubmittingReport = true
         errorMessage = nil
+        defer { isSubmittingReport = false }
         do {
             var photoURL: String?
             if let image, let jpeg = image.jpegData(compressionQuality: 0.8) {
@@ -157,32 +198,22 @@ final class ActivityDetailViewModel {
             activity.goalProgress = newProgress
 
             if let target = activity.goalTarget, newProgress >= target {
-                try await supabase
-                    .from("activities")
-                    .update(["status": "completed"])
-                    .eq("id", value: activity.id.uuidString)
-                    .execute()
-                activity.status = .completed
+                try await markCompleted()
             }
+            onReportSubmitted?()
         } catch {
             errorMessage = error.localizedDescription
         }
-        isSubmittingReport = false
     }
 
-    private func updateStreak() async {
-        let newStreak = activity.streakCurrent + 1
-        let newBest = max(newStreak, activity.streakBest)
-        do {
-            try await supabase
-                .from("activities")
-                .update(["streak_current": newStreak, "streak_best": newBest])
-                .eq("id", value: activity.id.uuidString)
-                .execute()
-            activity.streakCurrent = newStreak
-            activity.streakBest = newBest
-        } catch {
-            print("Streak update failed: \(error)")
-        }
+    // MARK: - Helpers
+
+    private func markCompleted() async throws {
+        try await supabase
+            .from("activities")
+            .update(["status": "completed"])
+            .eq("id", value: activity.id.uuidString)
+            .execute()
+        activity.status = .completed
     }
 }

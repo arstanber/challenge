@@ -11,6 +11,7 @@ enum Constants {
         static let maxFreeReportsPerMonth = 10
         static let freezeIntervalDays = 7
         static let streakMilestones = [7, 14, 30, 100]
+        static let minDailyActivitiesForStreak = 3
     }
 
     enum Storage {

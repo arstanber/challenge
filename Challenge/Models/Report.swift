@@ -1,23 +1,37 @@
 import Foundation
 
 enum AIVerificationResult: String, Codable {
-    case approved, rejected, pending, notApplicable
+    case approved, rejected, pending
+    case notApplicable = "not_applicable"
+    case excused
 
     var displayName: String {
         switch self {
-        case .approved: return NSLocalizedString("Approved", comment: "")
-        case .rejected: return NSLocalizedString("Rejected", comment: "")
-        case .pending: return NSLocalizedString("Checking...", comment: "")
-        case .notApplicable: return NSLocalizedString("Confirmed", comment: "")
+        case .approved:       return NSLocalizedString("Approved ✅", comment: "")
+        case .rejected:       return NSLocalizedString("Not approved ❌", comment: "")
+        case .pending:        return NSLocalizedString("Checking...", comment: "")
+        case .notApplicable:  return NSLocalizedString("Completed", comment: "")
+        case .excused:        return NSLocalizedString("Excuse accepted 🙏", comment: "")
         }
     }
 
     var icon: String {
         switch self {
-        case .approved: return "checkmark.seal.fill"
-        case .rejected: return "xmark.seal.fill"
-        case .pending: return "clock.fill"
+        case .approved:      return "checkmark.seal.fill"
+        case .rejected:      return "xmark.seal.fill"
+        case .pending:       return "clock.fill"
         case .notApplicable: return "checkmark.circle.fill"
+        case .excused:       return "bandage.fill"
+        }
+    }
+
+    var color: String {
+        switch self {
+        case .approved:      return "green"
+        case .rejected:      return "red"
+        case .pending:       return "orange"
+        case .notApplicable: return "blue"
+        case .excused:       return "purple"
         }
     }
 }

@@ -1,5 +1,6 @@
 import Foundation
 import Supabase
+import Functions
 import PostgREST
 import Observation
 
@@ -51,7 +52,7 @@ final class GoalPlannerViewModel {
             answers = response.questions.map { GoalAnswer(question: $0) }
             step = .questions
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = extractFunctionError(error)
             step = .describe
         }
     }
@@ -69,7 +70,7 @@ final class GoalPlannerViewModel {
             plan = response
             step = .plan
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = extractFunctionError(error)
             step = .questions
         }
     }
@@ -113,6 +114,19 @@ final class GoalPlannerViewModel {
             }
         }
         step = .done
+    }
+
+    // MARK: - Error extraction
+
+    private func extractFunctionError(_ error: Error) -> String {
+        // Try to decode {"error": "..."} from the function response body
+        if let fnError = error as? FunctionsError,
+           case .httpError(_, let data) = fnError,
+           let body = try? JSONDecoder().decode([String: String].self, from: data),
+           let msg = body["error"] {
+            return msg
+        }
+        return error.localizedDescription
     }
 
     // MARK: - Reset
