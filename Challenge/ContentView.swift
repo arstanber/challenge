@@ -1,24 +1,4 @@
-//
-//  ContentView.swift
-//  Challenge
-//
-//  Created by Арслан Бердонгар on 28.05.2026.
-//
-
 import SwiftUI
 
-struct ContentView: View {
-    var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
-    }
-}
-
-#Preview {
-    ContentView()
-}
+// This file is kept as a placeholder.
+// App routing is handled in ChallengeApp.swift via AuthService.isAuthenticated.

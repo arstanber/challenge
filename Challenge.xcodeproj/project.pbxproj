@@ -6,6 +6,15 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		F5D1B6732FC85CD100C764F3 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = F5D1B6722FC85CD100C764F3 /* Auth */; };
+		F5D1B6752FC85CD100C764F3 /* Functions in Frameworks */ = {isa = PBXBuildFile; productRef = F5D1B6742FC85CD100C764F3 /* Functions */; };
+		F5D1B6772FC85CD100C764F3 /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = F5D1B6762FC85CD100C764F3 /* PostgREST */; };
+		F5D1B6792FC85CD100C764F3 /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = F5D1B6782FC85CD100C764F3 /* Realtime */; };
+		F5D1B67B2FC85CD100C764F3 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = F5D1B67A2FC85CD100C764F3 /* Storage */; };
+		F5D1B67D2FC85CD100C764F3 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = F5D1B67C2FC85CD100C764F3 /* Supabase */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		F5D1B59B2FC8554600C764F3 /* Challenge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Challenge.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +32,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F5D1B6772FC85CD100C764F3 /* PostgREST in Frameworks */,
+				F5D1B6752FC85CD100C764F3 /* Functions in Frameworks */,
+				F5D1B67D2FC85CD100C764F3 /* Supabase in Frameworks */,
+				F5D1B6732FC85CD100C764F3 /* Auth in Frameworks */,
+				F5D1B67B2FC85CD100C764F3 /* Storage in Frameworks */,
+				F5D1B6792FC85CD100C764F3 /* Realtime in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +80,12 @@
 			);
 			name = Challenge;
 			packageProductDependencies = (
+				F5D1B6722FC85CD100C764F3 /* Auth */,
+				F5D1B6742FC85CD100C764F3 /* Functions */,
+				F5D1B6762FC85CD100C764F3 /* PostgREST */,
+				F5D1B6782FC85CD100C764F3 /* Realtime */,
+				F5D1B67A2FC85CD100C764F3 /* Storage */,
+				F5D1B67C2FC85CD100C764F3 /* Supabase */,
 			);
 			productName = Challenge;
 			productReference = F5D1B59B2FC8554600C764F3 /* Challenge.app */;
@@ -94,6 +115,9 @@
 			);
 			mainGroup = F5D1B5922FC8554600C764F3;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				F5D1B6712FC85CD100C764F3 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F5D1B59C2FC8554600C764F3 /* Products */;
 			projectDirPath = "";
@@ -256,6 +280,9 @@
 				DEVELOPMENT_TEAM = KQ2R483N7W;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Challenge needs camera access to take photos for your activity reports.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Challenge needs permission to save photos.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Challenge needs photo library access to select photos for your activity reports.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -288,6 +315,9 @@
 				DEVELOPMENT_TEAM = KQ2R483N7W;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Challenge needs camera access to take photos for your activity reports.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Challenge needs permission to save photos.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Challenge needs photo library access to select photos for your activity reports.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -332,6 +362,50 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		F5D1B6712FC85CD100C764F3 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase-community/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		F5D1B6722FC85CD100C764F3 /* Auth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F5D1B6712FC85CD100C764F3 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Auth;
+		};
+		F5D1B6742FC85CD100C764F3 /* Functions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F5D1B6712FC85CD100C764F3 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Functions;
+		};
+		F5D1B6762FC85CD100C764F3 /* PostgREST */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F5D1B6712FC85CD100C764F3 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = PostgREST;
+		};
+		F5D1B6782FC85CD100C764F3 /* Realtime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F5D1B6712FC85CD100C764F3 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Realtime;
+		};
+		F5D1B67A2FC85CD100C764F3 /* Storage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F5D1B6712FC85CD100C764F3 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Storage;
+		};
+		F5D1B67C2FC85CD100C764F3 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F5D1B6712FC85CD100C764F3 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = F5D1B5932FC8554600C764F3 /* Project object */;
 }
