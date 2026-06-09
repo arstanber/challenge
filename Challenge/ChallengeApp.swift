@@ -1,9 +1,19 @@
 import SwiftUI
+import os.log
+#if canImport(GoogleSignIn)
+import GoogleSignIn
+#endif
 
 @main
 struct ChallengeApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     private let authService = AuthService.shared
+    private let storeService = StoreService.shared
+
+    init() {
+        AnalyticsService.shared.start()
+        AnalyticsService.shared.track(.appLaunched)
+    }
 
     var body: some Scene {
         WindowGroup {
@@ -12,23 +22,36 @@ struct ChallengeApp: App {
                 .task {
                     await NotificationService.shared.requestPermission()
                 }
+                .onOpenURL { url in
+                    #if canImport(GoogleSignIn)
+                    GIDSignIn.sharedInstance.handle(url)
+                    #endif
+                }
         }
     }
 }
 
 struct RootView: View {
     @Environment(AuthService.self) private var authService
+    @AppStorage("appTheme") private var appTheme = AppColorTheme.light.rawValue
 
     var body: some View {
-        if authService.isAuthenticated {
-            MainTabView()
-        } else {
-            AuthView()
+        Group {
+            if authService.isRestoring {
+                LoadingView()
+            } else if authService.isAuthenticated {
+                MainTabView()
+            } else {
+                OnboardingView()
+            }
         }
+        .animation(.easeInOut(duration: 0.35), value: authService.isRestoring)
+        .preferredColorScheme(AppColorTheme(rawValue: appTheme)?.colorScheme)
     }
 }
 
 final class AppDelegate: NSObject, UIApplicationDelegate {
+    private let logger = Logger(subsystem: "com.challenge", category: "AppDelegate")
     func application(
         _ application: UIApplication,
         didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
@@ -43,6 +66,6 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFailToRegisterForRemoteNotificationsWithError error: Error
     ) {
-        print("APNs registration failed: \(error)")
+        logger.error("APNs registration failed: \(error)")
     }
 }

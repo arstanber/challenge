@@ -3,6 +3,9 @@ import Supabase
 import Functions
 import PostgREST
 import Observation
+import os.log
+
+private let logger = Logger(subsystem: "com.challenge", category: "GoalPlannerViewModel")
 
 @Observable
 final class GoalPlannerViewModel {
@@ -68,6 +71,7 @@ final class GoalPlannerViewModel {
             let response: GoalPlanResponse = try await supabase.functions
                 .invoke("plan-goal", options: FunctionInvokeOptions(body: req))
             plan = response
+            AnalyticsService.shared.track(.goalPlanGenerated, ["activities": response.activities.count])
             step = .plan
         } catch {
             errorMessage = extractFunctionError(error)
@@ -83,6 +87,44 @@ final class GoalPlannerViewModel {
         errorMessage = nil
         createdCount = 0
 
+        let sharedPlanId = UUID()
+        let sharedPlanTitle = plan.title
+
+        // 1. Create parent goal activity
+        let maxDeadline: Date? = plan.activities.compactMap { a in
+            a.deadlineDays.map { Calendar.current.date(byAdding: .day, value: $0, to: Date()) ?? Date() }
+        }.max()
+
+        let parentReq = CreateActivityRequest(
+            userId: user.id,
+            assignedBy: nil,
+            title: plan.title,
+            description: plan.summary,
+            type: .goal,
+            condition: nil,
+            frequency: .once,
+            deadline: maxDeadline,
+            reminderTime: nil,
+            goalTarget: nil,
+            planId: sharedPlanId,
+            planTitle: sharedPlanTitle,
+            parentId: nil
+        )
+
+        guard let parent: Activity = try? await supabase
+            .from("activities")
+            .insert(parentReq)
+            .select()
+            .single()
+            .execute()
+            .value
+        else {
+            errorMessage = "Failed to create goal"
+            step = .questions
+            return
+        }
+
+        // 2. Create subtasks with parent_id pointing to the parent goal
         for activity in plan.activities {
             let deadline: Date? = activity.deadlineDays.map {
                 Calendar.current.date(byAdding: .day, value: $0, to: Date()) ?? Date()
@@ -97,7 +139,10 @@ final class GoalPlannerViewModel {
                 frequency: activity.frequency,
                 deadline: deadline,
                 reminderTime: nil,
-                goalTarget: activity.goalTarget
+                goalTarget: activity.goalTarget,
+                planId: sharedPlanId,
+                planTitle: sharedPlanTitle,
+                parentId: parent.id
             )
             do {
                 let _: Activity = try await supabase
@@ -109,8 +154,7 @@ final class GoalPlannerViewModel {
                     .value
                 createdCount += 1
             } catch {
-                // Log but continue creating the rest
-                print("Failed to create activity '\(activity.title)': \(error)")
+                logger.error("Failed to create subtask '\(activity.title)': \(error)")
             }
         }
         step = .done
