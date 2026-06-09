@@ -76,7 +76,7 @@ Migrations are date-prefixed SQL files. Always create a new migration file — n
 - `async/await` throughout, no Combine
 - Actors for services with shared mutable state
 - No force-unwraps except where truly impossible to be nil (explain in comment)
-- No `print()` in production — use `AnalyticsService` or structured logging
+- No `print()` — use `os.Logger`: `import os.log`, then `private let logger = Logger(subsystem: "com.challenge", category: "<ClassName>")`. Use `logger.error(...)` for errors, `logger.debug(...)` for debug info. File-level `private let` for enums/static types, stored property for classes/structs.
 - Em-dashes banned in UI strings — use two hyphens (`--`) or rewrite
 
 ### Build
