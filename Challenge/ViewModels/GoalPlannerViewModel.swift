@@ -30,6 +30,8 @@ final class GoalPlannerViewModel {
     var plan: GoalPlanResponse?
     var errorMessage: String?
     var createdCount = 0
+    /// Optional deadline for the goal, picked by the user before generating the plan.
+    var deadline: Date?
 
     private let authService = AuthService.shared
 
@@ -91,9 +93,13 @@ final class GoalPlannerViewModel {
         let sharedPlanTitle = plan.title
 
         // 1. Create parent goal activity
-        let maxDeadline: Date? = plan.activities.compactMap { a in
+        let maxStepDeadline: Date? = plan.activities.compactMap { a in
             a.deadlineDays.map { Calendar.current.date(byAdding: .day, value: $0, to: Date()) ?? Date() }
         }.max()
+
+        // The user-picked deadline (if any) is the goal's hard cutoff -- it wins
+        // over the AI's step-based estimate.
+        let parentDeadline = deadline ?? maxStepDeadline
 
         let parentReq = CreateActivityRequest(
             userId: user.id,
@@ -103,7 +109,7 @@ final class GoalPlannerViewModel {
             type: .goal,
             condition: nil,
             frequency: .once,
-            deadline: maxDeadline,
+            deadline: parentDeadline,
             reminderTime: nil,
             goalTarget: nil,
             planId: sharedPlanId,
@@ -126,8 +132,12 @@ final class GoalPlannerViewModel {
 
         // 2. Create subtasks with parent_id pointing to the parent goal
         for activity in plan.activities {
-            let deadline: Date? = activity.deadlineDays.map {
+            var stepDeadline: Date? = activity.deadlineDays.map {
                 Calendar.current.date(byAdding: .day, value: $0, to: Date()) ?? Date()
+            }
+            // Don't let a subtask's estimated deadline fall after the goal's own deadline.
+            if let goalDeadline = parentDeadline, let candidate = stepDeadline, candidate > goalDeadline {
+                stepDeadline = goalDeadline
             }
             let req = CreateActivityRequest(
                 userId: user.id,
@@ -137,7 +147,7 @@ final class GoalPlannerViewModel {
                 type: activity.type,
                 condition: activity.condition,
                 frequency: activity.frequency,
-                deadline: deadline,
+                deadline: stepDeadline,
                 reminderTime: nil,
                 goalTarget: activity.goalTarget,
                 planId: sharedPlanId,
@@ -182,5 +192,6 @@ final class GoalPlannerViewModel {
         plan = nil
         errorMessage = nil
         createdCount = 0
+        deadline = nil
     }
 }

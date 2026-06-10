@@ -13,11 +13,11 @@ struct GoalPlannerView: View {
                 case .questions:
                     QuestionsView(vm: vm)
                 case .generatingPlan:
-                    AIThinkingView(message: "Building your plan…")
+                    AIThinkingView(message: "Строим твой план")
                 case .plan:
                     PlanPreviewView(vm: vm)
                 case .creating:
-                    AIThinkingView(message: "Creating \(vm.plan?.activities.count ?? 0) activities…")
+                    AIThinkingView(message: "Создаём \(vm.plan?.activities.count ?? 0) задач")
                 case .done:
                     DoneView(vm: vm, onDismiss: { dismiss() })
                 }
@@ -27,15 +27,15 @@ struct GoalPlannerView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     if vm.step != .done {
-                        Button("Cancel") { Haptics.tap(); dismiss() }
+                        Button("Отмена") { Haptics.tap(); dismiss() }
                     }
                 }
             }
-            .alert("Error", isPresented: Binding(
+            .alert("Ошибка", isPresented: Binding(
                 get: { vm.errorMessage != nil },
                 set: { if !$0 { vm.errorMessage = nil } }
             )) {
-                Button("OK") { Haptics.tap(); vm.errorMessage = nil }
+                Button("ОК") { Haptics.tap(); vm.errorMessage = nil }
             } message: {
                 Text(vm.errorMessage ?? "")
             }
@@ -46,8 +46,8 @@ struct GoalPlannerView: View {
         switch vm.step {
         case .describe: return "The Challenge."
         case .loadingQuestions, .questions: return "The Challenge."
-        case .generatingPlan, .plan: return "Your Plan"
-        case .creating, .done: return "Creating Plan"
+        case .generatingPlan, .plan: return "Твой план"
+        case .creating, .done: return "Создаём план"
         }
     }
 }
@@ -110,8 +110,17 @@ private enum AIPlanColors {
 
 private struct DescribeGoalView: View {
     @Bindable var vm: GoalPlannerViewModel
+    @State private var showDeadlinePicker = false
 
     private var isLoading: Bool { vm.step == .loadingQuestions }
+
+    private var deadlineLabel: String? {
+        guard let deadline = vm.deadline else { return nil }
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "ru_RU")
+        f.dateFormat = "d MMM"
+        return f.string(from: deadline)
+    }
 
     var body: some View {
         ZStack {
@@ -126,7 +135,7 @@ private struct DescribeGoalView: View {
                     VStack(alignment: .leading, spacing: 0) {
                         HStack(spacing: 10) {
                             AIPlanGlassButton()
-                            Text("AI step-by-step")
+                            Text("ИИ шаг за шагом")
                                 .font(.system(size: 20, weight: .medium))
                                 .foregroundColor(.black)
                         }
@@ -135,7 +144,7 @@ private struct DescribeGoalView: View {
 
                         ZStack(alignment: .topLeading) {
                             if vm.goalDescription.isEmpty {
-                                Text("Write a new task...")
+                                Text("Напиши новую задачу...")
                                     .font(.system(size: 32, weight: .medium))
                                     .foregroundColor(AIPlanColors.placeholderGray)
                                     .padding(.top, 20)
@@ -164,15 +173,30 @@ private struct DescribeGoalView: View {
                         }
 
                         HStack(spacing: 8) {
-                            Button { } label: {
-                                ZStack {
+                            Button {
+                                Haptics.tap()
+                                showDeadlinePicker = true
+                            } label: {
+                                ZStack(alignment: .topTrailing) {
                                     RoundedRectangle(cornerRadius: 12)
                                         .fill(AIPlanColors.buttonBackground)
-                                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(AIPlanColors.buttonBorder, lineWidth: 1))
-                                    Image(systemName: "clock.badge.plus")
+                                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(vm.deadline != nil ? AIPlanColors.blueAccent : AIPlanColors.buttonBorder, lineWidth: vm.deadline != nil ? 1.5 : 1))
+                                    Image(systemName: vm.deadline != nil ? "clock.fill" : "clock.badge.plus")
                                         .resizable().scaledToFit()
-                                        .foregroundColor(AIPlanColors.analyzeTextGray)
+                                        .foregroundColor(vm.deadline != nil ? AIPlanColors.blueAccent : AIPlanColors.analyzeTextGray)
                                         .frame(width: 22, height: 22)
+                                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                                    if let deadlineLabel {
+                                        Text(deadlineLabel)
+                                            .font(.system(size: 9, weight: .bold))
+                                            .foregroundColor(.white)
+                                            .padding(.horizontal, 5)
+                                            .padding(.vertical, 2)
+                                            .background(AIPlanColors.blueAccent)
+                                            .clipShape(Capsule())
+                                            .offset(x: 8, y: -6)
+                                    }
                                 }
                                 .frame(width: 62, height: 60)
                             }
@@ -188,7 +212,7 @@ private struct DescribeGoalView: View {
                                         ProgressView().tint(.white)
                                     } else {
                                         HStack(spacing: 6) {
-                                            Text("Analyze")
+                                            Text("Анализировать")
                                                 .font(.system(size: 18, weight: .medium))
                                                 .foregroundColor(vm.canProceedFromDescribe ? .white : AIPlanColors.analyzeTextGray)
                                             Image(systemName: "sparkles")
@@ -209,6 +233,66 @@ private struct DescribeGoalView: View {
             }
         }
         .animation(.easeInOut(duration: 0.3), value: isLoading)
+        .sheet(isPresented: $showDeadlinePicker) {
+            GoalDeadlinePickerView(deadline: $vm.deadline)
+                .presentationDetents([.medium])
+        }
+    }
+}
+
+// MARK: - Deadline picker sheet
+
+private struct GoalDeadlinePickerView: View {
+    @Binding var deadline: Date?
+    @Environment(\.dismiss) private var dismiss
+    @State private var selection: Date
+
+    private static var tomorrow: Date {
+        Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
+    }
+
+    init(deadline: Binding<Date?>) {
+        self._deadline = deadline
+        self._selection = State(initialValue: deadline.wrappedValue ?? Self.tomorrow)
+    }
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                DatePicker(
+                    "Дедлайн цели",
+                    selection: $selection,
+                    in: Self.tomorrow...,
+                    displayedComponents: .date
+                )
+                .datePickerStyle(.graphical)
+                .environment(\.locale, Locale(identifier: "ru_RU"))
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+
+                Spacer()
+            }
+            .navigationTitle("Дедлайн цели")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    if deadline != nil {
+                        Button("Убрать", role: .destructive) {
+                            Haptics.tap()
+                            deadline = nil
+                            dismiss()
+                        }
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Готово") {
+                        Haptics.tap()
+                        deadline = selection
+                        dismiss()
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -308,7 +392,7 @@ private struct QuestionsView: View {
                 .padding(.horizontal, 24)
 
                 // Header
-                Text("Nice task!\nWe need to ask a few questions.")
+                Text("Хорошая задача!\nНужно задать пару вопросов.")
                     .font(.system(size: 24, weight: .medium))
                     .foregroundColor(.white)
                     .fixedSize(horizontal: false, vertical: true)
@@ -327,7 +411,7 @@ private struct QuestionsView: View {
                 // Answer field
                 ZStack(alignment: .topLeading) {
                     if currentAnswer.wrappedValue.isEmpty {
-                        Text("Your answer...")
+                        Text("Твой ответ...")
                             .font(.system(size: 28, weight: .medium))
                             .foregroundColor(.white.opacity(0.45))
                             .padding(.top, 8)
@@ -358,7 +442,7 @@ private struct QuestionsView: View {
                     }
                 } label: {
                     HStack(spacing: 6) {
-                        Text(isLast ? "Generate" : "Next")
+                        Text(isLast ? "Сгенерировать" : "Далее")
                             .font(.system(size: 18, weight: .medium))
                             .foregroundColor(canAdvance ? .white : QColors.grayText)
                         Image(systemName: "sparkle")
@@ -414,7 +498,7 @@ private struct PlanPreviewView: View {
                         VStack(alignment: .leading, spacing: 0) {
                             // Header
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("New goal")
+                                Text("Новая цель")
                                     .font(.system(size: 34, weight: .bold))
                                     .italic()
                                     .foregroundColor(.white)
@@ -428,7 +512,7 @@ private struct PlanPreviewView: View {
                             .padding(.top, 36)
                             .padding(.horizontal, 36)
 
-                            Text("Tasks to-do to achieve a goal:")
+                            Text("Задачи для достижения цели:")
                                 .font(.system(size: 20, weight: .medium))
                                 .foregroundColor(.white)
                                 .padding(.top, 20)
@@ -460,7 +544,7 @@ private struct PlanPreviewView: View {
                             if vm.step == .creating {
                                 ProgressView().tint(PPColors.addTaskText)
                             } else {
-                                Text("Add tasks ✦")
+                                Text("Добавить задачи ✦")
                                     .font(.system(size: 18, weight: .medium))
                                     .foregroundColor(PPColors.addTaskText)
                             }
@@ -486,8 +570,8 @@ private struct PPTaskCard: View {
 
     private var scheduleLabel: String { activity.frequency.displayName }
     private var durationLabel: String {
-        if let days = activity.deadlineDays { return "\(days) days" }
-        return activity.frequency == .once ? "once" : "ongoing"
+        if let days = activity.deadlineDays { return "\(days) дн." }
+        return activity.frequency == .once ? "разово" : "постоянно"
     }
     private var categoryColor: Color { activity.type.stepColor }
 
@@ -611,9 +695,9 @@ private struct DoneView: View {
                     .foregroundStyle(.green)
             }
             VStack(spacing: 8) {
-                Text("Plan Created!")
+                Text("План создан!")
                     .font(.title.bold())
-                Text("\(vm.createdCount) activities added to your list.")
+                Text("Добавлено задач в твой список: \(vm.createdCount).")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                 if let title = vm.plan?.title {
@@ -626,7 +710,7 @@ private struct DoneView: View {
             Button {
                 onDismiss()
             } label: {
-                Text("Let's go! 🔥")
+                Text("Погнали! 🔥")
                     .fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
                     .padding()
