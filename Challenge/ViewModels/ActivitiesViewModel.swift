@@ -220,8 +220,25 @@ final class ActivitiesViewModel {
 
     // MARK: - Mutations
 
-    func deleteActivity(_ activity: Activity) async {
+    /// Deletes an activity. `reason` is mandatory and logged to
+    /// `activity_deletions` before the activity (and its reports) are removed.
+    func deleteActivity(_ activity: Activity, reason: String) async {
+        let trimmedReason = reason.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedReason.isEmpty else { return }
+
         do {
+            if let userId = authService.currentUser?.id {
+                try await supabase
+                    .from("activity_deletions")
+                    .insert([
+                        "user_id": userId.uuidString,
+                        "activity_id": activity.id.uuidString,
+                        "title": activity.title,
+                        "type": activity.type.rawValue,
+                        "reason": trimmedReason,
+                    ])
+                    .execute()
+            }
             try await supabase
                 .from("activities")
                 .delete()

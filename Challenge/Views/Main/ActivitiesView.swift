@@ -7,6 +7,7 @@ struct ActivitiesView: View {
     @State private var showPlanner = false
     @State private var showPaywall = false
     @State private var selectedTab = 0
+    @State private var deletingActivity: Activity?
 
     private var isChild: Bool { authService.currentUser?.role == .child }
 
@@ -67,9 +68,9 @@ struct ActivitiesView: View {
                                         if activity.status == .active {
                                             Button(role: .destructive) {
                                                 Haptics.warning()
-                                                Task { await vm.deleteActivity(activity) }
+                                                deletingActivity = activity
                                             } label: {
-                                                Label("Delete", systemImage: "trash")
+                                                Label("Удалить", systemImage: "trash")
                                             }
                                         }
                                     }
@@ -126,6 +127,11 @@ struct ActivitiesView: View {
             }
             .sheet(isPresented: $showPaywall) {
                 NavigationStack { PremiumView() }
+            }
+            .sheet(item: $deletingActivity) { activity in
+                DeleteReasonSheet(activityTitle: activity.title) { reason in
+                    Task { await vm.deleteActivity(activity, reason: reason) }
+                }
             }
             .alert("Error", isPresented: Binding(
                 get: { vm.errorMessage != nil },

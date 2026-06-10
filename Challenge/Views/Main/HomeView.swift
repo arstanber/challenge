@@ -59,6 +59,7 @@ struct HomeView: View {
     @State private var cancelledTaskId: UUID?
     @State private var editingActivity: Activity?
     @State private var detailActivity: Activity?
+    @State private var deletingActivity: Activity?
     // Celebration
     @State private var confettiTrigger = 0
     @State private var showPerfectDay = false
@@ -152,7 +153,7 @@ struct HomeView: View {
                                 onOpen: { detailActivity = task },
                                 onToggle: completeTask,
                                 onEdit: { editingActivity = $0 },
-                                onDelete: { act in Task { await vm.deleteActivity(act) } },
+                                onDelete: { act in deletingActivity = act },
                                 onTomorrow: { act in Task { await vm.moveToTomorrow(act); await vm.loadActivities() } },
                                 cancelledTaskId: cancelledTaskId
                             )
@@ -175,7 +176,7 @@ struct HomeView: View {
                                     onOpen: { detailActivity = task },
                                     onToggle: completeTask,
                                     onEdit: { editingActivity = $0 },
-                                    onDelete: { act in Task { await vm.deleteActivity(act) } },
+                                    onDelete: { act in deletingActivity = act },
                                     onTomorrow: { act in Task { await vm.moveToTomorrow(act); await vm.loadActivities() } },
                                     cancelledTaskId: cancelledTaskId
                                 )
@@ -274,6 +275,11 @@ struct HomeView: View {
         .sheet(item: $editingActivity) { activity in
             EditTaskView(activity: activity) { title, frequency, deadline, reminderTime, scheduleDays in
                 Task { await vm.updateActivity(activity, title: title, frequency: frequency, deadline: deadline, reminderTime: reminderTime, scheduleDays: scheduleDays) }
+            }
+        }
+        .sheet(item: $deletingActivity) { activity in
+            DeleteReasonSheet(activityTitle: activity.title) { reason in
+                Task { await vm.deleteActivity(activity, reason: reason) }
             }
         }
         .sheet(item: $taskToComplete, onDismiss: {
@@ -498,9 +504,9 @@ private struct TaskCardView: View {
         .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .onTapGesture { Haptics.selection(); onOpen() }
         .contextMenu {
-            Button { onEdit(task) } label: { Label("Edit", systemImage: "pencil") }
-            Button { onTomorrow(task) } label: { Label("Move to tomorrow", systemImage: "calendar") }
-            Button(role: .destructive) { onDelete(task) } label: { Label("Delete", systemImage: "trash") }
+            Button { onEdit(task) } label: { Label("Изменить", systemImage: "pencil") }
+            Button { onTomorrow(task) } label: { Label("На завтра", systemImage: "calendar") }
+            Button(role: .destructive) { onDelete(task) } label: { Label("Удалить", systemImage: "trash") }
         }
         .onChange(of: cancelledTaskId) { _, id in
             if id == task.id, isCompleting {
