@@ -61,8 +61,14 @@ Gamification/               ← GamificationEngine, QuestEngine
 - Supabase URL: `https://tvuvfuguxjvzyzsjnepr.supabase.co`
 - Free tier: 3 activities max, 10 AI verifications/month
 - Streak milestones: 7, 14, 30, 100 days
-- Min daily activities for streak: 3
+- Min daily activities for streak: 3 -- MUST match `p_min` in the server streak engine (`compute_user_streak` / `refresh_my_streaks` / `get_leaderboard`, migration `20260610b_task_core_redesign.sql`); change them together
 - IAP product IDs: `com.challenge.premium.monthly`, `com.challenge.premium.family`
+
+### Task core (single source of truth)
+- "Done today" = report row in `reports` (`ai_result` approved/not_applicable/pending counts; rejected never counts; excused holds the streak without counting). `Services/TaskEngine.swift` owns this state in the app; UserDefaults is only an optimistic offline overlay.
+- Streaks are computed ONLY by the server engine (`compute_activity_streak` / `compute_user_streak`); a trigger on `reports` keeps `activities.streak_current/streak_best` fresh; the app reads via the `refresh_my_streaks` RPC. Do not add new client-side streak algorithms.
+- `activities.schedule_days` smallint[] = ISO weekdays (1=Mon..7=Sun), NULL/empty = every day. Swift `Calendar.weekday` is Sun=1 -- convert via `Activity.isoWeekday(of:)`.
+- Server-side day bucketing uses `users.timezone` (synced from the device on login).
 
 ### Supabase Edge Functions (`supabase/functions/`)
 - `verify-report` — main AI verification, calls Claude, writes result back to DB
