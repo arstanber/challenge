@@ -52,3 +52,6 @@ drop trigger if exists trg_protect_ai_verdict on public.reports;
 create trigger trg_protect_ai_verdict
   before insert or update on public.reports
   for each row execute function public.protect_ai_verdict();
+
+-- Trigger function should not be exposed through PostgREST at all
+revoke execute on function public.protect_ai_verdict() from public, anon, authenticated;
