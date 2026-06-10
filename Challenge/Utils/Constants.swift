@@ -8,7 +8,6 @@ enum Constants {
 
     enum App {
         static let maxFreeActivities = 3
-        static let maxFreeReportsPerMonth = 10
         static let freezeIntervalDays = 7
         static let streakMilestones = [7, 14, 30, 100]
         static let minDailyActivitiesForStreak = 3
@@ -25,8 +24,21 @@ enum Constants {
 
     enum Store {
         /// Must match the product IDs you create in App Store Connect.
-        static let monthlyProductID       = "com.challenge.premium.monthly"
-        static let familyProductID        = "com.challenge.premium.family"   // #18
+        static let premiumMonthlyID = "com.challenge.premium.monthly"
+        static let premiumAnnualID  = "com.challenge.premium.annual"
+        static let premiumForeverID = "com.challenge.premium.forever"        // non-consumable (lifetime)
+        static let familyMonthlyID  = "com.challenge.premium.family"         // #18
+        static let familyAnnualID   = "com.challenge.premium.family.annual"
+        static let maxMonthlyID     = "com.challenge.max.monthly"
+
+        static let allProductIDs: Set<String> = [
+            premiumMonthlyID, premiumAnnualID, premiumForeverID,
+            familyMonthlyID, familyAnnualID, maxMonthlyID
+        ]
+
+        // Backward-compatible aliases (older call sites)
+        static let monthlyProductID = premiumMonthlyID
+        static let familyProductID  = familyMonthlyID
     }
 
     enum Aptabase {

@@ -19,16 +19,18 @@ enum AIFeature: String {
         }
     }
 
+    // MUST mirror check_and_increment_usage in the server rate limiter
+    // (migration 20260611_plan_limits.sql); change them together.
     func limit(for plan: UserPlan) -> Int {
         switch self {
         case .verifyReport:
-            switch plan { case .free: return 5;  case .premium: return 15; case .family: return 20; case .max: return 30 }
+            switch plan { case .free: return 5;  case .premium: return 30; case .family: return 30; case .max: return 100 }
         case .parseTasks:
-            switch plan { case .free: return 1;  case .premium: return 5;  case .family: return 8;  case .max: return 10 }
+            switch plan { case .free: return 1;  case .premium: return 10; case .family: return 10; case .max: return 30 }
         case .morningBrief:
-            switch plan { case .free: return 1;  case .premium: return 5;  case .family: return 8;  case .max: return 12 }
+            switch plan { case .free: return 1;  case .premium: return 10; case .family: return 10; case .max: return 30 }
         case .planGoal:
-            switch plan { case .free: return 3;  case .premium: return 10; case .family: return 10; case .max: return 20 }
+            switch plan { case .free: return 3;  case .premium: return 15; case .family: return 15; case .max: return 50 }
         }
     }
 }

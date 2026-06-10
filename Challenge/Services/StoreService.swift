@@ -11,31 +11,35 @@ private let storeLogger = Logger(subsystem: "com.challenge", category: "StoreSer
 final class StoreService {
     static let shared = StoreService()
 
-    // Individual monthly plan
-    var product: Product?
-    // Family plan (#18)
-    var familyProduct: Product?
+    /// All loaded StoreKit products keyed by product ID.
+    private(set) var products: [String: Product] = [:]
 
     var isPurchasing = false
     var errorMessage: String?
     var isPremium: Bool { AuthService.shared.currentUser?.isPremium ?? false }
+    var currentPlan: UserPlan { AuthService.shared.currentUser?.plan ?? .free }
+
+    // Backward-compatible accessors
+    var product: Product? { products[Constants.Store.premiumMonthlyID] }
+    var familyProduct: Product? { products[Constants.Store.familyMonthlyID] }
+
+    /// Set once this install has observed its own StoreKit entitlement.
+    /// Guards against downgrading users whose plan was granted server-side
+    /// (family members upgraded by the buyer have no local transaction).
+    private let hadLocalEntitlementKey = "store_had_local_entitlement_v1"
 
     private init() {
         Task { await loadProducts() }
-        Task { await checkCurrentEntitlements() }
+        Task { await recomputeEntitlements() }
         listenForTransactions()
     }
 
-    // MARK: - Load Products
+    // MARK: - Products
 
     func loadProducts() async {
         do {
-            let products = try await Product.products(for: [
-                Constants.Store.monthlyProductID,
-                Constants.Store.familyProductID
-            ])
-            product       = products.first { $0.id == Constants.Store.monthlyProductID }
-            familyProduct = products.first { $0.id == Constants.Store.familyProductID }
+            let loaded = try await Product.products(for: Constants.Store.allProductIDs)
+            products = Dictionary(uniqueKeysWithValues: loaded.map { ($0.id, $0) })
         } catch {
             storeLogger.error("loadProducts error: \(error)")
         }
@@ -44,21 +48,39 @@ final class StoreService {
     // Keep backward-compatible alias
     func loadProduct() async { await loadProducts() }
 
-    // MARK: - Purchase individual
+    func product(for id: String) -> Product? { products[id] }
+
+    /// Which plan a product ID unlocks. nil = unknown/foreign product.
+    static func plan(for productID: String) -> UserPlan? {
+        switch productID {
+        case Constants.Store.premiumMonthlyID,
+             Constants.Store.premiumAnnualID,
+             Constants.Store.premiumForeverID:
+            return .premium
+        case Constants.Store.familyMonthlyID,
+             Constants.Store.familyAnnualID:
+            return .family
+        case Constants.Store.maxMonthlyID:
+            return .max
+        default:
+            return nil
+        }
+    }
+
+    // MARK: - Purchase
 
     @discardableResult
-    func purchase() async -> Bool {
-        guard let product else { return false }
+    func purchase(productID: String) async -> Bool {
+        guard let product = products[productID] else { return false }
         return await doPurchase(product)
     }
 
-    // MARK: - Purchase family (#18)
+    // Backward-compatible entry points
+    @discardableResult
+    func purchase() async -> Bool { await purchase(productID: Constants.Store.premiumMonthlyID) }
 
     @discardableResult
-    func purchaseFamily() async -> Bool {
-        guard let familyProduct else { return false }
-        return await doPurchase(familyProduct)
-    }
+    func purchaseFamily() async -> Bool { await purchase(productID: Constants.Store.familyMonthlyID) }
 
     // MARK: - Restore
 
@@ -68,7 +90,7 @@ final class StoreService {
         defer { isPurchasing = false }
         do {
             try await AppStore.sync()
-            await checkCurrentEntitlements()
+            await recomputeEntitlements()
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -85,8 +107,8 @@ final class StoreService {
             switch result {
             case .success(let verification):
                 let transaction = try checkVerified(verification)
-                await handleVerified(transaction)
                 await transaction.finish()
+                await recomputeEntitlements()
                 return true
             case .userCancelled: return false
             case .pending:       return false
@@ -98,20 +120,12 @@ final class StoreService {
         }
     }
 
-    private func checkCurrentEntitlements() async {
-        for await result in Transaction.currentEntitlements {
-            guard let transaction = try? checkVerified(result) else { continue }
-            await handleVerified(transaction)
-            await transaction.finish()
-        }
-    }
-
     private func listenForTransactions() {
         Task(priority: .background) {
             for await result in Transaction.updates {
                 guard let transaction = try? checkVerified(result) else { continue }
-                await handleVerified(transaction)
                 await transaction.finish()
+                await recomputeEntitlements()
             }
         }
     }
@@ -123,20 +137,30 @@ final class StoreService {
         }
     }
 
+    /// Scans all active entitlements and applies the highest tier
+    /// (max > family > premium). Family purchases also upgrade members.
     @MainActor
-    private func handleVerified(_ transaction: Transaction) async {
-        let isIndividual = transaction.productID == Constants.Store.monthlyProductID
-        let isFamily     = transaction.productID == Constants.Store.familyProductID
-        guard isIndividual || isFamily else { return }
+    private func recomputeEntitlements() async {
+        var best: UserPlan = .free
+        var hasFamily = false
+        for await result in Transaction.currentEntitlements {
+            guard let transaction = try? checkVerified(result),
+                  transaction.revocationDate == nil,
+                  let plan = Self.plan(for: transaction.productID) else { continue }
+            if plan > best { best = plan }
+            if plan == .family { hasFamily = true }
+        }
 
-        let active = transaction.revocationDate == nil
-        let plan: UserPlan = active ? .premium : .free
-
-        await setRemotePlan(plan)
-
-        // For family plans, also upgrade all family members (#18)
-        if isFamily && active {
-            await upgradeFamilyMembers()
+        let defaults = UserDefaults.standard
+        if best > .free {
+            defaults.set(true, forKey: hadLocalEntitlementKey)
+            await setRemotePlan(best)
+            if hasFamily { await upgradeFamilyMembers() }
+        } else if defaults.bool(forKey: hadLocalEntitlementKey) {
+            // Own entitlement expired/revoked -- downgrade. Users granted a plan
+            // server-side (family members) never set this flag and are untouched.
+            defaults.set(false, forKey: hadLocalEntitlementKey)
+            await setRemotePlan(.free)
         }
     }
 
@@ -152,7 +176,7 @@ final class StoreService {
                 .execute()
             AuthService.shared.currentUser?.plan = plan
             AnalyticsService.shared.track(
-                plan == .premium ? .premiumPurchased : .premiumRevoked
+                plan == .free ? .premiumRevoked : .premiumPurchased
             )
         } catch {
             storeLogger.error("setRemotePlan error: \(error)")

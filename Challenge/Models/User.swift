@@ -1,7 +1,31 @@
 import Foundation
 
-enum UserPlan: String, Codable {
+enum UserPlan: String, Codable, Comparable {
     case free, premium, family, max
+
+    /// Tier ordering used to pick the highest active entitlement.
+    var rank: Int {
+        switch self {
+        case .free: return 0
+        case .premium: return 1
+        case .family: return 2
+        case .max: return 3
+        }
+    }
+
+    static func < (lhs: UserPlan, rhs: UserPlan) -> Bool { lhs.rank < rhs.rank }
+
+    var displayName: String {
+        switch self {
+        case .free: return "Free"
+        case .premium: return "Premium"
+        case .family: return "Family"
+        case .max: return "Max"
+        }
+    }
+
+    /// Max-tier connectors: Strava, Whoop, Notion, Google Docs, Google Drive, Gmail.
+    var hasMaxConnectors: Bool { self == .max }
 }
 
 enum UserRole: String, Codable {
