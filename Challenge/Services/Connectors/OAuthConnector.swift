@@ -152,6 +152,6 @@ struct OAuthConfig {
 /// Client IDs are **public** and safe to ship. The matching client secrets live ONLY in the
 /// Supabase Edge Function environment — never in the app. Fill these after registering each app.
 enum OAuthSecrets {
-    static let strava = "<STRAVA_CLIENT_ID>"
+    static let strava = "256944"
     static let whoop  = "<WHOOP_CLIENT_ID>"
 }
