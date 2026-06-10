@@ -32,17 +32,17 @@ struct ProfileView: View {
                         .padding(.vertical, 4)
                     }
 
-                    Section("Stats") {
-                        LabeledContent("Completed", value: "\(vm.totalCompleted)")
-                        LabeledContent("Failed", value: "\(vm.totalFailed)")
+                    Section("Статистика") {
+                        LabeledContent("Выполнено", value: "\(vm.totalCompleted)")
+                        LabeledContent("Провалено", value: "\(vm.totalFailed)")
                     }
                 }
 
-                Section("Family") {
+                Section("Семья") {
                     if authService.currentUser?.role == .parent {
                         if let family = vm.family {
                             HStack {
-                                Label("Invite code", systemImage: "qrcode")
+                                Label("Код приглашения", systemImage: "qrcode")
                                 Spacer()
                                 Text(family.inviteCode)
                                     .fontWeight(.bold)
@@ -51,43 +51,43 @@ struct ProfileView: View {
                             .onTapGesture { UIPasteboard.general.string = family.inviteCode; Haptics.success() }
 
                             NavigationLink(destination: FamilyView()) {
-                                Label("Manage family", systemImage: "person.2.fill")
+                                Label("Управление семьёй", systemImage: "person.2.fill")
                             }
                         } else {
                             Button {
                                 Haptics.tap()
                                 Task { await vm.createFamily() }
                             } label: {
-                                Label("Create family", systemImage: "plus.circle.fill")
+                                Label("Создать семью", systemImage: "plus.circle.fill")
                             }
                         }
                     } else if authService.currentUser?.familyId != nil {
-                        Label("Member of a family", systemImage: "person.2.circle.fill")
+                        Label("Участник семьи", systemImage: "person.2.circle.fill")
                             .foregroundStyle(.secondary)
                     } else {
                         Button { Haptics.tap(); showJoinFamily = true } label: {
-                            Label("Join family", systemImage: "person.badge.plus")
+                            Label("Присоединиться к семье", systemImage: "person.badge.plus")
                         }
                     }
                 }
 
-                Section("Leaderboard") {       // #1
+                Section("Рейтинг") {       // #1
                     NavigationLink(destination: LeaderboardView().environment(authService)) {
-                        Label("Streak Leaderboard", systemImage: "trophy.fill")
+                        Label("Рейтинг по сериям", systemImage: "trophy.fill")
                             .foregroundStyle(.yellow)
                     }
                 }
 
-                Section("Progress") {          // #16
+                Section("Прогресс") {          // #16
                     NavigationLink(destination: ProgressGalleryView()) {
-                        Label("Progress Gallery", systemImage: "photo.on.rectangle.angled")
+                        Label("Галерея прогресса", systemImage: "photo.on.rectangle.angled")
                             .foregroundStyle(Color(hex: "4580FF"))
                     }
                 }
 
-                Section("Connections") {
+                Section("Подключения") {
                     NavigationLink(destination: TelegramLinkView()) {
-                        Label("Telegram bot", systemImage: "paperplane.fill")
+                        Label("Телеграм-бот", systemImage: "paperplane.fill")
                             .foregroundStyle(Color(hex: "29A9EA"))
                     }
                     ForEach(DataConnector.allCases) { connector in
@@ -116,20 +116,22 @@ struct ProfileView: View {
                     }
                 }
 
-                Section("Focus") {             // #11
+                Section("Фокус") {             // #11
                     NavigationLink(destination: FocusModeView()) {
-                        Label("Focus Mode", systemImage: "moon.zzz.fill")
+                        Label("Режим фокуса", systemImage: "moon.zzz.fill")
                             .foregroundStyle(.indigo)
                     }
                 }
 
-                Section("Subscription") {
+                Section("Подписка") {
                     if authService.currentUser?.isPremium == true {
-                        Label("Premium active", systemImage: "star.fill")
-                            .foregroundStyle(.orange)
+                        NavigationLink(destination: PremiumView()) {
+                            Label("\((vm.user?.plan ?? .free).displayName) активен", systemImage: "star.fill")
+                                .foregroundStyle(.orange)
+                        }
                     } else {
                         NavigationLink(destination: PremiumView()) {
-                            Label("Upgrade to Premium", systemImage: "star.circle.fill")
+                            Label("Перейти на Premium", systemImage: "star.circle.fill")
                                 .foregroundStyle(.orange)
                         }
                     }
@@ -140,23 +142,23 @@ struct ProfileView: View {
                         Haptics.warning()
                         vm.signOut()
                     } label: {
-                        Label("Sign out", systemImage: "rectangle.portrait.and.arrow.right")
+                        Label("Выйти", systemImage: "rectangle.portrait.and.arrow.right")
                     }
                 }
             }
-            .navigationTitle("Profile")
+            .navigationTitle("Профиль")
             .refreshable { await vm.loadProfile() }
-            .alert("Join family", isPresented: $showJoinFamily) {
-                TextField("Invite code", text: $inviteCodeInput)
+            .alert("Присоединиться к семье", isPresented: $showJoinFamily) {
+                TextField("Код приглашения", text: $inviteCodeInput)
                     .textInputAutocapitalization(.characters)
-                Button("Join") { Haptics.tap(); Task { await vm.joinFamily(code: inviteCodeInput) } }
-                Button("Cancel", role: .cancel) {}
+                Button("Присоединиться") { Haptics.tap(); Task { await vm.joinFamily(code: inviteCodeInput) } }
+                Button("Отмена", role: .cancel) {}
             }
-            .alert("Error", isPresented: Binding(
+            .alert("Ошибка", isPresented: Binding(
                 get: { vm.errorMessage != nil },
                 set: { if !$0 { vm.errorMessage = nil } }
             )) {
-                Button("OK") { Haptics.tap(); vm.errorMessage = nil }
+                Button("ОК") { Haptics.tap(); vm.errorMessage = nil }
             } message: {
                 Text(vm.errorMessage ?? "")
             }
@@ -167,121 +169,60 @@ struct ProfileView: View {
 
 struct PlanBadge: View {
     let plan: UserPlan
+
+    private var tint: Color {
+        switch plan {
+        case .free:    return .secondary
+        case .premium: return .orange
+        case .family:  return Color(hex: "4580FF")
+        case .max:     return Color(hex: "7C4DF0")
+        }
+    }
+
     var body: some View {
-        Text(plan == .premium ? "Premium" : "Free")
-            .font(.caption2.bold())
-            .padding(.horizontal, 6).padding(.vertical, 2)
-            .background(plan == .premium ? Color.orange.opacity(0.15) : Color.secondary.opacity(0.15), in: Capsule())
-            .foregroundStyle(plan == .premium ? Color.orange : Color.secondary)
+        Group {
+            if plan == .max {
+                Text(plan.displayName)
+                    .font(.caption2.bold())
+                    .padding(.horizontal, 6).padding(.vertical, 2)
+                    .background(
+                        LinearGradient(
+                            colors: [Color(hex: "7C4DF0"), Color(hex: "5B2FD6")],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        ),
+                        in: Capsule()
+                    )
+                    .foregroundStyle(.white)
+            } else {
+                Text(plan.displayName)
+                    .font(.caption2.bold())
+                    .padding(.horizontal, 6).padding(.vertical, 2)
+                    .background(tint.opacity(0.15), in: Capsule())
+                    .foregroundStyle(tint)
+            }
+        }
     }
 }
 
 struct RoleBadge: View {
     let role: UserRole
+
+    private var title: String {
+        switch role {
+        case .parent:     return "Родитель"
+        case .child:      return "Ребёнок"
+        case .individual: return ""
+        }
+    }
+
     var body: some View {
         if role != .individual {
-            Text(role.rawValue.capitalized)
+            Text(title)
                 .font(.caption2.bold())
                 .padding(.horizontal, 6).padding(.vertical, 2)
                 .background(.purple.opacity(0.15), in: Capsule())
                 .foregroundStyle(.purple)
-        }
-    }
-}
-
-struct PremiumView: View {
-    @State private var store = StoreService.shared
-
-    private var priceLabel: String {
-        store.product?.displayPrice.appending("/month") ?? "$4.99/month"
-    }
-
-    private var familyPriceLabel: String {
-        store.familyProduct?.displayPrice.appending("/month") ?? "$9.99/month"
-    }
-
-    var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                Image(systemName: "star.circle.fill")
-                    .font(.system(size: 80)).foregroundStyle(.orange)
-                Text("Challenge Premium").font(.largeTitle.bold())
-
-                // Individual plan
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Individual").font(.headline).foregroundStyle(.secondary)
-                    FeatureRow(icon: "infinity",       text: "Unlimited challenges")
-                    FeatureRow(icon: "brain",          text: "Unlimited AI verifications")
-                    FeatureRow(icon: "clock.fill",     text: "Full history")
-                    FeatureRow(icon: "chart.bar.fill", text: "Detailed statistics")
-                    FeatureRow(icon: "flame.fill",     text: "Streak freeze (1 per week)")
-                }
-                .padding(20)
-                .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 16))
-
-                // Family plan (#18)
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Text("Family").font(.headline).foregroundStyle(.secondary)
-                        Text("NEW").font(.caption2.bold()).foregroundStyle(.white)
-                            .padding(.horizontal, 6).padding(.vertical, 2)
-                            .background(Capsule().fill(Color.orange))
-                    }
-                    FeatureRow(icon: "person.2.fill",  text: "Up to 5 family members")
-                    FeatureRow(icon: "star.fill",      text: "All Premium features for everyone")
-                    FeatureRow(icon: "gift.fill",      text: "Shared family leaderboard")
-                }
-                .padding(20)
-                .background(Color.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 16))
-                .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Color.orange.opacity(0.3), lineWidth: 1))
-
-                if let err = store.errorMessage {
-                    Text(err).font(.caption).foregroundStyle(.red).multilineTextAlignment(.center)
-                }
-
-                // Individual CTA
-                Button { Haptics.tap(); Task { await store.purchase() } } label: {
-                    Group {
-                        if store.isPurchasing { ProgressView().tint(.white) }
-                        else { Text("Individual: \(priceLabel)").fontWeight(.semibold) }
-                    }
-                    .frame(maxWidth: .infinity).frame(height: 50)
-                }
-                .buttonStyle(.borderedProminent).tint(.orange).disabled(store.isPurchasing)
-
-                // Family CTA (#18)
-                Button { Haptics.tap(); Task { await store.purchaseFamily() } } label: {
-                    Group {
-                        if store.isPurchasing { ProgressView().tint(.white) }
-                        else { Text("Family: \(familyPriceLabel)").fontWeight(.semibold) }
-                    }
-                    .frame(maxWidth: .infinity).frame(height: 50)
-                }
-                .buttonStyle(.borderedProminent).tint(Color(hex: "4580FF")).disabled(store.isPurchasing)
-
-                Button { Haptics.tap(); Task { await store.restore() } } label: {
-                    Text("Restore purchases").font(.subheadline).foregroundStyle(.secondary)
-                }
-                .disabled(store.isPurchasing)
-
-                Text("Cancel anytime · Family plan covers up to 5 members")
-                    .font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center)
-            }
-            .padding()
-        }
-        .navigationTitle("Premium")
-        .navigationBarTitleDisplayMode(.inline)
-        .onAppear { AnalyticsService.shared.track(.premiumPaywallShown) }
-    }
-}
-
-struct FeatureRow: View {
-    let icon: String
-    let text: String
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon).frame(width: 24).foregroundStyle(.orange)
-            Text(text)
         }
     }
 }
