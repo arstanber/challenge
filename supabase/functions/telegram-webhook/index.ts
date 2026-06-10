@@ -162,7 +162,7 @@ async function handleStart(chatId: number, username: string | undefined, code: s
     chatId,
     "✅ Linked! You can now:\n" +
       "• Send a message to create a new task\n" +
-      "• Send a photo to submit proof for a challenge (add a caption with the task name if you have several)\n" +
+      "• Send a photo to submit proof for a task (add a caption with the task name if you have several)\n" +
       "• /today — see today's active tasks\n" +
       "• /done — mark a task complete\n" +
       "• /delete — remove a task\n" +
@@ -177,7 +177,7 @@ async function handleHelp(chatId: number) {
     chatId,
     "<b>Commands</b>\n" +
       "• Send any text → creates a new task with that title\n" +
-      "• Send a photo → submits proof for a challenge/assignment (caption = task name if you have several active)\n" +
+      "• Send a photo → submits proof for a task (caption = task name if you have several active)\n" +
       "• /today — list today's active tasks\n" +
       "• /done — pick a task to mark complete\n" +
       "• /delete — pick a task to remove\n" +
@@ -450,19 +450,19 @@ interface ActivityRow {
 async function handlePhoto(chatId: number, userId: string, fileId: string, caption: string | undefined) {
   const db = admin();
 
-  // Find candidate activities that take photo proof.
+  // Any active task accepts photo proof (mirrors the in-app flow, which
+  // verifies every type against condition or title -- not just challenges).
   const { data: candidates } = await db
     .from("activities")
     .select("id, title, type, condition, frequency")
     .eq("user_id", userId)
     .eq("status", "active")
-    .in("type", ["challenge", "assignment"])
     .order("created_at", { ascending: false })
     .limit(50);
 
   const list = (candidates ?? []) as ActivityRow[];
   if (list.length === 0) {
-    await sendMessage(chatId, "You don't have any active challenges that need a photo. Send a text message to create a task instead.");
+    await sendMessage(chatId, "You don't have any active tasks yet. Send a text message to create one.");
     return;
   }
 
@@ -471,7 +471,7 @@ async function handlePhoto(chatId: number, userId: string, fileId: string, capti
     const needle = caption.trim().toLowerCase();
     activity = list.find((a) => a.title.toLowerCase().includes(needle));
     if (!activity) {
-      await sendMessage(chatId, `Couldn't find an active challenge matching "${escapeHtml(caption.trim())}". Your active challenges:\n${list.map((a) => `• ${a.title}`).join("\n")}`);
+      await sendMessage(chatId, `Couldn't find an active task matching "${escapeHtml(caption.trim())}". Your active tasks:\n${list.map((a) => `• ${a.title}`).join("\n")}`);
       return;
     }
   } else if (list.length === 1) {
@@ -482,7 +482,7 @@ async function handlePhoto(chatId: number, userId: string, fileId: string, capti
     const keyboard: InlineKeyboard = {
       inline_keyboard: list.map((a) => [{ text: a.title.slice(0, 60), callback_data: `photopick:${a.id}` }]),
     };
-    await sendMessage(chatId, "📸 Got it — which active challenge is this photo for?", keyboard);
+    await sendMessage(chatId, "📸 Got it — which task is this photo for?", keyboard);
     return;
   }
 
@@ -506,7 +506,7 @@ async function handlePhotoPick(chatId: number, messageId: number, userId: string
     .maybeSingle();
 
   if (!activity || activity.user_id !== userId || activity.status !== "active") {
-    await editMessageText(chatId, messageId, "That challenge is no longer available — please resend the photo.");
+    await editMessageText(chatId, messageId, "That task is no longer available — please resend the photo.");
     return;
   }
 
@@ -535,8 +535,11 @@ async function runVerification(chatId: number, activity: ActivityRow, fileId: st
       .single();
     if (reportError) throw reportError;
 
-    if ((activity.type === "challenge" || activity.type === "assignment") && activity.condition) {
-      const ai = await verifyPhoto(activity.condition, jpeg, false);
+    // Verify every task: against its photo condition if set, otherwise the
+    // title -- same rule as the in-app camera flow.
+    const condition = activity.condition?.trim() || activity.title;
+    if (condition) {
+      const ai = await verifyPhoto(condition, jpeg, false);
       const result = ai.approved ? "approved" : ai.excused ? "excused" : "rejected";
 
       await db.from("reports")
