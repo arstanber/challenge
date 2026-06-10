@@ -47,6 +47,8 @@ final class NotificationService: NSObject {
 
     func scheduleLocalReminder(for activity: Activity) {
         guard let reminderTime = activity.reminderTime else { return }
+        // Replace any previously scheduled variant (frequency/days may have changed).
+        cancelReminder(for: activity.id)
 
         let content = UNMutableNotificationContent()
         content.title = NSLocalizedString("Don't forget!", comment: "")
@@ -57,14 +59,29 @@ final class NotificationService: NSObject {
         var components = Calendar.current.dateComponents([.hour, .minute], from: reminderTime)
         components.second = 0
 
-        let repeats = activity.frequency == .daily || activity.frequency == .weekly
-        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: repeats)
-        let request = UNNotificationRequest(identifier: "reminder-\(activity.id)", content: content, trigger: trigger)
-        UNUserNotificationCenter.current().add(request)
+        let center = UNUserNotificationCenter.current()
+        if activity.frequency == .weekly, let days = activity.scheduleDays, !days.isEmpty {
+            // One repeating request per scheduled weekday.
+            // schedule_days is ISO (Mon=1..Sun=7); DateComponents.weekday is Sun=1..Sat=7.
+            for iso in days {
+                var comps = components
+                comps.weekday = iso == 7 ? 1 : iso + 1
+                let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: true)
+                let request = UNNotificationRequest(identifier: "reminder-\(activity.id)-\(iso)", content: content, trigger: trigger)
+                center.add(request)
+            }
+        } else {
+            let repeats = activity.frequency == .daily || activity.frequency == .weekly
+            let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: repeats)
+            let request = UNNotificationRequest(identifier: "reminder-\(activity.id)", content: content, trigger: trigger)
+            center.add(request)
+        }
     }
 
     func cancelReminder(for activityId: UUID) {
-        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["reminder-\(activityId)"])
+        // Legacy un-suffixed identifier plus the 7 per-weekday variants.
+        let ids = ["reminder-\(activityId)"] + (1...7).map { "reminder-\(activityId)-\($0)" }
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ids)
     }
 
     // MARK: - Bulk reminder sync

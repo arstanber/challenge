@@ -6,26 +6,6 @@ import os.log
 
 private let logger = Logger(subsystem: "com.challenge", category: "ActivitiesViewModel")
 
-// Lightweight model for streak calculation (only dates needed)
-private struct ReportDate: Decodable {
-    let createdAt: Date
-    enum CodingKeys: String, CodingKey { case createdAt = "created_at" }
-}
-
-private struct ReportActivityId: Decodable {
-    let activityId: UUID
-    enum CodingKeys: String, CodingKey { case activityId = "activity_id" }
-}
-
-private struct HabitReport: Encodable {
-    let activityId: UUID
-    let aiResult: String
-    enum CodingKeys: String, CodingKey {
-        case activityId = "activity_id"
-        case aiResult = "ai_result"
-    }
-}
-
 // MARK: - Plan Group model
 
 struct ActivityPlanGroup: Identifiable {
@@ -39,6 +19,7 @@ struct ActivityPlanGroup: Identifiable {
     var isFullyCompleted: Bool { completedCount == totalCount && totalCount > 0 }
 }
 
+@MainActor
 @Observable
 final class ActivitiesViewModel {
     var myActivities: [Activity] = []
@@ -46,32 +27,15 @@ final class ActivitiesViewModel {
     var isLoading = false
     var errorMessage: String?
 
-    // IDs of recurring activities already completed today — UserDefaults is source of truth
-    var todayDoneIds: Set<UUID> = []
+    // Done-today state and streaks live in TaskEngine (reports table is the
+    // source of truth); these are thin pass-throughs so view code stays small.
+    private let engine = TaskEngine.shared
 
-    private static var todayKey: String {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd"
-        return "habitDone_\(f.string(from: Date()))"
-    }
-
-    private func readLocalDoneIds() -> Set<UUID> {
-        let arr = UserDefaults.standard.stringArray(forKey: Self.todayKey) ?? []
-        return Set(arr.compactMap { UUID(uuidString: $0) })
-    }
-
-    private func persistLocalDoneId(_ id: UUID) {
-        var arr = UserDefaults.standard.stringArray(forKey: Self.todayKey) ?? []
-        let str = id.uuidString
-        if !arr.contains(str) {
-            arr.append(str)
-            UserDefaults.standard.set(arr, forKey: Self.todayKey)
-        }
-    }
-
-    var globalStreakCurrent: Int = 0
-    var globalStreakBest: Int = 0
-    var todayCount: Int = 0
+    func isDoneToday(_ id: UUID) -> Bool { engine.isDoneToday(id) }
+    func isHandledToday(_ id: UUID) -> Bool { engine.isHandledToday(id) }
+    var globalStreakCurrent: Int { engine.globalStreakCurrent }
+    var globalStreakBest: Int { engine.globalStreakBest }
+    var todayCount: Int { engine.todayCount }
 
     private let authService = AuthService.shared
     private let calendar = Calendar.current
@@ -134,13 +98,24 @@ final class ActivitiesViewModel {
                 .value
             myActivities = all.filter { $0.assignedBy == nil }
             parentActivities = all.filter { $0.assignedBy != nil }
-            // Load from local cache instantly, then merge with DB
-            todayDoneIds = readLocalDoneIds()
-            await recalculateGlobalStreak()
+            await engine.refresh(activityIds: all.map(\.id))
+            await engine.refreshStreaks()
+            applyEngineStreaks()
+            publishWidgetSnapshot()
         } catch {
             errorMessage = error.localizedDescription
         }
         isLoading = false
+    }
+
+    /// Patch server-maintained streaks into the in-memory activities.
+    private func applyEngineStreaks() {
+        for (idx, activity) in myActivities.enumerated() {
+            if let s = engine.activityStreaks[activity.id] {
+                myActivities[idx].streakCurrent = s.current
+                myActivities[idx].streakBest = s.best
+            }
+        }
     }
 
     func loadWorkspaceActivities(workspaceId: UUID) async {
@@ -159,7 +134,7 @@ final class ActivitiesViewModel {
                 .value
             myActivities = all.filter { $0.assignedBy == nil }
             parentActivities = all.filter { $0.assignedBy != nil }
-            todayDoneIds = readLocalDoneIds()
+            await engine.refresh(activityIds: all.map(\.id))
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -168,60 +143,24 @@ final class ActivitiesViewModel {
 
     // MARK: - Complete recurring habit
 
+    /// Mark a recurring habit done: instant local tick + check-in report in the DB.
     func markHabitDone(_ activity: Activity) async {
-        // Persist locally first — this is the source of truth
-        persistLocalDoneId(activity.id)
-        todayDoneIds.insert(activity.id)
-
-        // Best-effort DB insert for streak tracking; never rollback on failure
-        do {
-            let report = HabitReport(activityId: activity.id, aiResult: "habit_done")
-            try await supabase
-                .from("reports")
-                .insert(report)
-                .execute()
-            await recalculateGlobalStreak()
-        } catch {
-            logger.error("Habit report insert error (streak may be off): \(error)")
-        }
+        await engine.markDone(activity)
+        applyEngineStreaks()
+        publishWidgetSnapshot()
     }
 
     /// Mark a task done for today locally (after a photo report was already saved elsewhere),
     /// without inserting a second report. Hides it from today's list / counts the ring.
     func markDoneLocally(_ activity: Activity) {
-        persistLocalDoneId(activity.id)
-        todayDoneIds.insert(activity.id)
+        engine.markDoneLocally(activity.id)
         publishWidgetSnapshot()
-        Task { await recalculateGlobalStreak() }
     }
 
-    // MARK: - Global Streak
-
+    /// Re-sync done-today state and streaks from the server (e.g. after a photo report).
     func recalculateGlobalStreak() async {
-        let allIds = (myActivities + parentActivities).map { $0.id.uuidString }
-        guard !allIds.isEmpty else {
-            globalStreakCurrent = 0
-            globalStreakBest = 0
-            todayCount = 0
-            return
-        }
-
-        do {
-            let reports: [ReportDate] = try await supabase
-                .from("reports")
-                .select("created_at")
-                .in("activity_id", values: allIds)
-                .order("created_at", ascending: true)
-                .execute()
-                .value
-
-            let (current, best, todayN) = computeStreak(from: reports.map { $0.createdAt })
-            globalStreakCurrent = current
-            globalStreakBest = best
-            todayCount = todayN
-        } catch {
-            logger.error("Global streak calc error: \(error)")
-        }
+        await engine.resync()
+        applyEngineStreaks()
         publishWidgetSnapshot()
     }
 
@@ -240,7 +179,7 @@ final class ActivitiesViewModel {
                     typeIcon: activity.type.icon,
                     typeColorName: widgetColorName(for: activity.type),
                     deadline: activity.deadline,
-                    isDone: todayDoneIds.contains(activity.id)
+                    isDone: engine.isDoneToday(activity.id)
                 )
             }
 
@@ -257,7 +196,7 @@ final class ActivitiesViewModel {
 
         // Live Activity (#20)
         let nextTask = myActivities
-            .filter { $0.parentId == nil && $0.status == .active && !todayDoneIds.contains($0.id) }
+            .filter { $0.parentId == nil && $0.status == .active && !engine.isHandledToday($0.id) }
             .first?.title ?? ""
         let goalReached = todayDoneTopLevelCount >= Constants.App.minDailyActivitiesForStreak
         LiveActivityService.shared.update(
@@ -277,58 +216,6 @@ final class ActivitiesViewModel {
         case .habit: return "purple"
         case .assignment: return "pink"
         }
-    }
-
-    // MARK: - Streak Algorithm
-
-    private func computeStreak(from dates: [Date]) -> (current: Int, best: Int, today: Int) {
-        let minPerDay = Constants.App.minDailyActivitiesForStreak
-
-        var dayCount: [Date: Int] = [:]
-        for date in dates {
-            let day = calendar.startOfDay(for: date)
-            dayCount[day, default: 0] += 1
-        }
-
-        let qualifyingDays = dayCount
-            .filter { $0.value >= minPerDay }
-            .map { $0.key }
-            .sorted()
-
-        let today = calendar.startOfDay(for: Date())
-        let todayN = dayCount[today] ?? 0
-
-        guard !qualifyingDays.isEmpty else { return (0, 0, todayN) }
-
-        var bestStreak = 1
-        var tempStreak = 1
-        for i in 1..<qualifyingDays.count {
-            let diff = calendar.dateComponents([.day], from: qualifyingDays[i - 1], to: qualifyingDays[i]).day ?? 0
-            if diff == 1 {
-                tempStreak += 1
-                bestStreak = max(bestStreak, tempStreak)
-            } else {
-                tempStreak = 1
-            }
-        }
-
-        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
-        let lastQualified = qualifyingDays.last!
-
-        var currentStreak = 0
-        if lastQualified == today || lastQualified == yesterday {
-            var expectedDay = lastQualified
-            for day in qualifyingDays.reversed() {
-                if day == expectedDay {
-                    currentStreak += 1
-                    expectedDay = calendar.date(byAdding: .day, value: -1, to: expectedDay)!
-                } else {
-                    break
-                }
-            }
-        }
-
-        return (currentStreak, bestStreak, todayN)
     }
 
     // MARK: - Mutations
@@ -380,8 +267,7 @@ final class ActivitiesViewModel {
 
     func markCompleted(_ activity: Activity) async {
         // Track as "done today" locally so the day-progress ring counts it
-        persistLocalDoneId(activity.id)
-        todayDoneIds.insert(activity.id)
+        engine.markDoneLocally(activity.id)
         do {
             try await supabase
                 .from("activities")
@@ -461,7 +347,8 @@ final class ActivitiesViewModel {
         frequency: ActivityFrequency,
         goalTarget: Double? = nil,
         reminderTime: Date? = nil,
-        condition: String? = nil
+        condition: String? = nil,
+        scheduleDays: [Int]? = nil
     ) async {
         guard let user = authService.currentUser else { return }
         let req = CreateActivityRequest(
@@ -476,7 +363,8 @@ final class ActivitiesViewModel {
             reminderTime: reminderTime,
             goalTarget: goalTarget,
             workspaceId: nil,
-            parentId: nil
+            parentId: nil,
+            scheduleDays: scheduleDays
         )
         do {
             let created: Activity = try await supabase
@@ -499,23 +387,40 @@ final class ActivitiesViewModel {
         title: String,
         frequency: ActivityFrequency,
         deadline: Date?,
-        reminderTime: Date?
+        reminderTime: Date?,
+        scheduleDays: [Int]? = nil
     ) async {
         struct UpdateRequest: Encodable {
             let title: String
             let frequency: String
             let deadline: Date?
             let reminderTime: Date?
+            let scheduleDays: [Int]?
             enum CodingKeys: String, CodingKey {
                 case title, frequency, deadline
                 case reminderTime = "reminder_time"
+                case scheduleDays = "schedule_days"
+            }
+            // Custom encode so schedule_days is sent as explicit null when nil --
+            // switching weekly -> daily must clear stale days in the DB
+            // (synthesized Codable would omit the key entirely).
+            func encode(to encoder: Encoder) throws {
+                var c = encoder.container(keyedBy: CodingKeys.self)
+                try c.encode(title, forKey: .title)
+                try c.encode(frequency, forKey: .frequency)
+                try c.encode(deadline, forKey: .deadline)
+                try c.encode(reminderTime, forKey: .reminderTime)
+                try c.encode(scheduleDays, forKey: .scheduleDays)
             }
         }
+        // Only weekly tasks carry specific days; daily/once clear them.
+        let days = frequency == .weekly ? scheduleDays : nil
         let req = UpdateRequest(
             title: title.trimmingCharacters(in: .whitespaces),
             frequency: frequency.rawValue,
             deadline: deadline,
-            reminderTime: reminderTime
+            reminderTime: reminderTime,
+            scheduleDays: days
         )
         do {
             try await supabase
@@ -528,6 +433,7 @@ final class ActivitiesViewModel {
                 myActivities[idx].frequency = frequency
                 myActivities[idx].deadline = deadline
                 myActivities[idx].reminderTime = reminderTime
+                myActivities[idx].scheduleDays = days
             }
             // Refresh reminder
             NotificationService.shared.cancelReminder(for: activity.id)
@@ -543,14 +449,18 @@ final class ActivitiesViewModel {
 
     /// Top-level activities completed today (recurring habits + one-time tasks).
     var todayDoneTopLevelCount: Int {
-        myActivities.filter { $0.parentId == nil && todayDoneIds.contains($0.id) }.count
+        myActivities.filter { $0.parentId == nil && engine.isDoneToday($0.id) }.count
     }
 
     private func checkAndCompleteParent(parentId: UUID) async {
-        // All one-time subtasks of this parent must be .completed
+        // A goal finishes when all its one-time subtasks are completed.
+        // Recurring children never "finish" -- they neither block nor complete
+        // the parent (a single done-today tick must not close a goal forever).
         let siblings = myActivities.filter { $0.parentId == parentId }
-        let allDone = siblings.allSatisfy { $0.status == .completed || todayDoneIds.contains($0.id) }
-        guard allDone, !siblings.isEmpty else { return }
+        let onceSiblings = siblings.filter { $0.frequency == .once }
+        guard !onceSiblings.isEmpty else { return }
+        let allDone = onceSiblings.allSatisfy { $0.status == .completed }
+        guard allDone else { return }
 
         do {
             try await supabase

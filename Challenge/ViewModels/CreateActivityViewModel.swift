@@ -10,6 +10,8 @@ final class CreateActivityViewModel {
     var type: ActivityType = .challenge
     var condition = ""
     var frequency: ActivityFrequency = .daily
+    /// ISO weekdays (1=Mon..7=Sun) for weekly activities; empty = every day.
+    var scheduleDays: Set<Int> = []
     var deadline: Date = Calendar.current.date(byAdding: .month, value: 1, to: Date()) ?? Date()
     var hasDeadline = true
     var reminderEnabled = false
@@ -58,7 +60,10 @@ final class CreateActivityViewModel {
             goalTarget: showGoalTarget ? Double(goalTarget) : nil,
             workspaceId: workspaceId,
             parentId: parentId,
-            category: category
+            category: category,
+            scheduleDays: frequency == .weekly && !scheduleDays.isEmpty && scheduleDays.count < 7
+                ? scheduleDays.sorted()
+                : nil
         )
 
         do {

@@ -5,6 +5,7 @@ import PostgREST
 import Storage
 import Observation
 
+@MainActor
 @Observable
 final class ActivityDetailViewModel {
     var activity: Activity
@@ -142,6 +143,7 @@ final class ActivityDetailViewModel {
                     // Rejected — nothing
                     break
                 }
+                await TaskEngine.shared.noteReportChanged(activityId: activity.id)
             } catch {
                 if let fnError = error as? FunctionsError,
                    case .httpError(let code, _) = fnError, code == 429 {
@@ -152,6 +154,7 @@ final class ActivityDetailViewModel {
                 lastAIResult = .notApplicable
                 if activity.frequency == .once { try await markCompleted() }
                 onReportSubmitted?()
+                await TaskEngine.shared.noteReportChanged(activityId: activity.id)
             }
         } catch {
             errorMessage = error.localizedDescription
@@ -176,6 +179,7 @@ final class ActivityDetailViewModel {
             reports.insert(report, at: 0)
             if activity.frequency == .once { try await markCompleted() }
             onReportSubmitted?()
+            await TaskEngine.shared.noteReportChanged(activityId: activity.id)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -222,6 +226,7 @@ final class ActivityDetailViewModel {
                 try await markCompleted()
             }
             onReportSubmitted?()
+            await TaskEngine.shared.noteReportChanged(activityId: activity.id)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -232,18 +237,34 @@ final class ActivityDetailViewModel {
     private let cal = Calendar.current
 
     /// Distinct days (start-of-day) on which this habit was completed.
+    /// Rejected photos do not paint the calendar.
     var completedDays: Set<Date> {
-        Set(reports.map { cal.startOfDay(for: $0.createdAt) })
+        Set(reports.filter { $0.aiResult != .rejected }.map { cal.startOfDay(for: $0.createdAt) })
     }
 
     var isDoneToday: Bool {
-        completedDays.contains(cal.startOfDay(for: Date()))
+        TaskEngine.shared.isDoneToday(activity.id)
+            || completedDays.contains(cal.startOfDay(for: Date()))
     }
 
     var totalDaysDone: Int { completedDays.count }
 
-    /// Current consecutive-day streak ending today or yesterday.
+    /// Current streak: server-maintained column (kept fresh by the reports
+    /// trigger + refresh_my_streaks), local recomputation as offline seed.
     var currentStreak: Int {
+        if let s = TaskEngine.shared.activityStreaks[activity.id] { return s.current }
+        return max(activity.streakCurrent, localCurrentStreak)
+    }
+
+    /// Best streak: server-maintained column, local recomputation as offline seed.
+    var bestStreak: Int {
+        if let s = TaskEngine.shared.activityStreaks[activity.id] { return s.best }
+        return max(activity.streakBest, localBestStreak)
+    }
+
+    // Offline fallback, server is canonical (schedule-aware off-days are only
+    // handled server-side; this is a plain consecutive-day approximation).
+    private var localCurrentStreak: Int {
         let days = completedDays
         guard !days.isEmpty else { return 0 }
         let today = cal.startOfDay(for: Date())
@@ -258,8 +279,7 @@ final class ActivityDetailViewModel {
         return streak
     }
 
-    /// Best historical consecutive-day streak.
-    var bestStreak: Int {
+    private var localBestStreak: Int {
         let sorted = completedDays.sorted()
         guard !sorted.isEmpty else { return 0 }
         var best = 1, temp = 1
@@ -291,6 +311,7 @@ final class ActivityDetailViewModel {
                 .gte("created_at", value: iso.string(from: start))
                 .execute()
             reports.removeAll { cal.isDate($0.createdAt, inSameDayAs: start) }
+            await TaskEngine.shared.undoToday(activityId: activity.id)
             onReportSubmitted?()
         } catch {
             errorMessage = error.localizedDescription

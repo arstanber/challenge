@@ -2,7 +2,7 @@ import SwiftUI
 
 struct EditTaskView: View {
     let activity: Activity
-    let onSave: (_ title: String, _ frequency: ActivityFrequency, _ deadline: Date?, _ reminderTime: Date?) -> Void
+    let onSave: (_ title: String, _ frequency: ActivityFrequency, _ deadline: Date?, _ reminderTime: Date?, _ scheduleDays: [Int]?) -> Void
 
     @Environment(\.dismiss) private var dismiss
 
@@ -12,11 +12,14 @@ struct EditTaskView: View {
     @State private var deadline: Date
     @State private var reminderEnabled: Bool
     @State private var reminderTime: Date
+    /// ISO weekdays (1=Mon..7=Sun) for weekly tasks.
+    @State private var selectedDays: Set<Int>
 
     private let blue = Color(red: 0.0, green: 0.282, blue: 0.886)
+    private let weekdayLabels = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
 
     init(activity: Activity,
-         onSave: @escaping (String, ActivityFrequency, Date?, Date?) -> Void) {
+         onSave: @escaping (String, ActivityFrequency, Date?, Date?, [Int]?) -> Void) {
         self.activity = activity
         self.onSave = onSave
         _title = State(initialValue: activity.title)
@@ -29,6 +32,7 @@ struct EditTaskView: View {
             c.hour = 9; c.minute = 0
             return Calendar.current.date(from: c) ?? Date()
         }())
+        _selectedDays = State(initialValue: Set(activity.scheduleDays ?? []))
     }
 
     private var canSave: Bool {
@@ -50,6 +54,27 @@ struct EditTaskView: View {
                         Text("Weekly").tag(ActivityFrequency.weekly)
                     }
                     .pickerStyle(.segmented)
+
+                    if frequency == .weekly {
+                        HStack(spacing: 8) {
+                            ForEach(1...7, id: \.self) { day in
+                                let on = selectedDays.contains(day)
+                                Button {
+                                    Haptics.selection()
+                                    if on { selectedDays.remove(day) } else { selectedDays.insert(day) }
+                                } label: {
+                                    Text(weekdayLabels[day - 1])
+                                        .font(.system(size: 13, weight: .bold))
+                                        .foregroundColor(on ? .white : .primary.opacity(0.6))
+                                        .frame(maxWidth: .infinity)
+                                        .frame(height: 36)
+                                        .background(Circle().fill(on ? blue : blue.opacity(0.12)))
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
                 }
 
                 Section("Deadline") {
@@ -80,11 +105,16 @@ struct EditTaskView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         Haptics.success()
+                        // All 7 days or none selected = every day (nil).
+                        let days: [Int]? = frequency == .weekly && !selectedDays.isEmpty && selectedDays.count < 7
+                            ? selectedDays.sorted()
+                            : nil
                         onSave(
                             title,
                             frequency,
                             hasDeadline ? deadline : nil,
-                            reminderEnabled ? reminderTime : nil
+                            reminderEnabled ? reminderTime : nil,
+                            days
                         )
                         dismiss()
                     }

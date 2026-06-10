@@ -100,6 +100,9 @@ struct Activity: Codable, Identifiable {
     var parentId: UUID?
     var sortOrder: Int = 0
     var category: String?
+    /// ISO weekdays (1 = Monday ... 7 = Sunday) the activity is scheduled on.
+    /// nil/empty = every day. Matches Postgres extract(isodow).
+    var scheduleDays: [Int]?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -119,6 +122,7 @@ struct Activity: Codable, Identifiable {
         case parentId = "parent_id"
         case sortOrder = "sort_order"
         case category
+        case scheduleDays = "schedule_days"
     }
 
     var progressFraction: Double {
@@ -127,6 +131,23 @@ struct Activity: Codable, Identifiable {
     }
 
     var isFromParent: Bool { assignedBy != nil }
+
+    /// ISO weekday of a date: Monday = 1 ... Sunday = 7.
+    /// Calendar.weekday is Sunday = 1 ... Saturday = 7, hence the shift
+    /// (e.g. Calendar Mon=2 -> ISO 1, Calendar Sun=1 -> ISO 7).
+    static func isoWeekday(of date: Date, calendar: Calendar = .current) -> Int {
+        let w = calendar.component(.weekday, from: date)
+        return w == 1 ? 7 : w - 1
+    }
+
+    /// Whether this activity is scheduled on the given date.
+    /// Once-tasks are deadline-driven (the caller filters by deadline);
+    /// recurring tasks with no scheduleDays run every day.
+    func isScheduled(on date: Date, calendar: Calendar = .current) -> Bool {
+        guard frequency != .once else { return true }
+        guard let days = scheduleDays, !days.isEmpty else { return true }
+        return days.contains(Self.isoWeekday(of: date, calendar: calendar))
+    }
 }
 
 struct CreateActivityRequest: Codable {
@@ -145,6 +166,7 @@ struct CreateActivityRequest: Codable {
     var workspaceId: UUID?
     var parentId: UUID?
     var category: String? = nil
+    var scheduleDays: [Int]? = nil
 
     enum CodingKeys: String, CodingKey {
         case userId = "user_id"
@@ -157,5 +179,6 @@ struct CreateActivityRequest: Codable {
         case workspaceId = "workspace_id"
         case parentId = "parent_id"
         case category
+        case scheduleDays = "schedule_days"
     }
 }

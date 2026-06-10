@@ -68,7 +68,7 @@ struct HomeView: View {
     private var activeTasks: [Activity] {
         (vm.myActivities + vm.parentActivities)
             .filter { $0.status == .active }
-            .filter { !vm.todayDoneIds.contains($0.id) }
+            .filter { !vm.isHandledToday($0.id) }
     }
 
     private var todayTasks: [Activity] {
@@ -77,6 +77,8 @@ struct HomeView: View {
         return activeTasks.filter { a in
             guard a.parentId == nil else { return false }
             if a.type == .goal, activeTasks.contains(where: { $0.parentId == a.id }) { return true }
+            // Recurring tasks appear only on their scheduled weekdays.
+            guard a.isScheduled(on: Date()) else { return false }
             guard let d = a.deadline else { return true }
             return d <= endOfToday
         }
@@ -87,6 +89,8 @@ struct HomeView: View {
         let endOfToday = cal.date(bySettingHour: 23, minute: 59, second: 59, of: Date())!
         return activeTasks.filter { a in
             guard a.parentId == nil else { return false }
+            // Off-day recurring tasks are intentionally absent from Home entirely.
+            guard a.frequency == .once else { return false }
             guard let d = a.deadline else { return false }
             return d > endOfToday
         }
@@ -128,7 +132,7 @@ struct HomeView: View {
                             TaskCardView(
                                 task: task,
                                 subtasks: pendingSubtasks(of: task),
-                                isDone: { vm.todayDoneIds.contains($0.id) },
+                                isDone: { vm.isDoneToday($0.id) },
                                 onOpen: { detailActivity = task },
                                 onToggle: completeTask,
                                 onEdit: { editingActivity = $0 },
@@ -151,7 +155,7 @@ struct HomeView: View {
                                 TaskCardView(
                                     task: task,
                                     subtasks: pendingSubtasks(of: task),
-                                    isDone: { vm.todayDoneIds.contains($0.id) },
+                                    isDone: { vm.isDoneToday($0.id) },
                                     onOpen: { detailActivity = task },
                                     onToggle: completeTask,
                                     onEdit: { editingActivity = $0 },
@@ -252,8 +256,8 @@ struct HomeView: View {
         .sheet(isPresented: $showBySaying, onDismiss: reload) { BySayingView() }
         .sheet(isPresented: $showSettings) { SettingsView() }
         .sheet(item: $editingActivity) { activity in
-            EditTaskView(activity: activity) { title, frequency, deadline, reminderTime in
-                Task { await vm.updateActivity(activity, title: title, frequency: frequency, deadline: deadline, reminderTime: reminderTime) }
+            EditTaskView(activity: activity) { title, frequency, deadline, reminderTime, scheduleDays in
+                Task { await vm.updateActivity(activity, title: title, frequency: frequency, deadline: deadline, reminderTime: reminderTime, scheduleDays: scheduleDays) }
             }
         }
         .sheet(item: $taskToComplete, onDismiss: {

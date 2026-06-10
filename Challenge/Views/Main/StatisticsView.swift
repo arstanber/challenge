@@ -194,7 +194,15 @@ struct StatisticsView: View {
                 counts[day, default: 0] += 1
             }
             dayCounts = counts
-            (currentStreak, bestStreak) = computeStreaks(days: Set(counts.keys))
+            // Canonical streaks come from the server engine (same algorithm as
+            // the leaderboard); the local computation is the offline fallback.
+            await TaskEngine.shared.refreshStreaks()
+            if TaskEngine.shared.globalStreakBest > 0 || TaskEngine.shared.globalStreakCurrent > 0 {
+                currentStreak = TaskEngine.shared.globalStreakCurrent
+                bestStreak = TaskEngine.shared.globalStreakBest
+            } else {
+                (currentStreak, bestStreak) = computeStreaks(days: Set(counts.keys))
+            }
 
             // Feed the gamification engine (#2–#5)
             engine.refresh(with: GameStats(

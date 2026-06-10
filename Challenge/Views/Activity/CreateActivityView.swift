@@ -37,10 +37,32 @@ struct CreateActivityView: View {
                 }
 
                 Section("Schedule") {
+                    // .custom is deprecated -- weekly + day picker covers it.
                     Picker("Frequency", selection: $vm.frequency) {
-                        ForEach(ActivityFrequency.allCases) { freq in
+                        ForEach(ActivityFrequency.allCases.filter { $0 != .custom }) { freq in
                             Text(freq.displayName).tag(freq)
                         }
+                    }
+                    if vm.frequency == .weekly {
+                        HStack(spacing: 8) {
+                            ForEach(1...7, id: \.self) { day in
+                                let labels = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
+                                let on = vm.scheduleDays.contains(day)
+                                Button {
+                                    Haptics.selection()
+                                    if on { vm.scheduleDays.remove(day) } else { vm.scheduleDays.insert(day) }
+                                } label: {
+                                    Text(labels[day - 1])
+                                        .font(.system(size: 13, weight: .bold))
+                                        .foregroundColor(on ? .white : .primary.opacity(0.6))
+                                        .frame(maxWidth: .infinity)
+                                        .frame(height: 36)
+                                        .background(Circle().fill(on ? Color.accentColor : Color.accentColor.opacity(0.12)))
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.vertical, 4)
                     }
                     Toggle("Set deadline", isOn: $vm.hasDeadline)
                     if vm.hasDeadline {

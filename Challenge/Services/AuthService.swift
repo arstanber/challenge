@@ -9,6 +9,9 @@ import UIKit
 #if canImport(GoogleSignIn)
 import GoogleSignIn
 #endif
+import os.log
+
+private let authLogger = Logger(subsystem: "com.challenge", category: "AuthService")
 
 enum AuthError: LocalizedError {
     case invalidCredentials
@@ -68,6 +71,23 @@ final class AuthService {
             .value
         currentUser = user
         isAuthenticated = true
+        syncTimezone(userId: id)
+    }
+
+    /// Fire-and-forget upsert of the device timezone -- the server uses it for
+    /// streak day-bucketing and reminder scheduling (users.timezone).
+    func syncTimezone(userId: UUID) {
+        Task {
+            do {
+                try await supabase
+                    .from("users")
+                    .update(["timezone": TimeZone.current.identifier])
+                    .eq("id", value: userId.uuidString)
+                    .execute()
+            } catch {
+                authLogger.error("timezone sync failed: \(error)")
+            }
+        }
     }
 
     // MARK: - Auth Operations
@@ -104,6 +124,7 @@ final class AuthService {
                 .value
             currentUser = inserted
             isAuthenticated = true
+            syncTimezone(userId: inserted.id)
             AnalyticsService.shared.track(.signedUp, ["method": "email"])
         } catch let error as AuthError {
             throw error
@@ -142,6 +163,7 @@ final class AuthService {
                     .value
                 currentUser = inserted
                 isAuthenticated = true
+                syncTimezone(userId: inserted.id)
                 AnalyticsService.shared.track(.signedUp, ["method": "apple"])
             }
         } catch let error as AuthError {
@@ -179,6 +201,7 @@ final class AuthService {
                     .value
                 currentUser = inserted
                 isAuthenticated = true
+                syncTimezone(userId: inserted.id)
                 AnalyticsService.shared.track(.signedUp, ["method": "google"])
             }
         } catch let error as AuthError {

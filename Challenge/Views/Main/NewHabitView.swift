@@ -361,6 +361,10 @@ struct NewHabitView: View {
         let goal: Double? = goalOn ? Double(goalValue.filter(\.isNumber)) : nil
         let type: ActivityType = goalOn ? .goal : .habit
         let condition = photoDesc.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Picker indices are 0-based Monday-first; schedule_days is ISO 1=Mon..7=Sun.
+        let days: [Int]? = freq == .weekly && selectedDays.count < 7 && !selectedDays.isEmpty
+            ? selectedDays.sorted().map { $0 + 1 }
+            : nil
         Task {
             await vm.createActivity(
                 title: title.trimmingCharacters(in: .whitespaces),
@@ -368,7 +372,8 @@ struct NewHabitView: View {
                 frequency: freq,
                 goalTarget: goal,
                 reminderTime: reminderOn ? reminderTime : nil,
-                condition: condition.isEmpty ? nil : condition
+                condition: condition.isEmpty ? nil : condition,
+                scheduleDays: days
             )
             onCreated()
             dismiss()
