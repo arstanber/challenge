@@ -54,6 +54,12 @@ final class TaskEngine {
         serverTodayCount + optimisticDoneIds.subtracting(doneTodayIds).count
     }
 
+    /// Number of known activities not yet handled today -- used for the
+    /// morning reminder ("today's task list") notification copy.
+    var pendingTodayCount: Int {
+        max(0, knownActivityIds.count - handledTodayIds.subtracting(optimisticDoneIds).count - optimisticDoneIds.count)
+    }
+
     /// The one rule for "is this task completed today".
     func isDoneToday(_ id: UUID) -> Bool {
         doneTodayIds.contains(id) || optimisticDoneIds.contains(id)

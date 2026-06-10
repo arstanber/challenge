@@ -86,33 +86,13 @@ struct ProfileView: View {
                 }
 
                 Section("Подключения") {
+                    NavigationLink(destination: ConnectorsView()) {
+                        Label("Коннекторы", systemImage: "link")
+                            .foregroundStyle(Color(hex: "7C4DF0"))
+                    }
                     NavigationLink(destination: TelegramLinkView()) {
                         Label("Телеграм-бот", systemImage: "paperplane.fill")
                             .foregroundStyle(Color(hex: "29A9EA"))
-                    }
-                    ForEach(DataConnector.allCases) { connector in
-                        Button {
-                            Haptics.tap()
-                            Task {
-                                let svc = ConnectorService.shared
-                                if svc.isConnected(connector) {
-                                    await svc.disconnect(connector)
-                                } else {
-                                    try? await svc.connect(connector)
-                                }
-                            }
-                        } label: {
-                            HStack {
-                                Label(connector.displayName, systemImage: connector.icon)
-                                    .foregroundStyle(connector.tint)
-                                Spacer()
-                                if ConnectorService.shared.isConnected(connector) {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .foregroundStyle(.green)
-                                }
-                            }
-                        }
-                        .foregroundStyle(.primary)
                     }
                 }
 

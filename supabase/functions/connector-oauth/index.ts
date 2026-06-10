@@ -1,11 +1,14 @@
 // Edge Function: connector-oauth
-// Handles OAuth2 token exchange / refresh / data fetch for third-party fitness connectors.
+// Handles OAuth2 token exchange / refresh / data fetch for third-party connectors
+// (fitness: Strava, Whoop, Fitbit, Garmin, Google Fit; productivity: Google Calendar/Docs/
+// Drive, Gmail, Notion).
 // Client secrets live ONLY here (as function secrets); the app never sees them.
+// Google Calendar/Docs/Drive/Gmail use the public installed-app + PKCE flow (no secret).
 //
 // Actions (POST body): { action, provider, ... }
-//   exchange   { code, redirectUri }  → swap auth code for tokens, store them
-//   today      { metric }             → return today's value for that metric
-//   disconnect {}                     → delete stored tokens
+//   exchange   { code, redirectUri, codeVerifier? }  → swap auth code for tokens, store them
+//   today      { metric }                            → return today's value for that metric
+//   disconnect {}                                     → delete stored tokens
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { verifyAuth, CORS_HEADERS } from "../_shared/rateLimiter.ts";
@@ -14,10 +17,14 @@ interface ProviderCfg {
   tokenURL: string;
   clientId: string;
   clientSecret: string;
-  /** true = send credentials as HTTP Basic header (Fitbit, Whoop, Garmin); false = in body. */
+  /** true = send credentials as HTTP Basic header (Fitbit, Whoop, Garmin, Notion); false = in body. */
   basicAuth: boolean;
+  /** true = public client (Google installed-app + PKCE) -- no client_secret is sent. */
+  pkce?: boolean;
 }
 
+// All Google scopes (Calendar/Docs/Drive/Gmail) share one OAuth client -- the same
+// `GIDClientID` used for "Sign in with Google" -- via the installed-app + PKCE flow.
 function providerConfig(provider: string): ProviderCfg {
   const env = (k: string) => Deno.env.get(k) ?? "";
   switch (provider) {
@@ -31,6 +38,14 @@ function providerConfig(provider: string): ProviderCfg {
       return { tokenURL: "https://api.prod.whoop.com/oauth/oauth2/token", clientId: env("WHOOP_CLIENT_ID"), clientSecret: env("WHOOP_CLIENT_SECRET"), basicAuth: false };
     case "garmin":
       return { tokenURL: "https://diauth.garmin.com/di-oauth2-service/oauth/token", clientId: env("GARMIN_CLIENT_ID"), clientSecret: env("GARMIN_CLIENT_SECRET"), basicAuth: true };
+    case "notion":
+      return { tokenURL: "https://api.notion.com/v1/oauth/token", clientId: env("NOTION_CLIENT_ID"), clientSecret: env("NOTION_CLIENT_SECRET"), basicAuth: true };
+    case "google_calendar":
+    case "google_docs":
+    case "google_drive":
+    case "gmail":
+      // Public client (PKCE) -- the app's GIDClientID, no secret on either side.
+      return { tokenURL: "https://oauth2.googleapis.com/token", clientId: env("GOOGLE_CLIENT_ID"), clientSecret: "", basicAuth: false, pkce: true };
     default:
       throw new Error(`unknown provider: ${provider}`);
   }
@@ -50,7 +65,10 @@ function json(body: unknown, status = 200) {
 async function tokenRequest(provider: string, params: URLSearchParams): Promise<any> {
   const cfg = providerConfig(provider);
   const headers: Record<string, string> = { "Content-Type": "application/x-www-form-urlencoded" };
-  if (cfg.basicAuth) {
+  if (cfg.pkce) {
+    // Public client: client_id only, no secret. code_verifier (set by the caller) covers it.
+    params.set("client_id", cfg.clientId);
+  } else if (cfg.basicAuth) {
     headers["Authorization"] = "Basic " + btoa(`${cfg.clientId}:${cfg.clientSecret}`);
   } else {
     params.set("client_id", cfg.clientId);
@@ -62,12 +80,14 @@ async function tokenRequest(provider: string, params: URLSearchParams): Promise<
   return JSON.parse(text);
 }
 
-function exchangeCode(provider: string, code: string, redirectUri: string) {
-  return tokenRequest(provider, new URLSearchParams({
+function exchangeCode(provider: string, code: string, redirectUri: string, codeVerifier?: string) {
+  const params = new URLSearchParams({
     grant_type: "authorization_code",
     code,
     redirect_uri: redirectUri,
-  }));
+  });
+  if (codeVerifier) params.set("code_verifier", codeVerifier);
+  return tokenRequest(provider, params);
 }
 
 function refresh(provider: string, refreshToken: string) {
@@ -179,6 +199,46 @@ async function fetchToday(provider: string, metric: string, token: string): Prom
     case "garmin":
       // Garmin Health API is partner-gated; implement once your program is approved.
       return 0;
+    case "google_calendar": {
+      const timeMin = `${todayStr}T00:00:00Z`;
+      const timeMax = new Date(startEpoch * 1000 + 86_400_000).toISOString();
+      const url = `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}&singleEvents=true`;
+      const res = await fetch(url, { headers: bearer });
+      const d = await res.json();
+      return Array.isArray(d.items) ? d.items.length : 0;
+    }
+    case "google_docs": {
+      const q = encodeURIComponent(`mimeType = 'application/vnd.google-apps.document' and modifiedTime >= '${todayStr}T00:00:00'`);
+      const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)`, { headers: bearer });
+      const d = await res.json();
+      return Array.isArray(d.files) ? d.files.length : 0;
+    }
+    case "google_drive": {
+      const q = encodeURIComponent(`modifiedTime >= '${todayStr}T00:00:00' and trashed = false`);
+      const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)`, { headers: bearer });
+      const d = await res.json();
+      return Array.isArray(d.files) ? d.files.length : 0;
+    }
+    case "gmail": {
+      const res = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent("newer_than:1d")}`, { headers: bearer });
+      const d = await res.json();
+      return d.resultSizeEstimate ?? (Array.isArray(d.messages) ? d.messages.length : 0);
+    }
+    case "notion": {
+      const res = await fetch("https://api.notion.com/v1/search", {
+        method: "POST",
+        headers: { ...bearer, "Content-Type": "application/json", "Notion-Version": "2022-06-28" },
+        body: JSON.stringify({
+          sort: { direction: "descending", timestamp: "last_edited_time" },
+          page_size: 100,
+          filter: { property: "object", value: "page" },
+        }),
+      });
+      const d = await res.json();
+      const results = Array.isArray(d.results) ? d.results : [];
+      // deno-lint-ignore no-explicit-any
+      return results.filter((p: any) => typeof p.last_edited_time === "string" && p.last_edited_time.slice(0, 10) === todayStr).length;
+    }
     default:
       return 0;
   }
@@ -197,7 +257,7 @@ serve(async (req) => {
 
     switch (action) {
       case "exchange": {
-        const tok = await exchangeCode(provider, body.code, body.redirectUri);
+        const tok = await exchangeCode(provider, body.code, body.redirectUri, body.codeVerifier);
         await saveToken(userId, provider, tok);
         return json({ ok: true });
       }

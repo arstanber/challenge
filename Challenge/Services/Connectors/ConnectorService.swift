@@ -4,8 +4,12 @@ import Observation
 /// Facade over every data source. Views talk only to this.
 ///
 /// - Apple Health / Fitness → `HealthKitConnector` (on-device, fully functional).
-/// - Strava / Google Fit / Garmin / Whoop / Fitbit → `OAuthConnector` (OAuth2 via the
-///   `connector-oauth` Supabase Edge Function, which holds the client secrets and tokens).
+/// - Apple Calendar → `CalendarConnector` (EventKit, on-device).
+/// - Apple "smart alarm" → `ClockConnector` (local notifications).
+/// - Telegram → wraps `TelegramService`'s existing link state; no separate connect flow.
+/// - Strava / Whoop / Notion / Google Calendar/Docs/Drive/Gmail → `OAuthConnector` (OAuth2 via
+///   the `connector-oauth` Supabase Edge Function, which holds the client secrets and tokens).
+@MainActor
 @Observable
 final class ConnectorService {
     static let shared = ConnectorService()
@@ -15,30 +19,43 @@ final class ConnectorService {
 
     private let health = HealthKitConnector()
     private let oauth = OAuthConnector()
+    private let calendar = CalendarConnector()
+    private let clock = ClockConnector()
     private let defaultsKey = "connected_connectors_v1"
 
     private init() { load() }
 
-    func isConnected(_ c: DataConnector) -> Bool { connected.contains(c) }
+    func isConnected(_ c: DataConnector) -> Bool {
+        if c == .telegram { return TelegramService.shared.isLinked }
+        return connected.contains(c)
+    }
 
-    /// Connect a source. Throws `ConnectorError` (incl. user-cancelled / not-configured).
+    /// Connect a source. Throws `ConnectorError` (incl. user-cancelled / not-configured /
+    /// `.requiresMax` when the user's plan doesn't unlock this connector).
     func connect(_ c: DataConnector) async throws {
+        let plan = AuthService.shared.currentUser?.plan ?? .free
+        guard c.isUnlocked(for: plan) else { throw ConnectorError.requiresMax }
+
         switch c.kind {
-        case .health: try await health.requestAuthorization()
-        case .oauth:  try await oauth.connect(c)
+        case .health:   try await health.requestAuthorization()
+        case .oauth:    try await oauth.connect(c)
+        case .calendar: try await calendar.requestAuthorization()
+        case .clock:    try await clock.enable()
+        case .telegram: return // handled via TelegramLinkView; nothing to do here.
         }
-        await MainActor.run {
-            connected.insert(c)
-            save()
-        }
+        connected.insert(c)
+        save()
     }
 
     func disconnect(_ c: DataConnector) async {
-        if c.kind == .oauth { await oauth.disconnect(c) }
-        await MainActor.run {
-            connected.remove(c)
-            save()
+        switch c.kind {
+        case .oauth:    await oauth.disconnect(c)
+        case .clock:    clock.disable()
+        case .telegram: return // handled via TelegramLinkView.
+        case .health, .calendar: break
         }
+        connected.remove(c)
+        save()
     }
 
     /// Best available "today" value for the metric a task tracks, across connected sources.
@@ -52,6 +69,12 @@ final class ConnectorService {
             if let v = try? await oauth.todayValue(provider: c, metric: metric), v > 0 { return v }
         }
         return nil
+    }
+
+    /// Number of events on the user's Apple calendars today, if connected.
+    func todayCalendarEventsCount() async -> Int? {
+        guard connected.contains(.appleCalendar) else { return nil }
+        return await calendar.todayEventsCount()
     }
 
     // MARK: - Persistence

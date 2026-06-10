@@ -42,6 +42,7 @@ struct SettingsView: View {
     @State private var showHallOfFame = false
     @State private var showSignOut = false
     @State private var showTelegramLink = false
+    @State private var showConnectors = false
 
     private let blue = Color(hex: "0A84FF")
 
@@ -77,6 +78,9 @@ struct SettingsView: View {
         }
         .sheet(isPresented: $showTelegramLink) {
             NavigationStack { TelegramLinkView() }
+        }
+        .sheet(isPresented: $showConnectors) {
+            NavigationStack { ConnectorsView() }
         }
         .fullScreenCover(isPresented: $showHallOfFame) {
             ZStack(alignment: .topTrailing) {
@@ -244,13 +248,9 @@ struct SettingsView: View {
                 Haptics.tap(); showTelegramLink = true
             }
             SettingsDivider()
-            ConnectorSettingsRow(connector: .appleHealth)
-            SettingsDivider()
-            ConnectorSettingsRow(connector: .appleFitness)
-            SettingsDivider()
-            ConnectorSettingsRow(connector: .strava)
-            SettingsDivider()
-            ConnectorSettingsRow(connector: .whoop)
+            SettingsRow(icon: "antenna.radiowaves.left.and.right", title: "Коннекторы", trailing: .chevron) {
+                Haptics.tap(); showConnectors = true
+            }
         }
     }
 
@@ -527,36 +527,6 @@ private struct RowIcon: View {
             .font(.system(size: 20, weight: .regular))
             .foregroundStyle(destructive ? Color.red : .secondary)
             .frame(width: 26, alignment: .center)
-    }
-}
-
-// MARK: - Connector row for Settings
-
-private struct ConnectorSettingsRow: View {
-    let connector: DataConnector
-    @State private var busy = false
-
-    var body: some View {
-        let connected = ConnectorService.shared.isConnected(connector)
-        SettingsRow(
-            icon: connector.icon,
-            title: connector.displayName,
-            value: connected ? "Подключено" : nil,
-            trailing: connected ? .none : .chevron
-        ) {
-            guard !busy else { return }
-            Haptics.tap()
-            busy = true
-            Task {
-                let svc = ConnectorService.shared
-                if connected {
-                    await svc.disconnect(connector)
-                } else {
-                    try? await svc.connect(connector)
-                }
-                busy = false
-            }
-        }
     }
 }
 

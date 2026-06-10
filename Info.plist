@@ -39,6 +39,8 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>GIDClientID</key>
 	<string>403964246968-l9ibioo4q4hr42t83b44rt247hslbnsn.apps.googleusercontent.com</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Challenge читает календарь, чтобы показывать события дня рядом с задачами.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Challenge needs camera access to take photos for your activity reports.</string>
 	<key>NSHealthShareUsageDescription</key>

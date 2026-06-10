@@ -30,6 +30,7 @@ final class HealthKitConnector {
         case .activeEnergy:    type = HKQuantityType(.activeEnergyBurned);     unit = .kilocalorie()
         case .exerciseMinutes: type = HKQuantityType(.appleExerciseTime);      unit = .minute()
         case .distance:        type = HKQuantityType(.distanceWalkingRunning); unit = .meter()
+        case .itemsToday:      throw ConnectorError.unavailable // not a HealthKit metric
         }
 
         let start = Calendar.current.startOfDay(for: Date())
