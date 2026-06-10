@@ -1,0 +1,29 @@
+# macOS
+.DS_Store
+
+# Secrets -- never commit keys or OAuth credentials
+*.p8
+*.pem
+*.mobileprovision
+client_secret*.json
+client_*.plist
+GoogleService-Info.plist
+.env
+.env.*
+
+# Xcode user state
+xcuserdata/
+*.xcuserstate
+DerivedData/
+build/
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# Supabase local
+supabase/.temp/
+supabase/.branches/
+
+# Claude Code local settings
+.claude/settings.local.json
