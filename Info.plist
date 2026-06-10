@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>The Challenge</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.403964246968-l9ibioo4q4hr42t83b44rt247hslbnsn</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>qazaqpyn.Challenge.oauth</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>challenge</string>
+			</array>
+		</dict>
+	</array>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>GIDClientID</key>
+	<string>403964246968-l9ibioo4q4hr42t83b44rt247hslbnsn.apps.googleusercontent.com</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Challenge needs camera access to take photos for your activity reports.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Challenge reads steps, energy, exercise minutes and distance from Apple Health to automatically track your goals.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Challenge uses your location in the background to remind you about activities when you arrive at a place, like the gym.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Challenge uses your location to remind you about activities when you arrive at a place, like the gym.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Challenge uses the microphone so you can add tasks by speaking.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>Challenge uses motion sensors for interactive photo physics.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Challenge needs permission to save photos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Challenge needs photo library access to select photos for your activity reports.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Challenge transcribes your voice to turn what you say into tasks.</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
+	<key>NSSupportsLiveActivitiesFrequentUpdates</key>
+	<true/>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Manrope-Regular.ttf</string>
+		<string>Manrope-Medium.ttf</string>
+		<string>Manrope-SemiBold.ttf</string>
+		<string>Manrope-Bold.ttf</string>
+		<string>Manrope-ExtraBold.ttf</string>
+	</array>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
+		<dict/>
+	</dict>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+	<key>UILaunchScreen</key>
+	<dict/>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+</dict>
+</plist>

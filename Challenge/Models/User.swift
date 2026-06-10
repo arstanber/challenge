@@ -1,7 +1,7 @@
 import Foundation
 
 enum UserPlan: String, Codable {
-    case free, premium
+    case free, premium, family, max
 }
 
 enum UserRole: String, Codable {
@@ -26,7 +26,7 @@ struct AppUser: Codable, Identifiable {
     }
 
     var isParent: Bool { role == .parent }
-    var isPremium: Bool { plan == .premium }
+    var isPremium: Bool { plan != .free }
 }
 
 struct AuthSession: Codable {

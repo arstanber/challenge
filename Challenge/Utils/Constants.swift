@@ -17,4 +17,23 @@ enum Constants {
     enum Storage {
         static let reportsBucket = "reports"
     }
+
+    enum Telegram {
+        /// Username of the @BotFather bot that backs the in-app integration (no leading @).
+        static let botUsername = "thechallengeapp_bot"
+    }
+
+    enum Store {
+        /// Must match the product IDs you create in App Store Connect.
+        static let monthlyProductID       = "com.challenge.premium.monthly"
+        static let familyProductID        = "com.challenge.premium.family"   // #18
+    }
+
+    enum Aptabase {
+        // Replace with your Aptabase App Key from app.aptabase.com → Settings → App Key.
+        // Format: "A-US-XXXXXXXXXX", "A-EU-XXXXXXXXXX", or "A-DEV-XXXXXXXXXX".
+        static let appKey = "A-EU-7608056201"
+    }
+
+
 }

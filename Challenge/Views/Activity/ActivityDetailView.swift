@@ -3,6 +3,13 @@ import SwiftUI
 struct ActivityDetailView: View {
     @State private var vm: ActivityDetailViewModel
     @State private var showSubmitReport = false
+    // AI features (#11, #12)
+    @State private var showFailureAnalysis = false
+    @State private var showGoalSplit = false
+    // Location reminder (#10)
+    @State private var showLocationReminder = false
+    // Habit calendar
+    @State private var showHabitCalendar = false
 
     init(activity: Activity, onReportSubmitted: (() -> Void)? = nil) {
         let viewModel = ActivityDetailViewModel(activity: activity)
@@ -28,11 +35,25 @@ struct ActivityDetailView: View {
         .toolbar {
             if vm.activity.status == .active {
                 ToolbarItem(placement: .primaryAction) {
-                    Button("Submit report") {
-                        showSubmitReport = true
+                    Button("Submit report") { Haptics.tap(); showSubmitReport = true }
+                        .fontWeight(.semibold).foregroundStyle(.orange)
+                }
+            }
+            // AI toolbar menu (#11 #12)
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    if vm.activity.type.hasStreak {
+                        Button("Calendar & streak 🔥") { Haptics.tap(); showHabitCalendar = true }
                     }
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.orange)
+                    if vm.activity.status == .failed {
+                        Button("Why did I fail? 🔍") { Haptics.tap(); showFailureAnalysis = true }  // #11
+                    }
+                    if vm.activity.type == .goal {
+                        Button("Break this goal down 🤖") { Haptics.tap(); showGoalSplit = true }   // #12
+                    }
+                    Button("Location reminder 📍") { Haptics.tap(); showLocationReminder = true }   // #10
+                } label: {
+                    Image(systemName: "ellipsis.circle")
                 }
             }
         }
@@ -41,12 +62,37 @@ struct ActivityDetailView: View {
         }) {
             SubmitReportView(activity: vm.activity, onSubmit: { showSubmitReport = false }, vm: vm)
         }
+        // AI: failure analysis (#11)
+        .sheet(isPresented: $showFailureAnalysis) {
+            FailureAnalysisSheet(activity: vm.activity)
+        }
+        // AI: goal split (#12)
+        .sheet(isPresented: $showGoalSplit) {
+            GoalSplitSheet(activity: vm.activity) { subtasks in
+                Task {
+                    await vm.createSubtasks(subtasks)
+                    await vm.loadReports()
+                }
+            }
+        }
+        // Location reminder (#10)
+        .sheet(isPresented: $showLocationReminder) {
+            LocationReminderPicker(activity: vm.activity)
+        }
+        // Habit calendar + streak
+        .fullScreenCover(isPresented: $showHabitCalendar, onDismiss: {
+            Task { await vm.loadReports() }
+        }) {
+            HabitCalendarView(activity: vm.activity) {
+                Task { await vm.loadReports() }
+            }
+        }
         .task { await vm.loadReports() }
         .alert("Error", isPresented: Binding(
             get: { vm.errorMessage != nil },
             set: { if !$0 { vm.errorMessage = nil } }
         )) {
-            Button("OK") { vm.errorMessage = nil }
+            Button("OK") { Haptics.tap(); vm.errorMessage = nil }
         } message: {
             Text(vm.errorMessage ?? "")
         }
@@ -124,7 +170,7 @@ struct ActivityDetailView: View {
                             .foregroundStyle(.secondary)
                     }
                     ProgressView(value: vm.activity.progressFraction)
-                        .tint(.blue)
+                        .tint(Color(hex: "0048E2"))
                         .scaleEffect(x: 1, y: 1.5)
                 }
                 .padding(14)
@@ -155,7 +201,7 @@ struct ActivityDetailView: View {
 
     private var typeColor: Color {
         switch vm.activity.type {
-        case .challenge: return .blue
+        case .challenge: return Color(hex: "0048E2")
         case .goal: return .green
         case .task: return .orange
         case .habit: return .purple
@@ -239,7 +285,7 @@ struct ReportRowView: View {
         case .approved:      return .green
         case .rejected:      return .red
         case .pending:       return .orange
-        case .notApplicable: return .blue
+        case .notApplicable: return Color(hex: "0048E2")
         case .excused:       return .purple
         }
     }

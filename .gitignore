@@ -27,3 +27,6 @@ supabase/.branches/
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Separate git repo (arstanber/the-challenge-site)
+website/

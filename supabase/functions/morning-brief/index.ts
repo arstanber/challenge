@@ -1,0 +1,60 @@
+// Edge Function: morning-brief
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { checkRateLimit, CORS_HEADERS } from "../_shared/rateLimiter.ts";
+
+const GEMINI_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
+const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS_HEADERS });
+
+  const rateResult = await checkRateLimit(req, "coach-group");
+  if (rateResult instanceof Response) return rateResult;
+
+  try {
+    const { streakCurrent, todayTasks } = await req.json();
+
+    const taskList = (todayTasks as string[]).slice(0, 5).join(", ") || "no tasks set yet";
+    const streakText = streakCurrent > 0 ? `They're on a ${streakCurrent}-day streak.` : "They don't have a streak yet.";
+
+    const prompt = `You are an enthusiastic productivity coach for a habit-tracking app called "Challenge".
+Write a short morning brief for a user. ${streakText}
+Today's activities: ${taskList}
+
+Respond ONLY with valid JSON in this exact format (no markdown):
+{
+  "greeting": "one upbeat sentence acknowledging their streak or motivating them to start one (max 120 chars)",
+  "topTasks": ["task1", "task2", "task3"],
+  "motivationTip": "one actionable tip for today (max 100 chars)"
+}`;
+
+    const res = await fetch(`${GEMINI_URL}?key=${GEMINI_KEY}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.7, maxOutputTokens: 300 },
+      }),
+    });
+
+    if (!res.ok) throw new Error(`Gemini error: ${res.status}`);
+    const data = await res.json();
+    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
+    const cleaned = raw.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
+    const parsed = JSON.parse(cleaned);
+
+    parsed.topTasks = (parsed.topTasks as string[])
+      .filter((t: string) => todayTasks.includes(t))
+      .slice(0, 3);
+    if (parsed.topTasks.length === 0) parsed.topTasks = (todayTasks as string[]).slice(0, 3);
+
+    return new Response(JSON.stringify({ ...parsed, remaining: rateResult.remaining }), {
+      headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(
+      JSON.stringify({ greeting: "Let's make today count!", topTasks: [], motivationTip: "Start with your hardest task first.", error: String(e) }),
+      { headers: { ...CORS_HEADERS, "Content-Type": "application/json" } }
+    );
+  }
+});

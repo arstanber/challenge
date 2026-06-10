@@ -20,6 +20,9 @@ final class CreateActivityViewModel {
     }()
     var goalTarget: String = ""
     var assignToChildId: UUID?
+    var workspaceId: UUID?
+    var parentId: UUID?
+    var category: String?
 
     var isLoading = false
     var errorMessage: String?
@@ -52,7 +55,10 @@ final class CreateActivityViewModel {
             frequency: frequency,
             deadline: hasDeadline ? deadline : nil,
             reminderTime: reminderEnabled ? reminderTime : nil,
-            goalTarget: showGoalTarget ? Double(goalTarget) : nil
+            goalTarget: showGoalTarget ? Double(goalTarget) : nil,
+            workspaceId: workspaceId,
+            parentId: parentId,
+            category: category
         )
 
         do {
@@ -66,6 +72,10 @@ final class CreateActivityViewModel {
             if reminderEnabled {
                 notifications.scheduleLocalReminder(for: created)
             }
+            AnalyticsService.shared.track(.activityCreated, [
+                "type": type.rawValue,
+                "frequency": frequency.rawValue
+            ])
             didCreate = true
         } catch {
             errorMessage = error.localizedDescription

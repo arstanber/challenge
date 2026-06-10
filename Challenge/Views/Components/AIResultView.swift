@@ -30,7 +30,7 @@ struct AIResultView: View {
         case .approved:      return .green
         case .rejected:      return .red
         case .pending:       return .orange
-        case .notApplicable: return .blue
+        case .notApplicable: return Color(hex: "0048E2")
         case .excused:       return .purple
         }
     }

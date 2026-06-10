@@ -71,7 +71,7 @@ final class ActivityDetailViewModel {
                 photoURL: photoURL,
                 comment: comment.isEmpty ? nil : comment
             )
-            var report: Report = try await supabase
+            let report: Report = try await supabase
                 .from("reports")
                 .insert(req)
                 .select()
@@ -80,8 +80,12 @@ final class ActivityDetailViewModel {
                 .value
             reports.insert(report, at: 0)
 
-            // 3. AI verification
-            if activity.type.hasAIVerification, let condition = activity.condition {
+            // 3. AI verification — runs for EVERY task now.
+            //    Verifies against the photo description (condition) if set, otherwise the title.
+            let trimmedCondition = activity.condition?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let condition = trimmedCondition.isEmpty ? activity.title : trimmedCondition
+
+            do {
                 let aiResponse = try await aiService.verify(
                     reportId:   report.id,
                     activityId: activity.id,
@@ -100,10 +104,9 @@ final class ActivityDetailViewModel {
                     resultEnum = .rejected
                 }
 
-                let resultStr = resultEnum.rawValue
                 try await supabase
                     .from("reports")
-                    .update(["ai_result": resultStr, "ai_explanation": aiResponse.explanation])
+                    .update(["ai_result": resultEnum.rawValue, "ai_explanation": aiResponse.explanation])
                     .eq("id", value: report.id.uuidString)
                     .execute()
 
@@ -117,6 +120,15 @@ final class ActivityDetailViewModel {
 
                 switch resultEnum {
                 case .approved:
+                    AnalyticsService.shared.track(.verificationSucceeded, ["activity_type": activity.type.rawValue])
+                case .excused:
+                    AnalyticsService.shared.track(.excuseUsed, ["activity_type": activity.type.rawValue])
+                default:
+                    AnalyticsService.shared.track(.verificationFailed, ["activity_type": activity.type.rawValue])
+                }
+
+                switch resultEnum {
+                case .approved:
                     if activity.frequency == .once { try await markCompleted() }
                     onReportSubmitted?()
                 case .excused:
@@ -126,8 +138,9 @@ final class ActivityDetailViewModel {
                     // Rejected — nothing
                     break
                 }
-            } else {
-                // No AI needed — always counts
+            } catch {
+                // Verification unavailable (offline / monthly limit reached) — don't hard-block:
+                // accept the photo so the user can still complete the task.
                 lastAIResult = .notApplicable
                 if activity.frequency == .once { try await markCompleted() }
                 onReportSubmitted?()
@@ -203,6 +216,115 @@ final class ActivityDetailViewModel {
             onReportSubmitted?()
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    // MARK: - Calendar / streak helpers (habit detail)
+
+    private let cal = Calendar.current
+
+    /// Distinct days (start-of-day) on which this habit was completed.
+    var completedDays: Set<Date> {
+        Set(reports.map { cal.startOfDay(for: $0.createdAt) })
+    }
+
+    var isDoneToday: Bool {
+        completedDays.contains(cal.startOfDay(for: Date()))
+    }
+
+    var totalDaysDone: Int { completedDays.count }
+
+    /// Current consecutive-day streak ending today or yesterday.
+    var currentStreak: Int {
+        let days = completedDays
+        guard !days.isEmpty else { return 0 }
+        let today = cal.startOfDay(for: Date())
+        let yesterday = cal.date(byAdding: .day, value: -1, to: today)!
+        guard days.contains(today) || days.contains(yesterday) else { return 0 }
+        var streak = 0
+        var cursor = days.contains(today) ? today : yesterday
+        while days.contains(cursor) {
+            streak += 1
+            cursor = cal.date(byAdding: .day, value: -1, to: cursor)!
+        }
+        return streak
+    }
+
+    /// Best historical consecutive-day streak.
+    var bestStreak: Int {
+        let sorted = completedDays.sorted()
+        guard !sorted.isEmpty else { return 0 }
+        var best = 1, temp = 1
+        for i in 1..<sorted.count {
+            let diff = cal.dateComponents([.day], from: sorted[i-1], to: sorted[i]).day ?? 0
+            if diff == 1 { temp += 1; best = max(best, temp) } else { temp = 1 }
+        }
+        return best
+    }
+
+    /// Toggle today's completion: check off if not done, undo if already done.
+    func toggleToday() async {
+        if isDoneToday {
+            await undoToday()
+        } else {
+            await submitTaskReport()
+        }
+    }
+
+    /// Remove today's report(s) for this activity (undo).
+    func undoToday() async {
+        let start = cal.startOfDay(for: Date())
+        let iso = ISO8601DateFormatter()
+        do {
+            try await supabase
+                .from("reports")
+                .delete()
+                .eq("activity_id", value: activity.id.uuidString)
+                .gte("created_at", value: iso.string(from: start))
+                .execute()
+            reports.removeAll { cal.isDate($0.createdAt, inSameDayAs: start) }
+            onReportSubmitted?()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    // MARK: - Subtask creation (GoalSplitSheet #12)
+
+    func createSubtasks(_ subtasks: [SplitTask]) async {
+        guard let user = AuthService.shared.currentUser else { return }
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+
+        for sub in subtasks {
+            let deadline: Date? = sub.estimatedDays.flatMap {
+                cal.date(byAdding: .day, value: $0, to: today)
+            }
+            let req = CreateActivityRequest(
+                userId: user.id,
+                assignedBy: nil,
+                title: sub.title,
+                description: "",
+                type: .task,
+                condition: nil,
+                frequency: .once,
+                deadline: deadline,
+                reminderTime: nil,
+                goalTarget: nil,
+                planId: nil,
+                planTitle: nil,
+                workspaceId: activity.workspaceId,
+                parentId: activity.id
+            )
+            do {
+                try await supabase
+                    .from("activities")
+                    .insert(req)
+                    .execute()
+            } catch {
+                errorMessage = error.localizedDescription
+                return
+            }
         }
     }
 

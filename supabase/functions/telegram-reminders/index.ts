@@ -1,0 +1,93 @@
+// Edge Function: telegram-reminders
+// Scheduled (via pg_cron + pg_net, see migration 20260608c_telegram_reminders_cron.sql)
+// to run once a day. Sends every linked Telegram user a short digest of the
+// active tasks they haven't logged a report for yet today — nudging them
+// before they lose their streak.
+//
+// Internal/service-only: invoked by pg_cron with no user-facing auth, same
+// pattern as telegram-notify (verify_jwt = false, service_role DB access only).
+
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN") ?? "";
+const TG_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
+
+const admin = () =>
+  createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+function sendMessage(chatId: number, text: string) {
+  return fetch(`${TG_API}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML" }),
+  });
+}
+
+function escapeHtml(s: string) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+interface ActivityRow {
+  id: string;
+  title: string;
+  type: string;
+  streak_current: number;
+}
+
+serve(async (req) => {
+  if (req.method !== "POST") return new Response("ok", { status: 200 });
+
+  const db = admin();
+  const startOfDay = new Date();
+  startOfDay.setUTCHours(0, 0, 0, 0);
+
+  const { data: links } = await db.from("telegram_links").select("user_id, chat_id");
+  let sent = 0;
+
+  for (const link of (links ?? []) as { user_id: string; chat_id: number }[]) {
+    try {
+      const { data: activities } = await db
+        .from("activities")
+        .select("id, title, type, streak_current")
+        .eq("user_id", link.user_id)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      const list = (activities ?? []) as ActivityRow[];
+      if (list.length === 0) continue;
+
+      const ids = list.map((a) => a.id);
+      const { data: doneToday } = await db
+        .from("reports")
+        .select("activity_id")
+        .in("activity_id", ids)
+        .gte("created_at", startOfDay.toISOString());
+
+      const doneIds = new Set((doneToday ?? []).map((r: { activity_id: string }) => r.activity_id));
+      const pending = list.filter((a) => !doneIds.has(a.id));
+      if (pending.length === 0) continue;
+
+      const lines = pending.slice(0, 8).map((a) => {
+        const streak = a.streak_current > 0 ? ` 🔥${a.streak_current}` : "";
+        return `• ${escapeHtml(a.title)}${streak}`;
+      });
+
+      await sendMessage(
+        link.chat_id,
+        "<b>⏰ Don't forget today</b>\n" +
+          `${lines.join("\n")}\n\n` +
+          "Send a photo or message here to log it, or open the app.",
+      );
+      sent++;
+    } catch (err) {
+      console.error(`reminder failed for user ${link.user_id}:`, err);
+    }
+  }
+
+  return new Response(JSON.stringify({ sent }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
+});

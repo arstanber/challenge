@@ -24,11 +24,12 @@ final class AuthViewModel {
         guard isValid else { return }
         isLoading = true
         errorMessage = nil
+        let normalizedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         do {
             if isSignUp {
-                try await authService.signUp(email: email, password: password)
+                try await authService.signUp(email: normalizedEmail, password: password)
             } else {
-                try await authService.signIn(email: email, password: password)
+                try await authService.signIn(email: normalizedEmail, password: password)
             }
         } catch {
             errorMessage = error.localizedDescription
@@ -36,21 +37,34 @@ final class AuthViewModel {
         isLoading = false
     }
 
-    func handleAppleSignIn(_ result: Result<ASAuthorization, Error>) async {
-        switch result {
-        case .success(let auth):
-            guard let credential = auth.credential as? ASAuthorizationAppleIDCredential else { return }
-            isLoading = true
-            do {
-                try await authService.signInWithApple(credential: credential)
-            } catch {
-                errorMessage = error.localizedDescription
-            }
-            isLoading = false
-        case .failure(let error):
+    func signInWithApple() async {
+        isLoading = true
+        errorMessage = nil
+        do {
+            let result = try await AppleSignInCoordinator.shared.signIn()
+            try await authService.signInWithApple(credential: result.credential, nonce: result.nonce)
+        } catch {
+            // Ignore user cancellation.
             if (error as? ASAuthorizationError)?.code != .canceled {
                 errorMessage = error.localizedDescription
             }
         }
+        isLoading = false
+    }
+
+    func handleGoogleSignIn() async {
+        isLoading = true
+        errorMessage = nil
+        do {
+            try await authService.signInWithGoogle()
+        } catch {
+            // Ignore user-initiated cancellation (GIDSignInError.canceled).
+            let nsError = error as NSError
+            let isCanceled = nsError.domain == "com.google.GIDSignIn" && nsError.code == -5
+            if !isCanceled {
+                errorMessage = error.localizedDescription
+            }
+        }
+        isLoading = false
     }
 }

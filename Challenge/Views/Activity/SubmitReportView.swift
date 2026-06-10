@@ -39,7 +39,7 @@ struct SubmitReportView: View {
             .toolbar {
                 if !showResult {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel") { dismiss() }
+                        Button("Cancel") { Haptics.tap(); dismiss() }
                     }
                 }
             }
@@ -85,7 +85,7 @@ struct SubmitReportView: View {
                         .resizable().scaledToFill()
                         .frame(maxWidth: .infinity).frame(height: 260)
                         .clipShape(RoundedRectangle(cornerRadius: 16))
-                    Button { capturedImage = nil } label: {
+                    Button { Haptics.tap(); capturedImage = nil } label: {
                         Image(systemName: "xmark.circle.fill")
                             .font(.title2).foregroundStyle(.white)
                             .shadow(radius: 4).padding(10)
@@ -96,16 +96,16 @@ struct SubmitReportView: View {
                     VStack(spacing: 12) {
                         Image(systemName: "camera.fill")
                             .font(.system(size: 44))
-                            .foregroundStyle(.blue)
+                            .foregroundStyle(Color(hex: "0048E2"))
                         Text("Take a photo")
-                            .font(.headline).foregroundStyle(.blue)
+                            .font(.headline).foregroundStyle(Color(hex: "0048E2"))
                         Text("Tap to open camera")
                             .font(.caption).foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity).frame(height: 200)
                     .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 16))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.haptic)
             }
 
             if let condition = activity.condition {
@@ -135,7 +135,7 @@ struct SubmitReportView: View {
                 if let target = activity.goalTarget {
                     Text(String(format: "Current: %.0f / %.0f", activity.goalProgress, target))
                         .font(.subheadline).foregroundStyle(.secondary)
-                    ProgressView(value: activity.progressFraction).tint(.blue)
+                    ProgressView(value: activity.progressFraction).tint(Color(hex: "0048E2"))
                 }
             }
             TextField("Add progress value (e.g. 5 for 5 km)", text: $progressValue)
@@ -164,6 +164,7 @@ struct SubmitReportView: View {
         VStack(spacing: 10) {
             // Primary submit button
             Button {
+                Haptics.tap()
                 Task { await handleSubmit(isExcuse: false) }
             } label: {
                 Group {
@@ -204,7 +205,7 @@ struct SubmitReportView: View {
                     .foregroundStyle(.purple)
                     .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.purple.opacity(0.4), lineWidth: 1))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.haptic)
                 .disabled(vm.isSubmittingReport)
             }
 
@@ -297,12 +298,12 @@ private struct AIVerificationResultScreen: View {
             // Contextual tip
             if result == .rejected {
                 HStack(spacing: 8) {
-                    Image(systemName: "info.circle").foregroundStyle(.blue)
+                    Image(systemName: "info.circle").foregroundStyle(Color(hex: "0048E2"))
                     Text("If you had a valid reason, next time tap \"Submit as excuse\"")
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 .padding(12)
-                .background(.blue.opacity(0.07), in: RoundedRectangle(cornerRadius: 10))
+                .background(Color(hex: "0048E2").opacity(0.07), in: RoundedRectangle(cornerRadius: 10))
                 .padding(.horizontal)
             }
 
@@ -310,7 +311,7 @@ private struct AIVerificationResultScreen: View {
 
             // Action buttons
             VStack(spacing: 10) {
-                Button(action: onDone) {
+                Button { Haptics.tap(); onDone() } label: {
                     Text(result == .approved || result == .excused ? "Done 🎉" : "Close")
                         .fontWeight(.semibold)
                         .frame(maxWidth: .infinity).frame(height: 50)
@@ -319,7 +320,7 @@ private struct AIVerificationResultScreen: View {
                 .tint(bgColor)
 
                 if result == .rejected {
-                    Button(action: onRetry) {
+                    Button { Haptics.tap(); onRetry() } label: {
                         Text("Try again")
                             .frame(maxWidth: .infinity).frame(height: 44)
                     }
@@ -331,6 +332,13 @@ private struct AIVerificationResultScreen: View {
             .padding(.bottom, 20)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear {
+            switch result {
+            case .approved, .excused, .notApplicable: Haptics.success()
+            case .rejected:                            Haptics.error()
+            case .pending:                             Haptics.warning()
+            }
+        }
     }
 
     private var bgColor: Color {

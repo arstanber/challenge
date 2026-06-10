@@ -1,0 +1,508 @@
+import SwiftUI
+
+// MARK: - Habit Calendar Detail
+// Streak header + month calendar + per-task stats + connectable data sources.
+
+struct HabitCalendarView: View {
+    @State private var vm: ActivityDetailViewModel
+    @Environment(\.dismiss) private var dismiss
+    @AppStorage("requirePhotoVerification") private var requirePhoto = true
+    @State private var monthOffset = 0
+    @State private var showPerfect = false
+    @State private var showCamera = false
+    @State private var liveToday: Double?
+
+    private let cal = Calendar.current
+    private let orange = Color(hex: "FF7A00")
+    private let blue = Color(hex: "4580FF")
+
+    init(activity: Activity, onChange: (() -> Void)? = nil) {
+        let model = ActivityDetailViewModel(activity: activity)
+        model.onReportSubmitted = onChange
+        _vm = State(wrappedValue: model)
+    }
+
+    // Per-type accent
+    private var accent: Color {
+        switch vm.activity.type {
+        case .challenge:  return Color(hex: "0048E2")
+        case .goal:       return Color(hex: "2FB873")
+        case .task:       return Color(hex: "FF7A00")
+        case .habit:      return Color(hex: "8B5CF6")
+        case .assignment: return Color(hex: "EC4899")
+        }
+    }
+
+    private var isGoal: Bool { (vm.activity.goalTarget ?? 0) > 0 }
+
+    var body: some View {
+        ZStack {
+            Color(.systemBackground).ignoresSafeArea()
+
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 28) {
+                    header.appearEffect(delay: 0.05)
+                    if requirePhoto { photoRequirementBanner.appearEffect(delay: 0.1) }
+                    statsRow.appearEffect(delay: 0.15)
+                    monthCalendar.appearEffect(delay: 0.25)
+                }
+                .padding(.horizontal, 22)
+                .padding(.top, 12)
+                .padding(.bottom, 170)
+            }
+
+            VStack {
+                topBar
+                Spacer()
+                todayBar
+            }
+        }
+        .task {
+            await vm.loadReports()
+            await refreshLiveValue()
+        }
+        .onChange(of: ConnectorService.shared.connected) { _, _ in
+            Task { await refreshLiveValue() }
+        }
+        .fullScreenCover(isPresented: $showCamera) {
+            CompleteTaskView(activity: vm.activity) {
+                Task { await vm.loadReports() }
+                vm.onReportSubmitted?()
+                Haptics.success()
+                withAnimation { showPerfect = true }
+            }
+        }
+        .overlay {
+            if showPerfect {
+                PerfectDayView(message: "Серия продолжается! 🔥") { showPerfect = false }
+                    .transition(.opacity)
+            }
+        }
+    }
+
+    // MARK: Top bar
+
+    private var topBar: some View {
+        HStack {
+            Button { Haptics.tap(); dismiss() } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.primary.opacity(0.6))
+                    .frame(width: 38, height: 38)
+                    .background(Circle().fill(Color.primary.opacity(0.08)))
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 18)
+        .padding(.top, 8)
+    }
+
+    // MARK: Header
+
+    private var header: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: "flame.fill").foregroundStyle(orange)
+                Text("\(vm.currentStreak)-дневная серия")
+                    .font(.manrope(.bold, size: 15))
+                    .foregroundColor(orange)
+            }
+            .padding(.top, 30)
+
+            HStack(spacing: 10) {
+                Image(systemName: vm.activity.type.icon)
+                    .font(.system(size: 26))
+                    .foregroundStyle(accent)
+                Text(vm.activity.title)
+                    .font(.manrope(.extraBold, size: 30))
+                    .foregroundColor(.primary)
+                    .multilineTextAlignment(.center)
+            }
+            Text(frequencyLabel)
+                .font(.manrope(.medium, size: 15))
+                .foregroundColor(.primary.opacity(0.4))
+        }
+    }
+
+    private var frequencyLabel: String {
+        switch vm.activity.frequency {
+        case .daily:  return "Каждый день"
+        case .weekly: return "Каждую неделю"
+        case .once:   return "Один раз"
+        case .custom: return "По расписанию"
+        }
+    }
+
+    // MARK: Stats
+
+    private var statsRow: some View {
+        HStack(spacing: 0) {
+            laurelTile(value: vm.bestStreak, caption: "Лучшая серия")
+            Rectangle().fill(Color.primary.opacity(0.08)).frame(width: 1, height: 56)
+            statTile(emoji: "📆", value: vm.totalDaysDone, caption: "Всего")
+        }
+        .padding(.vertical, 8)
+    }
+
+    /// Best-streak tile with a golden laurel wreath flanking the number.
+    private func laurelTile(value: Int, caption: String) -> some View {
+        let gold = Color(hex: "E3B341")
+        return VStack(spacing: 4) {
+            Text(caption)
+                .font(.manrope(.medium, size: 13))
+                .foregroundColor(.primary.opacity(0.4))
+            HStack(spacing: 4) {
+                Image(systemName: "laurel.leading")
+                    .font(.system(size: 40, weight: .regular))
+                    .foregroundStyle(gold)
+                Text("\(value)")
+                    .font(.manrope(.extraBold, size: 34))
+                    .foregroundColor(.primary)
+                    .frame(minWidth: 30)
+                Image(systemName: "laurel.trailing")
+                    .font(.system(size: 40, weight: .regular))
+                    .foregroundStyle(gold)
+            }
+            Text("дней")
+                .font(.manrope(.medium, size: 12))
+                .foregroundColor(.primary.opacity(0.4))
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private func statTile(emoji: String, value: Int, caption: String) -> some View {
+        VStack(spacing: 6) {
+            Text(caption)
+                .font(.manrope(.medium, size: 13))
+                .foregroundColor(.primary.opacity(0.4))
+            HStack(spacing: 6) {
+                Text(emoji).font(.system(size: 18))
+                Text("\(value)")
+                    .font(.manrope(.extraBold, size: 34))
+                    .foregroundColor(.primary)
+            }
+            Text("дней")
+                .font(.manrope(.medium, size: 12))
+                .foregroundColor(.primary.opacity(0.4))
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    // MARK: Month calendar
+
+    private var monthDate: Date {
+        cal.date(byAdding: .month, value: monthOffset, to: Date()) ?? Date()
+    }
+
+    private var monthCalendar: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Image(systemName: "calendar").foregroundColor(.primary.opacity(0.5))
+                Text(monthTitle)
+                    .font(.manrope(.bold, size: 20))
+                    .foregroundColor(.primary)
+                Spacer()
+                Button { Haptics.selection(); withAnimation { monthOffset -= 1 } } label: {
+                    Image(systemName: "chevron.left").foregroundColor(.primary.opacity(0.4))
+                }
+                Button { Haptics.selection(); withAnimation { if monthOffset < 0 { monthOffset += 1 } } } label: {
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(monthOffset < 0 ? .primary.opacity(0.4) : .primary.opacity(0.15))
+                }
+                .disabled(monthOffset >= 0)
+            }
+
+            // Weekday headers (Mon-first)
+            HStack(spacing: 0) {
+                ForEach(["Пн","Вт","Ср","Чт","Пт","Сб","Вс"], id: \.self) { d in
+                    Text(d)
+                        .font(.manrope(.medium, size: 13))
+                        .foregroundColor(.primary.opacity(0.35))
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .padding(.vertical, 8)
+            .background(RoundedRectangle(cornerRadius: 12).fill(Color.primary.opacity(0.05)))
+
+            // Day grid
+            let cols = Array(repeating: GridItem(.flexible(), spacing: 4), count: 7)
+            LazyVGrid(columns: cols, spacing: 10) {
+                ForEach(Array(monthCells.enumerated()), id: \.offset) { _, cell in
+                    DayCell(cell: cell, done: cell.date.map { vm.completedDays.contains(cal.startOfDay(for: $0)) } ?? false,
+                            isToday: cell.date.map { cal.isDateInToday($0) } ?? false,
+                            orange: orange, blue: blue)
+                }
+            }
+        }
+    }
+
+    private var monthTitle: String {
+        let f = DateFormatter(); f.locale = Locale(identifier: "ru_RU"); f.dateFormat = "LLLL"
+        return f.string(from: monthDate).capitalized
+    }
+
+    /// Cells for the month grid (with leading blanks for Monday alignment).
+    private var monthCells: [DayCellModel] {
+        guard let interval = cal.dateInterval(of: .month, for: monthDate) else { return [] }
+        let firstDay = interval.start
+        // weekday 1=Sun..7=Sat → convert to Monday-first index 0..6
+        let weekday = cal.component(.weekday, from: firstDay)
+        let leading = (weekday + 5) % 7
+        let daysInMonth = cal.range(of: .day, in: .month, for: monthDate)?.count ?? 30
+
+        var cells: [DayCellModel] = []
+        for _ in 0..<leading { cells.append(DayCellModel(date: nil, day: nil)) }
+        for d in 1...daysInMonth {
+            let date = cal.date(byAdding: .day, value: d - 1, to: firstDay)!
+            cells.append(DayCellModel(date: date, day: d))
+        }
+        return cells
+    }
+
+    // MARK: Today bar (per-task stat / mark done)
+
+    private var todayBar: some View {
+        VStack(spacing: 12) {
+            Text("Сегодня")
+                .font(.manrope(.bold, size: 16))
+                .foregroundColor(.primary)
+
+            if isGoal {
+                goalTodayStat
+            } else {
+                markDoneControl
+            }
+        }
+        .padding(.vertical, 18)
+        .frame(maxWidth: .infinity)
+        .background(.ultraThinMaterial)
+    }
+
+    private var goalTodayStat: some View {
+        let target = vm.activity.goalTarget ?? 0
+        let current = liveToday ?? vm.activity.goalProgress
+        let fraction = target > 0 ? min(current / target, 1.0) : 0
+        return HStack(spacing: 16) {
+            ZStack {
+                Circle().stroke(accent.opacity(0.2), lineWidth: 7)
+                Circle().trim(from: 0, to: max(0.001, fraction))
+                    .stroke(accent, style: StrokeStyle(lineWidth: 7, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                Image(systemName: vm.activity.type.icon)
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(accent)
+            }
+            .frame(width: 64, height: 64)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(grouped(current)) / \(grouped(target))")
+                    .font(.manrope(.extraBold, size: 22))
+                    .foregroundColor(.primary)
+                Text(liveToday != nil ? "по данным приложений" : "выполнено сегодня")
+                    .font(.manrope(.medium, size: 12))
+                    .foregroundColor(.primary.opacity(0.45))
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 34)
+    }
+
+    private func refreshLiveValue() async {
+        guard isGoal else { return }
+        if let v = await ConnectorService.shared.todayValue(for: vm.activity) {
+            liveToday = v
+        }
+    }
+
+    // Photo requirement shown each time you open the task.
+    private var photoRequirementBanner: some View {
+        let line: String = {
+            if let c = vm.activity.condition, !c.trimmingCharacters(in: .whitespaces).isEmpty { return c }
+            return "Сделай фото при отметке выполнения"
+        }()
+        return HStack(spacing: 12) {
+            Image(systemName: "camera.viewfinder")
+                .font(.system(size: 22))
+                .foregroundStyle(accent)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Нужно фото-подтверждение")
+                    .font(.manrope(.bold, size: 14))
+                    .foregroundColor(.primary)
+                Text(line)
+                    .font(.manrope(.medium, size: 13))
+                    .foregroundColor(.primary.opacity(0.5))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer()
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(accent.opacity(0.12)))
+    }
+
+    private var markDoneControl: some View {
+        VStack(spacing: 10) {
+            Button {
+                Haptics.tap()
+                if !vm.isDoneToday && requirePhoto {
+                    showCamera = true
+                } else {
+                    Task {
+                        let wasDone = vm.isDoneToday
+                        await vm.toggleToday()
+                        if !wasDone && vm.isDoneToday {
+                            Haptics.success()
+                            withAnimation { showPerfect = true }
+                        }
+                    }
+                }
+            } label: {
+                ZStack {
+                    Circle()
+                        .fill(vm.isDoneToday ? Color(hex: "2FB873") : Color.clear)
+                        .frame(width: 72, height: 72)
+                        .overlay(
+                            Circle().strokeBorder(
+                                vm.isDoneToday ? Color.clear : Color.primary.opacity(0.25),
+                                style: StrokeStyle(lineWidth: 2, dash: vm.isDoneToday ? [] : [6])
+                            )
+                        )
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundColor(vm.isDoneToday ? .white : .primary.opacity(0.3))
+                }
+            }
+            Text(vm.isDoneToday ? "Нажми, чтобы отменить" : "Отметить выполненным")
+                .font(.manrope(.medium, size: 12))
+                .foregroundColor(.primary.opacity(0.4))
+        }
+    }
+}
+
+// MARK: - Connector chip
+
+private struct ConnectorChip: View {
+    let connector: DataConnector
+    private let service = ConnectorService.shared
+    @State private var busy = false
+    private let green = Color(hex: "2FB873")
+
+    var body: some View {
+        let connected = service.isConnected(connector)
+        Button {
+            guard !busy else { return }
+            Haptics.tap()
+            busy = true
+            Task {
+                if connected {
+                    await service.disconnect(connector)
+                } else {
+                    try? await service.connect(connector)
+                }
+                busy = false
+            }
+        } label: {
+            VStack(spacing: 9) {
+                ZStack(alignment: .topTrailing) {
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(connector.tint.opacity(connected ? 0.28 : 0.16))
+                        .frame(width: 64, height: 64)
+                        .overlay(
+                            Group {
+                                if busy {
+                                    ProgressView().tint(connector.tint)
+                                } else {
+                                    Image(systemName: connector.icon)
+                                        .font(.system(size: 26, weight: .semibold))
+                                        .foregroundStyle(connector.tint)
+                                }
+                            }
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                .strokeBorder(connected ? green : Color.clear, lineWidth: 2)
+                        )
+                    if connected {
+                        Circle()
+                            .fill(green)
+                            .frame(width: 22, height: 22)
+                            .overlay(
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundColor(.white)
+                            )
+                            .offset(x: 6, y: -6)
+                    }
+                }
+
+                Text(connector.displayName)
+                    .font(.manrope(.semiBold, size: 12))
+                    .foregroundColor(.primary)
+                    .lineLimit(1)
+                Text(connected ? "Подключено" : "Подключить")
+                    .font(.manrope(.medium, size: 10))
+                    .foregroundColor(connected ? green : .primary.opacity(0.4))
+            }
+            .frame(width: 84)
+        }
+        .buttonStyle(.plain)
+        .disabled(busy)
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: connected)
+    }
+}
+
+// MARK: - Number formatting
+
+private let groupedFormatter: NumberFormatter = {
+    let f = NumberFormatter()
+    f.numberStyle = .decimal
+    f.groupingSeparator = " "
+    f.maximumFractionDigits = 0
+    return f
+}()
+
+private func grouped(_ value: Double) -> String {
+    groupedFormatter.string(from: NSNumber(value: value)) ?? "\(Int(value))"
+}
+
+// MARK: - Day cell
+
+private struct DayCellModel {
+    let date: Date?
+    let day: Int?
+}
+
+private struct DayCell: View {
+    let cell: DayCellModel
+    let done: Bool
+    let isToday: Bool
+    let orange: Color
+    let blue: Color
+
+    var body: some View {
+        ZStack {
+            if cell.day == nil {
+                Color.clear.frame(height: 40)
+            } else {
+                Circle()
+                    .fill(done ? orange : Color.primary.opacity(0.06))
+                    .frame(width: 40, height: 40)
+                    .overlay {
+                        if isToday {
+                            Circle().strokeBorder(blue, style: StrokeStyle(lineWidth: 2, dash: done ? [] : [4]))
+                        }
+                    }
+                if done {
+                    Image(systemName: "flame.fill")
+                        .font(.system(size: 16))
+                        .foregroundColor(.white)
+                } else {
+                    Text("\(cell.day ?? 0)")
+                        .font(.manrope(.medium, size: 15))
+                        .foregroundColor(.primary.opacity(0.55))
+                }
+            }
+        }
+        .frame(height: 40)
+    }
+}

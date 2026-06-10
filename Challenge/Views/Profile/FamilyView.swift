@@ -14,6 +14,7 @@ struct FamilyView: View {
                         Spacer()
                         Button {
                             UIPasteboard.general.string = family.inviteCode
+                            Haptics.success()
                         } label: {
                             Image(systemName: "doc.on.doc")
                         }

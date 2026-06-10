@@ -94,6 +94,12 @@ struct Activity: Codable, Identifiable {
     var goalProgress: Double
     var goalTarget: Double?
     var createdAt: Date
+    var planId: UUID?
+    var planTitle: String?
+    var workspaceId: UUID?
+    var parentId: UUID?
+    var sortOrder: Int = 0
+    var category: String?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -107,6 +113,12 @@ struct Activity: Codable, Identifiable {
         case goalProgress = "goal_progress"
         case goalTarget = "goal_target"
         case createdAt = "created_at"
+        case planId = "plan_id"
+        case planTitle = "plan_title"
+        case workspaceId = "workspace_id"
+        case parentId = "parent_id"
+        case sortOrder = "sort_order"
+        case category
     }
 
     var progressFraction: Double {
@@ -128,6 +140,11 @@ struct CreateActivityRequest: Codable {
     var deadline: Date?
     var reminderTime: Date?
     var goalTarget: Double?
+    var planId: UUID?
+    var planTitle: String?
+    var workspaceId: UUID?
+    var parentId: UUID?
+    var category: String? = nil
 
     enum CodingKeys: String, CodingKey {
         case userId = "user_id"
@@ -135,5 +152,10 @@ struct CreateActivityRequest: Codable {
         case title, description, type, condition, frequency, deadline
         case reminderTime = "reminder_time"
         case goalTarget = "goal_target"
+        case planId = "plan_id"
+        case planTitle = "plan_title"
+        case workspaceId = "workspace_id"
+        case parentId = "parent_id"
+        case category
     }
 }

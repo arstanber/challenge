@@ -8,10 +8,8 @@ struct GoalPlannerView: View {
         NavigationStack {
             Group {
                 switch vm.step {
-                case .describe:
+                case .describe, .loadingQuestions:
                     DescribeGoalView(vm: vm)
-                case .loadingQuestions:
-                    AIThinkingView(message: "Analyzing your goal…")
                 case .questions:
                     QuestionsView(vm: vm)
                 case .generatingPlan:
@@ -29,7 +27,7 @@ struct GoalPlannerView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     if vm.step != .done {
-                        Button("Cancel") { dismiss() }
+                        Button("Cancel") { Haptics.tap(); dismiss() }
                     }
                 }
             }
@@ -37,7 +35,7 @@ struct GoalPlannerView: View {
                 get: { vm.errorMessage != nil },
                 set: { if !$0 { vm.errorMessage = nil } }
             )) {
-                Button("OK") { vm.errorMessage = nil }
+                Button("OK") { Haptics.tap(); vm.errorMessage = nil }
             } message: {
                 Text(vm.errorMessage ?? "")
             }
@@ -46,331 +44,513 @@ struct GoalPlannerView: View {
 
     private var navTitle: String {
         switch vm.step {
-        case .describe: return "AI Goal Planner"
-        case .loadingQuestions, .questions: return "Clarify Your Goal"
+        case .describe: return "The Challenge."
+        case .loadingQuestions, .questions: return "The Challenge."
         case .generatingPlan, .plan: return "Your Plan"
         case .creating, .done: return "Creating Plan"
         }
     }
 }
 
+// MARK: - Arc motion (blob follows a circular arc path)
+
+private struct ArcMotionEffect: GeometryEffect {
+    /// Animatable parameter 0 → 1 (maps to the arc sweep angle).
+    var phase: CGFloat
+
+    var animatableData: CGFloat {
+        get { phase }
+        set { phase = newValue }
+    }
+
+    func effectValue(size: CGSize) -> ProjectionTransform {
+        // Convert phase 0…1 → angle -sweep…+sweep radians
+        let sweep: CGFloat = 0.52           // ±0.52 rad ≈ ±30°
+        let angle = (phase * 2 - 1) * sweep
+        let radius: CGFloat = 320           // arc radius
+
+        // Arc: circle center is directly below current position, blob traces bottom.
+        // x grows linearly with angle; y increases toward the sides (∪ shape).
+        let x = radius * sin(angle)
+        let y = 295 + radius * (1 - cos(angle))   // 295 = base vertical offset
+
+        return ProjectionTransform(CGAffineTransform(translationX: x, y: y))
+    }
+}
+
+private struct AIBlobView: View {
+    @State private var phase: CGFloat = 0
+
+    var body: some View {
+        Ellipse()
+            .fill(Color(hex: "0048E2").opacity(0.30))
+            .frame(width: 534, height: 510)
+            .blur(radius: 40)
+            .modifier(ArcMotionEffect(phase: phase))
+            .onAppear {
+                withAnimation(
+                    .easeInOut(duration: 3.5).repeatForever(autoreverses: true)
+                ) { phase = 1 }
+            }
+    }
+}
+
 // MARK: - Step 1: Describe
+
+private enum AIPlanColors {
+    static let background = Color(red: 0.962, green: 0.962, blue: 0.962)
+    static let placeholderGray = Color(red: 0.75, green: 0.75, blue: 0.75)
+    static let buttonBackground = Color(red: 0.872, green: 0.872, blue: 0.872)
+    static let buttonBorder = Color(red: 0.675, green: 0.675, blue: 0.675)
+    static let analyzeTextGray = Color(red: 0.536, green: 0.536, blue: 0.536)
+    static let blueAccent = Color(red: 0.0, green: 0.282, blue: 0.886)
+    static let glassButtonBg = Color(red: 0.970, green: 0.970, blue: 0.970)
+    static let glassButtonBorder = Color(red: 0.867, green: 0.867, blue: 0.867)
+}
 
 private struct DescribeGoalView: View {
     @Bindable var vm: GoalPlannerViewModel
 
+    private var isLoading: Bool { vm.step == .loadingQuestions }
+
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
+        ZStack {
+            Color.white.ignoresSafeArea()
 
-                // Header
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Image(systemName: "sparkles")
-                            .foregroundStyle(.orange)
-                        Text("Describe your goal")
-                            .font(.title2).bold()
-                    }
-                    Text("Tell Claude what you want to achieve. Be as specific as possible — the more detail, the better the plan.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
+            VStack(spacing: 0) {
+                ZStack(alignment: .topLeading) {
+                    RoundedRectangle(cornerRadius: 50)
+                        .fill(AIPlanColors.background)
+                        .ignoresSafeArea(edges: .bottom)
 
-                // Text editor
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("What is your goal?")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .textCase(.uppercase)
-                    ZStack(alignment: .topLeading) {
-                        RoundedRectangle(cornerRadius: 14)
-                            .fill(Color(.systemGray6))
-                        if vm.goalDescription.isEmpty {
-                            Text("e.g. I want to lose weight to 80 kg by summer through healthy eating and daily exercise")
-                                .foregroundStyle(.tertiary)
-                                .padding(14)
-                                .allowsHitTesting(false)
+                    VStack(alignment: .leading, spacing: 0) {
+                        HStack(spacing: 10) {
+                            AIPlanGlassButton()
+                            Text("AI step-by-step")
+                                .font(.system(size: 20, weight: .medium))
+                                .foregroundColor(.black)
                         }
-                        TextEditor(text: $vm.goalDescription)
-                            .scrollContentBackground(.hidden)
-                            .padding(10)
-                            .frame(minHeight: 140)
-                    }
-                    .frame(minHeight: 140)
-                }
+                        .padding(.top, 28)
+                        .padding(.leading, 24)
 
-                // Examples
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Examples")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .textCase(.uppercase)
-                    ForEach(examples, id: \.self) { example in
-                        Button {
-                            vm.goalDescription = example
-                        } label: {
-                            HStack {
-                                Image(systemName: "lightbulb.fill")
-                                    .foregroundStyle(.yellow)
-                                    .font(.caption)
-                                Text(example)
-                                    .font(.subheadline)
-                                    .foregroundStyle(.primary)
-                                    .multilineTextAlignment(.leading)
-                                Spacer()
+                        ZStack(alignment: .topLeading) {
+                            if vm.goalDescription.isEmpty {
+                                Text("Write a new task...")
+                                    .font(.system(size: 32, weight: .medium))
+                                    .foregroundColor(AIPlanColors.placeholderGray)
+                                    .padding(.top, 20)
+                                    .padding(.leading, 24)
+                                    .allowsHitTesting(false)
                             }
-                            .padding(12)
-                            .background(Color(.systemGray6), in: RoundedRectangle(cornerRadius: 10))
+                            TextEditor(text: $vm.goalDescription)
+                                .font(.system(size: 32, weight: .medium))
+                                .foregroundColor(.black)
+                                .scrollContentBackground(.hidden)
+                                .background(Color.clear)
+                                .padding(.top, 12)
+                                .padding(.horizontal, 20)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                .disabled(isLoading)
                         }
-                        .buttonStyle(.plain)
-                    }
-                }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                // CTA
-                Button {
-                    Task { await vm.loadQuestions() }
-                } label: {
-                    HStack {
-                        Image(systemName: "sparkles")
-                        Text("Analyze with AI")
-                            .fontWeight(.semibold)
+                        // Bottom gradient aura when loading
+                        .overlay(alignment: .bottom) {
+                            if isLoading {
+                                AIBlobView()
+                                    .transition(.opacity.animation(.easeIn(duration: 0.4)))
+                                    .allowsHitTesting(false)
+                            }
+                        }
+
+                        HStack(spacing: 8) {
+                            Button { } label: {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(AIPlanColors.buttonBackground)
+                                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(AIPlanColors.buttonBorder, lineWidth: 1))
+                                    Image(systemName: "clock.badge.plus")
+                                        .resizable().scaledToFit()
+                                        .foregroundColor(AIPlanColors.analyzeTextGray)
+                                        .frame(width: 22, height: 22)
+                                }
+                                .frame(width: 62, height: 60)
+                            }
+                            .buttonStyle(PressableButtonStyle())
+                            .disabled(isLoading)
+
+                            Button { Task { await vm.loadQuestions() } } label: {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(vm.canProceedFromDescribe ? Color.black : AIPlanColors.buttonBackground)
+                                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(vm.canProceedFromDescribe ? Color.clear : AIPlanColors.buttonBorder, lineWidth: 1))
+                                    if isLoading {
+                                        ProgressView().tint(.white)
+                                    } else {
+                                        HStack(spacing: 6) {
+                                            Text("Analyze")
+                                                .font(.system(size: 18, weight: .medium))
+                                                .foregroundColor(vm.canProceedFromDescribe ? .white : AIPlanColors.analyzeTextGray)
+                                            Image(systemName: "sparkles")
+                                                .font(.system(size: 14, weight: .medium))
+                                                .foregroundColor(vm.canProceedFromDescribe ? .white : AIPlanColors.analyzeTextGray)
+                                        }
+                                    }
+                                }
+                                .frame(maxWidth: .infinity).frame(height: 60)
+                            }
+                            .buttonStyle(PressableButtonStyle())
+                            .disabled(!vm.canProceedFromDescribe || isLoading)
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 28)
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(vm.canProceedFromDescribe ? Color.orange : Color.gray.opacity(0.3))
-                    .foregroundStyle(vm.canProceedFromDescribe ? .white : .secondary)
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
-                .disabled(!vm.canProceedFromDescribe)
             }
-            .padding()
         }
+        .animation(.easeInOut(duration: 0.3), value: isLoading)
     }
-
-    private let examples = [
-        "I want to lose weight to 80 kg by September through diet and daily runs",
-        "I want to read 20 books this year, starting with philosophy",
-        "I want to run a 5K in under 30 minutes within 3 months",
-        "I want to learn Spanish to conversational level in 6 months"
-    ]
 }
 
-// MARK: - Step 2: Questions
+private struct AIPlanGlassButton: View {
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(AIPlanColors.glassButtonBg)
+                .frame(width: 42, height: 42)
+                .overlay(Circle().fill(Color.white.opacity(0.65)))
+                .overlay(Circle().stroke(AIPlanColors.glassButtonBorder, lineWidth: 0.5))
+            ZStack {
+                Image(systemName: "sparkle")
+                    .resizable().scaledToFit()
+                    .foregroundColor(AIPlanColors.blueAccent)
+                    .frame(width: 10, height: 10)
+                    .offset(x: 5, y: -5)
+                Image(systemName: "sparkle")
+                    .resizable().scaledToFit()
+                    .foregroundColor(.black)
+                    .frame(width: 18, height: 18)
+                    .offset(x: -2, y: 2)
+            }
+            .frame(width: 24, height: 24)
+        }
+        .frame(width: 42, height: 42)
+    }
+}
+
+// MARK: - Step 2: Questions (one at a time)
+
+private enum QColors {
+    static let blue = Color(red: 0.0, green: 0.282, blue: 0.886)
+    static let buttonBg = Color(red: 0.872, green: 0.872, blue: 0.872)
+    static let buttonBorder = Color(red: 0.675, green: 0.675, blue: 0.675)
+    static let grayText = Color(red: 0.536, green: 0.536, blue: 0.536)
+}
 
 private struct QuestionsView: View {
     @Bindable var vm: GoalPlannerViewModel
-    @FocusState private var focusedIndex: Int?
+    @State private var currentIndex = 0
+    @FocusState private var isFocused: Bool
+
+    private var total: Int { vm.answers.count }
+    private var isLast: Bool { currentIndex == total - 1 }
+    private var currentAnswer: Binding<String> {
+        Binding(
+            get: { currentIndex < total ? vm.answers[currentIndex].answer : "" },
+            set: { if currentIndex < total { vm.answers[currentIndex].answer = $0 } }
+        )
+    }
+    private var canAdvance: Bool {
+        !currentAnswer.wrappedValue.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+    private var questionText: AttributedString {
+        var num = AttributedString("\(currentIndex + 1). ")
+        num.font = .system(size: 24, weight: .bold)
+        num.foregroundColor = .white
+        var q = AttributedString(currentIndex < total ? vm.answers[currentIndex].question : "")
+        q.font = .system(size: 24, weight: .regular)
+        q.foregroundColor = .white
+        return num + q
+    }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
+        ZStack {
+            QColors.blue.ignoresSafeArea()
 
-                // Header
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Image(systemName: "text.bubble.fill")
-                            .foregroundStyle(.blue)
-                        Text("A few questions")
-                            .font(.title2).bold()
-                    }
-                    Text("Claude needs a bit more info to build the perfect plan for you.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-
-                // Goal recap chip
-                Label(vm.goalDescription, systemImage: "flag.fill")
-                    .font(.caption)
-                    .foregroundStyle(.orange)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(Color.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
-                    .lineLimit(2)
-
-                // Questions
-                ForEach($vm.answers) { $answer in
-                    let idx = vm.answers.firstIndex(where: { $0.id == answer.id }) ?? 0
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack(alignment: .top, spacing: 8) {
-                            Text("\(idx + 1)")
-                                .font(.caption.bold())
-                                .foregroundStyle(.white)
-                                .frame(width: 22, height: 22)
-                                .background(Color.blue, in: Circle())
-                            Text(answer.question)
-                                .font(.subheadline.weight(.medium))
+            VStack(alignment: .leading, spacing: 0) {
+                // Progress + back chevron
+                HStack(spacing: 10) {
+                    if currentIndex > 0 {
+                        Button {
+                            Haptics.tap()
+                            isFocused = false
+                            withAnimation { currentIndex -= 1 }
+                        } label: {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(.white)
+                                .frame(width: 34, height: 34)
+                                .background(Color.white.opacity(0.2))
+                                .clipShape(Circle())
                         }
-                        TextField("Your answer…", text: $answer.answer, axis: .vertical)
-                            .lineLimit(2...4)
-                            .padding(12)
-                            .background(Color(.systemGray6), in: RoundedRectangle(cornerRadius: 10))
-                            .focused($focusedIndex, equals: idx)
                     }
-                }
-
-                // CTA
-                Button {
-                    focusedIndex = nil
-                    Task { await vm.generatePlan() }
-                } label: {
-                    HStack {
-                        Image(systemName: "wand.and.stars")
-                        Text("Generate Plan")
-                            .fontWeight(.semibold)
+                    HStack(spacing: 6) {
+                        ForEach(0..<total, id: \.self) { i in
+                            Capsule()
+                                .fill(i <= currentIndex ? Color.white : Color.white.opacity(0.3))
+                                .frame(height: 4)
+                                .animation(.easeInOut(duration: 0.25), value: currentIndex)
+                        }
                     }
                     .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(vm.canProceedFromQuestions ? Color.blue : Color.gray.opacity(0.3))
-                    .foregroundStyle(vm.canProceedFromQuestions ? .white : .secondary)
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
-                .disabled(!vm.canProceedFromQuestions)
+                .padding(.top, 64)
+                .padding(.horizontal, 24)
+
+                // Header
+                Text("Nice task!\nWe need to ask a few questions.")
+                    .font(.system(size: 24, weight: .medium))
+                    .foregroundColor(.white)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 24)
+                    .padding(.horizontal, 24)
+
+                // Question
+                if currentIndex < total {
+                    Text(questionText)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 16)
+                        .padding(.horizontal, 24)
+                        .id("q-\(currentIndex)")
+                }
+
+                // Answer field
+                ZStack(alignment: .topLeading) {
+                    if currentAnswer.wrappedValue.isEmpty {
+                        Text("Your answer...")
+                            .font(.system(size: 28, weight: .medium))
+                            .foregroundColor(.white.opacity(0.45))
+                            .padding(.top, 8)
+                            .padding(.leading, 4)
+                            .allowsHitTesting(false)
+                    }
+                    TextEditor(text: currentAnswer)
+                        .font(.system(size: 28, weight: .medium))
+                        .foregroundColor(.white)
+                        .tint(.white)
+                        .scrollContentBackground(.hidden)
+                        .background(Color.clear)
+                        .focused($isFocused)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                .padding(.top, 12)
+                .padding(.horizontal, 20)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .onAppear { isFocused = true }
+
+                // Next / Generate button
+                Button {
+                    isFocused = false
+                    if isLast {
+                        Task { await vm.generatePlan() }
+                    } else {
+                        withAnimation(.easeInOut(duration: 0.3)) { currentIndex += 1 }
+                    }
+                } label: {
+                    HStack(spacing: 6) {
+                        Text(isLast ? "Generate" : "Next")
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(canAdvance ? .white : QColors.grayText)
+                        Image(systemName: "sparkle")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(canAdvance ? .white : QColors.grayText)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 60)
+                    .background(canAdvance ? Color.black : QColors.buttonBg)
+                    .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(canAdvance ? Color.clear : QColors.buttonBorder, lineWidth: 1)
+                    )
+                }
+                .buttonStyle(PressableButtonStyle())
+                .disabled(!canAdvance)
+                .padding(.horizontal, 12)
+                .padding(.bottom, 32)
             }
-            .padding()
         }
     }
 }
 
 // MARK: - Step 3: Plan Preview
 
+private enum PPColors {
+    static let cardBlue = Color(red: 0.0, green: 0.282, blue: 0.886)
+    static let tagHealth = Color(red: 0.475, green: 0.566, blue: 0.973)
+    static let tagDurationText = Color(red: 0.664, green: 0.0, blue: 0.011)
+    static let addTaskBg = Color(red: 0.872, green: 0.872, blue: 0.872)
+    static let addTaskBorder = Color(red: 0.675, green: 0.675, blue: 0.675)
+    static let addTaskText = Color(red: 0.536, green: 0.536, blue: 0.536)
+    static let checkboxBorder = Color(red: 0.839, green: 0.839, blue: 0.839)
+}
+
 private struct PlanPreviewView: View {
     let vm: GoalPlannerViewModel
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                if let plan = vm.plan {
-                    planContent(plan: plan)
-                }
-            }
-            .padding()
-        }
-    }
+        ZStack {
+            Color.white.ignoresSafeArea()
 
-    @ViewBuilder
-    private func planContent(plan: GoalPlanResponse) -> some View {
-                // Plan header
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(plan.title)
-                        .font(.title2).bold()
-                    Text(plan.summary)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-                .padding()
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(
-                    LinearGradient(colors: [.orange.opacity(0.15), .clear], startPoint: .top, endPoint: .bottom),
-                    in: RoundedRectangle(cornerRadius: 16)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16).stroke(Color.orange.opacity(0.3), lineWidth: 1)
-                )
-
-                // Activity ladder
-                Text("Your \(plan.activities.count)-step ladder")
-                    .font(.headline)
-
+            if let plan = vm.plan {
                 VStack(spacing: 0) {
-                    ForEach(plan.activities.sorted(by: { $0.stepNumber < $1.stepNumber })) { activity in
-                        PlannedActivityCard(activity: activity, isLast: activity.stepNumber == plan.activities.count)
-                    }
-                }
+                    // Blue card
+                    ZStack(alignment: .topLeading) {
+                        RoundedRectangle(cornerRadius: 50)
+                            .fill(PPColors.cardBlue)
+                            .padding(.horizontal, 15)
+                            .ignoresSafeArea(edges: .bottom)
 
-                // CTA
-                Button {
-                    Task { await vm.createActivities() }
-                } label: {
-                    HStack {
-                        Image(systemName: "checkmark.circle.fill")
-                        Text("Create All \(plan.activities.count) Activities")
-                            .fontWeight(.semibold)
+                        VStack(alignment: .leading, spacing: 0) {
+                            // Header
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("New goal")
+                                    .font(.system(size: 34, weight: .bold))
+                                    .italic()
+                                    .foregroundColor(.white)
+                                Text(plan.title)
+                                    .font(.system(size: 34, weight: .regular))
+                                    .italic()
+                                    .foregroundColor(.white)
+                                    .lineLimit(3)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            .padding(.top, 36)
+                            .padding(.horizontal, 36)
+
+                            Text("Tasks to-do to achieve a goal:")
+                                .font(.system(size: 20, weight: .medium))
+                                .foregroundColor(.white)
+                                .padding(.top, 20)
+                                .padding(.horizontal, 36)
+
+                            // Task cards
+                            ScrollView(showsIndicators: false) {
+                                VStack(spacing: 16) {
+                                    ForEach(plan.activities.sorted { $0.stepNumber < $1.stepNumber }) { activity in
+                                        PPTaskCard(activity: activity)
+                                            .padding(.horizontal, 4)
+                                    }
+                                }
+                                .padding(.top, 20)
+                                .padding(.horizontal, 32)
+                                .padding(.bottom, 32)
+                            }
+                        }
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.orange)
-                    .foregroundStyle(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
+
+                    // Add tasks button
+                    Button {
+                        Task { await vm.createActivities() }
+                    } label: {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(PPColors.addTaskBg)
+                                .overlay(RoundedRectangle(cornerRadius: 12).stroke(PPColors.addTaskBorder, lineWidth: 1))
+                            if vm.step == .creating {
+                                ProgressView().tint(PPColors.addTaskText)
+                            } else {
+                                Text("Add tasks ✦")
+                                    .font(.system(size: 18, weight: .medium))
+                                    .foregroundColor(PPColors.addTaskText)
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 60)
+                    }
+                    .buttonStyle(PressableButtonStyle())
+                    .padding(.horizontal, 22)
+                    .padding(.bottom, 16)
+                    .padding(.top, 12)
+                    .disabled(vm.step == .creating)
                 }
+            }
+        }
+        .onAppear { Haptics.success() }
     }
 }
 
-private struct PlannedActivityCard: View {
+private struct PPTaskCard: View {
     let activity: PlannedActivity
-    let isLast: Bool
+    @State private var isChecked = false
 
-    var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            // Step indicator + line
-            VStack(spacing: 0) {
-                ZStack {
-                    Circle()
-                        .fill(activity.type.stepColor.opacity(0.15))
-                        .frame(width: 36, height: 36)
-                    Image(systemName: activity.type.icon)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(activity.type.stepColor)
-                }
-                if !isLast {
-                    Rectangle()
-                        .fill(Color(.systemGray4))
-                        .frame(width: 2)
-                        .frame(maxHeight: .infinity)
-                        .padding(.vertical, 4)
-                }
-            }
-            .frame(width: 36)
-
-            // Card content
-            VStack(alignment: .leading, spacing: 6) {
-                HStack {
-                    Text("Step \(activity.stepNumber)")
-                        .font(.caption.bold())
-                        .foregroundStyle(activity.type.stepColor)
-                    Spacer()
-                    TypeBadge(type: activity.type, frequency: activity.frequency)
-                }
-                Text(activity.title)
-                    .font(.subheadline.bold())
-                Text(activity.description)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                if let days = activity.deadlineDays {
-                    Label("\(days) days to complete", systemImage: "calendar")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                }
-                if let target = activity.goalTarget {
-                    Label("Target: \(target.formatted())", systemImage: "target")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                }
-                if let condition = activity.condition {
-                    Label(condition, systemImage: "camera.fill")
-                        .font(.caption2)
-                        .foregroundStyle(.blue.opacity(0.8))
-                }
-            }
-            .padding(.bottom, isLast ? 0 : 16)
-        }
+    private var scheduleLabel: String { activity.frequency.displayName }
+    private var durationLabel: String {
+        if let days = activity.deadlineDays { return "\(days) days" }
+        return activity.frequency == .once ? "once" : "ongoing"
     }
-}
-
-private struct TypeBadge: View {
-    let type: ActivityType
-    let frequency: ActivityFrequency
+    private var categoryColor: Color { activity.type.stepColor }
 
     var body: some View {
-        HStack(spacing: 4) {
-            Text(type.displayName)
-            Text("·")
-            Text(frequency.displayName)
+        ZStack {
+            RoundedRectangle(cornerRadius: 15)
+                .fill(Color.white)
+                .frame(height: 74)
+                .shadow(color: .black.opacity(0.06), radius: 6, x: 0, y: 2)
+
+            HStack(spacing: 12) {
+                // Checkbox
+                ZStack {
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(Color.white)
+                        .frame(width: 24, height: 24)
+                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(PPColors.checkboxBorder, lineWidth: 2))
+                    if isChecked {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(PPColors.cardBlue)
+                    }
+                }
+                .onTapGesture { Haptics.selection(); withAnimation { isChecked.toggle() } }
+                .padding(.leading, 12)
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(activity.title)
+                        .font(.system(size: 17, weight: .medium))
+                        .foregroundColor(.black)
+                        .lineLimit(1)
+
+                    HStack(spacing: 6) {
+                        // Category
+                        Text(activity.type.displayName.uppercased())
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(categoryColor)
+                            .padding(.horizontal, 6).padding(.vertical, 4)
+                            .background(categoryColor.opacity(0.10))
+                            .cornerRadius(4)
+
+                        // Schedule
+                        Text(scheduleLabel.uppercased())
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 6).padding(.vertical, 4)
+                            .background(Color.black)
+                            .cornerRadius(4)
+
+                        // Duration
+                        Text(durationLabel.uppercased())
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(PPColors.tagDurationText)
+                            .padding(.horizontal, 6).padding(.vertical, 4)
+                            .background(Color.gray.opacity(0.1))
+                            .cornerRadius(4)
+                    }
+                }
+
+                Spacer()
+            }
+            .frame(height: 74)
         }
-        .font(.caption2)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 3)
-        .background(type.stepColor.opacity(0.12), in: Capsule())
-        .foregroundStyle(type.stepColor)
     }
 }
 
@@ -467,7 +647,7 @@ private extension ActivityType {
     var stepColor: Color {
         switch self {
         case .challenge: return .orange
-        case .goal: return .blue
+        case .goal: return Color(hex: "0048E2")
         case .task: return .green
         case .habit: return .purple
         case .assignment: return .pink

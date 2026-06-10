@@ -23,6 +23,8 @@ struct ActivitiesView: View {
                 }
 
                 let activities = selectedTab == 0 ? vm.myActivities : vm.parentActivities
+                let standalones = selectedTab == 0 ? vm.standaloneActivities : vm.parentActivities
+                let plans = selectedTab == 0 ? vm.planGroups : []
 
                 if vm.isLoading && activities.isEmpty {
                     ProgressView()
@@ -32,23 +34,43 @@ struct ActivitiesView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     List {
-                        ForEach(activities) { activity in
-                            NavigationLink(destination: ActivityDetailView(activity: activity, onReportSubmitted: {
-                                Task { await vm.recalculateGlobalStreak() }
-                            })) {
-                                ActivityRowView(activity: activity)
-                                    .listRowInsets(EdgeInsets())
+                        // AI plan groups (only on "Mine" tab)
+                        if !plans.isEmpty {
+                            Section("My Plans") {
+                                ForEach(plans) { group in
+                                    PlanGroupRow(group: group) {
+                                        Task { await vm.recalculateGlobalStreak() }
+                                    }
+                                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                                    .listRowSeparator(.hidden)
+                                    .listRowBackground(Color.clear)
+                                }
                             }
-                            .listRowSeparator(.hidden)
-                            .listRowBackground(Color.clear)
-                            .padding(.horizontal)
-                            .padding(.vertical, 4)
-                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                if activity.status == .active {
-                                    Button(role: .destructive) {
-                                        Task { await vm.deleteActivity(activity) }
-                                    } label: {
-                                        Label("Delete", systemImage: "trash")
+                        }
+
+                        // Standalone / parent activities
+                        if !standalones.isEmpty {
+                            Section(plans.isEmpty ? "" : "Individual") {
+                                ForEach(standalones) { activity in
+                                    NavigationLink(destination: ActivityDetailView(activity: activity, onReportSubmitted: {
+                                        Task { await vm.recalculateGlobalStreak() }
+                                    })) {
+                                        ActivityRowView(activity: activity)
+                                            .listRowInsets(EdgeInsets())
+                                    }
+                                    .listRowSeparator(.hidden)
+                                    .listRowBackground(Color.clear)
+                                    .padding(.horizontal)
+                                    .padding(.vertical, 4)
+                                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                        if activity.status == .active {
+                                            Button(role: .destructive) {
+                                                Haptics.warning()
+                                                Task { await vm.deleteActivity(activity) }
+                                            } label: {
+                                                Label("Delete", systemImage: "trash")
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -62,11 +84,13 @@ struct ActivitiesView: View {
                 GlobalStreakBanner(vm: vm)
             }
             .navigationTitle("Challenge")
+            .sensoryFeedback(.selection, trigger: selectedTab)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     HStack(spacing: 4) {
                         // AI Planner button
                         Button {
+                            Haptics.tap()
                             showPlanner = true
                         } label: {
                             Image(systemName: "sparkles")
@@ -75,7 +99,8 @@ struct ActivitiesView: View {
                         }
                         // Manual create button
                         Button {
-                            if vm.canCreateMore { showCreate = true }
+                            if vm.canCreateMore { Haptics.tap(); showCreate = true }
+                            else { Haptics.warning() }
                         } label: {
                             if vm.canCreateMore {
                                 Image(systemName: "plus.circle.fill")
@@ -102,12 +127,91 @@ struct ActivitiesView: View {
                 get: { vm.errorMessage != nil },
                 set: { if !$0 { vm.errorMessage = nil } }
             )) {
-                Button("OK") { vm.errorMessage = nil }
+                Button("OK") { Haptics.tap(); vm.errorMessage = nil }
             } message: {
                 Text(vm.errorMessage ?? "")
             }
         }
         .task { await vm.loadActivities() }
+    }
+}
+
+// MARK: - Plan Group Row
+
+struct PlanGroupRow: View {
+    let group: ActivityPlanGroup
+    let onReportSubmitted: () -> Void
+    @State private var isExpanded = true
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Header card
+            Button {
+                withAnimation(.spring(response: 0.3)) { isExpanded.toggle() }
+            } label: {
+                HStack(spacing: 12) {
+                    // Plan icon
+                    ZStack {
+                        Circle()
+                            .fill(Color.orange.opacity(0.15))
+                            .frame(width: 40, height: 40)
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(.orange)
+                    }
+
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(group.title)
+                            .font(.subheadline.bold())
+                            .foregroundStyle(.primary)
+                            .multilineTextAlignment(.leading)
+                        Text("\(group.completedCount) of \(group.totalCount) completed")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer()
+
+                    // Circular progress
+                    ZStack {
+                        Circle()
+                            .stroke(Color(.systemGray5), lineWidth: 3)
+                        Circle()
+                            .trim(from: 0, to: group.progressFraction)
+                            .stroke(group.isFullyCompleted ? Color.green : Color.orange, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                            .rotationEffect(.degrees(-90))
+                            .animation(.easeInOut, value: group.progressFraction)
+                    }
+                    .frame(width: 28, height: 28)
+
+                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                        .font(.caption.bold())
+                        .foregroundStyle(.secondary)
+                }
+                .padding(12)
+                .background(.background, in: RoundedRectangle(cornerRadius: 14))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .strokeBorder(Color.orange.opacity(0.25), lineWidth: 1)
+                )
+            }
+            .buttonStyle(.haptic)
+
+            // Expanded activity list
+            if isExpanded {
+                VStack(spacing: 0) {
+                    ForEach(group.activities) { activity in
+                        NavigationLink(destination: ActivityDetailView(activity: activity, onReportSubmitted: onReportSubmitted)) {
+                            ActivityRowView(activity: activity)
+                        }
+                        .buttonStyle(.haptic)
+                        .padding(.horizontal, 8)
+                        .padding(.top, 6)
+                    }
+                }
+                .padding(.bottom, 4)
+            }
+        }
     }
 }
 

@@ -34,7 +34,7 @@ struct ActivityRowView: View {
             if activity.type == .goal, let target = activity.goalTarget {
                 VStack(alignment: .leading, spacing: 4) {
                     ProgressView(value: activity.goalProgress, total: target)
-                        .tint(.blue)
+                        .tint(Color(hex: "0048E2"))
                     Text(String(format: "%.0f / %.0f", activity.goalProgress, target))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
@@ -67,7 +67,7 @@ struct ActivityRowView: View {
 
     private var typeColor: Color {
         switch activity.type {
-        case .challenge: return .blue
+        case .challenge: return Color(hex: "0048E2")
         case .goal: return .green
         case .task: return .orange
         case .habit: return .purple
@@ -97,7 +97,7 @@ struct StatusBadge: View {
 
     private var color: Color {
         switch status {
-        case .active: return .blue
+        case .active: return Color(hex: "0048E2")
         case .completed: return .green
         case .failed: return .red
         }

@@ -60,17 +60,21 @@ struct CreateActivityView: View {
                     }
                 }
             }
+            .sensoryFeedback(.selection, trigger: vm.type)
+            .sensoryFeedback(.selection, trigger: vm.frequency)
+            .sensoryFeedback(.selection, trigger: vm.hasDeadline)
+            .sensoryFeedback(.selection, trigger: vm.reminderEnabled)
             .navigationTitle("New activity")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel") { Haptics.tap(); dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Create") {
                         Task {
                             await vm.create()
-                            if vm.didCreate { dismiss() }
+                            if vm.didCreate { Haptics.success(); dismiss() }
                         }
                     }
                     .fontWeight(.semibold)
