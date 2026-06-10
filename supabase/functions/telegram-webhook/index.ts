@@ -87,8 +87,19 @@ async function downloadPhoto(fileId: string): Promise<Uint8Array> {
 // AI photo verification (Gemini vision) — mirrors the in-app verify flow
 // ---------------------------------------------------------------------------
 
+// Chunked base64: spreading a multi-hundred-KB photo into String.fromCharCode
+// arguments blows the call stack (RangeError) -- encode in 32 KB slices.
+function toBase64(bytes: Uint8Array): string {
+  let bin = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    bin += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  return btoa(bin);
+}
+
 async function verifyPhoto(condition: string, jpeg: Uint8Array, isExcuse: boolean) {
-  const base64 = btoa(String.fromCharCode(...jpeg));
+  const base64 = toBase64(jpeg);
   const prompt = isExcuse
     ? `You are checking whether a user's excuse photo is a plausible reason they could not complete this task today: "${condition}".
 Respond ONLY with JSON: {"approved": false, "excused": true or false, "explanation": "short reason, max 150 chars, same language as the condition"}`

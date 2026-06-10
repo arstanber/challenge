@@ -71,16 +71,32 @@ struct HomeView: View {
             .filter { !vm.isHandledToday($0.id) }
     }
 
+    /// Parents that are still active -- children of completed/deleted goals are
+    /// orphans and must surface as top-level cards, not vanish.
+    private var activeParentIds: Set<UUID> {
+        Set(activeTasks.filter { $0.parentId == nil }.map(\.id))
+    }
+
+    private func isTopLevel(_ a: Activity) -> Bool {
+        guard let parentId = a.parentId else { return true }
+        return !activeParentIds.contains(parentId)
+    }
+
     private var todayTasks: [Activity] {
         let cal = Calendar.current
         let endOfToday = cal.date(bySettingHour: 23, minute: 59, second: 59, of: Date())!
         return activeTasks.filter { a in
-            guard a.parentId == nil else { return false }
+            guard isTopLevel(a) else { return false }
             if a.type == .goal, activeTasks.contains(where: { $0.parentId == a.id }) { return true }
-            // Recurring tasks appear only on their scheduled weekdays.
+            if a.frequency == .once {
+                guard let d = a.deadline else { return true }
+                return d <= endOfToday
+            }
+            // Recurring: only on scheduled weekdays; deadline is an expiry
+            // date ("repeat until"), not a due date.
             guard a.isScheduled(on: Date()) else { return false }
-            guard let d = a.deadline else { return true }
-            return d <= endOfToday
+            if let d = a.deadline, d < Date() { return false }
+            return true
         }
     }
 
@@ -88,7 +104,7 @@ struct HomeView: View {
         let cal = Calendar.current
         let endOfToday = cal.date(bySettingHour: 23, minute: 59, second: 59, of: Date())!
         return activeTasks.filter { a in
-            guard a.parentId == nil else { return false }
+            guard isTopLevel(a) else { return false }
             // Off-day recurring tasks are intentionally absent from Home entirely.
             guard a.frequency == .once else { return false }
             guard let d = a.deadline else { return false }
