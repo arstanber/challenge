@@ -42,7 +42,7 @@ final class YearInReviewViewModel {
             // Top category
             var catCounts: [String: Int] = [:]
             for a in activities { if let c = a.category { catCounts[c, default: 0] += 1 } }
-            let topCategory = catCounts.max { $0.value < $1.value }?.key ?? "—"
+            let topCategory = catCounts.max { $0.value < $1.value }?.key ?? "--"
 
             guard !ids.isEmpty else {
                 stats = emptyStats(year: year); isLoading = false; return
@@ -73,7 +73,7 @@ final class YearInReviewViewModel {
 
     private func emptyStats(year: Int) -> YearStats {
         YearStats(totalCheckins: 0, activeDays: 0, bestStreak: 0, completedActivities: 0,
-                  topCategory: "—", busiestMonth: "—", busiestWeekday: "—", year: year)
+                  topCategory: "--", busiestMonth: "--", busiestWeekday: "--", year: year)
     }
 
     private func compute(dates: [Date], completed: Int, topCategory: String, year: Int) -> YearStats {
@@ -97,11 +97,11 @@ final class YearInReviewViewModel {
         let monthF = DateFormatter(); monthF.dateFormat = "LLLL"
         let busiestMonth = monthCounts.max { $0.value < $1.value }.map {
             monthF.monthSymbols[$0.key - 1]
-        } ?? "—"
+        } ?? "--"
 
         let busiestWeekday = weekdayCounts.max { $0.value < $1.value }.map {
             DateFormatter().weekdaySymbols[$0.key - 1]
-        } ?? "—"
+        } ?? "--"
 
         return YearStats(
             totalCheckins: dates.count,
@@ -153,9 +153,9 @@ struct YearInReviewView: View {
                             if let img = rendered(stats) {
                                 ShareLink(
                                     item: Image(uiImage: img),
-                                    preview: SharePreview("My \(stats.year) on Challenge", image: Image(uiImage: img))
+                                    preview: SharePreview("Мой \(stats.year) год в Challenge", image: Image(uiImage: img))
                                 ) {
-                                    Label("Share my \(String(stats.year))", systemImage: "square.and.arrow.up")
+                                    Label("Поделиться итогами \(String(stats.year))", systemImage: "square.and.arrow.up")
                                         .font(.manrope(.bold, size: 16))
                                         .foregroundColor(Color(hex: "4580FF"))
                                         .frame(maxWidth: .infinity)
@@ -200,28 +200,28 @@ private struct WrappedCard: View {
                 Text("\(String(stats.year))")
                     .font(.manrope(.extraBold, size: 40))
                     .foregroundStyle(.white)
-                Text("My Year in Review")
+                Text("Мои итоги года")
                     .font(.manrope(.bold, size: 16))
                     .foregroundStyle(.white.opacity(0.8))
             }
 
             VStack(spacing: 14) {
-                WrappedRow(emoji: "✅", value: "\(stats.totalCheckins)", label: "check-ins")
-                WrappedRow(emoji: "📅", value: "\(stats.activeDays)", label: "active days")
-                WrappedRow(emoji: "🔥", value: "\(stats.bestStreak)", label: "longest streak")
-                WrappedRow(emoji: "🏆", value: "\(stats.completedActivities)", label: "goals completed")
-                WrappedRow(emoji: "⭐️", value: "LVL \(level)", label: "reached")
+                WrappedRow(emoji: "✅", value: "\(stats.totalCheckins)", label: "отметок")
+                WrappedRow(emoji: "📅", value: "\(stats.activeDays)", label: "активных дней")
+                WrappedRow(emoji: "🔥", value: "\(stats.bestStreak)", label: "лучшая серия")
+                WrappedRow(emoji: "🏆", value: "\(stats.completedActivities)", label: "целей выполнено")
+                WrappedRow(emoji: "⭐️", value: "УР. \(level)", label: "достигнут")
             }
 
             Divider().overlay(.white.opacity(0.3))
 
             VStack(alignment: .leading, spacing: 8) {
-                WrappedFact(label: "Top category", value: stats.topCategory.capitalized)
-                WrappedFact(label: "Busiest month", value: stats.busiestMonth)
-                WrappedFact(label: "Power day", value: stats.busiestWeekday)
+                WrappedFact(label: "Топ-категория", value: stats.topCategory.capitalized)
+                WrappedFact(label: "Активный месяц", value: stats.busiestMonth)
+                WrappedFact(label: "Продуктивный день", value: stats.busiestWeekday)
             }
 
-            Text("Challenge · \(String(stats.year))")
+            Text("Challenge -- \(String(stats.year))")
                 .font(.manrope(.medium, size: 12))
                 .foregroundStyle(.white.opacity(0.6))
                 .frame(maxWidth: .infinity, alignment: .center)

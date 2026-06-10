@@ -17,7 +17,7 @@ struct WeeklyReportView: View {
         let m = computeMetrics()
         VStack(spacing: 24) {
             HStack {
-                Text("Weekly Report")
+                Text("Отчёт за неделю")
                     .font(.manrope(.bold, size: 18))
                 Spacer()
                 Button { Haptics.tap(); dismiss() } label: {
@@ -37,9 +37,9 @@ struct WeeklyReportView: View {
             if let img = renderedImage(m) {
                 ShareLink(
                     item: Image(uiImage: img),
-                    preview: SharePreview("My week on Challenge", image: Image(uiImage: img))
+                    preview: SharePreview("Моя неделя в Challenge", image: Image(uiImage: img))
                 ) {
-                    Text("Share my week")
+                    Text("Поделиться неделей")
                         .font(.manrope(.bold, size: 16))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
@@ -69,7 +69,7 @@ struct WeeklyReportView: View {
         }
         let f = DateFormatter()
         f.dateFormat = "EEE"
-        let label = best.map { f.string(from: $0.0) } ?? "—"
+        let label = best.map { f.string(from: $0.0) } ?? "--"
         return ReportMetrics(checkins: checkins, activeDays: activeDays,
                              bestDayLabel: label, bestDayCount: best?.1 ?? 0)
     }
@@ -105,11 +105,11 @@ private struct ReportCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             HStack {
-                Text("My week")
+                Text("Моя неделя")
                     .font(.manrope(.extraBold, size: 24))
                     .foregroundColor(.black)
                 Spacer()
-                Text("LVL \(level)")
+                Text("УР. \(level)")
                     .font(.manrope(.bold, size: 13))
                     .foregroundColor(.white)
                     .padding(.horizontal, 10).padding(.vertical, 5)
@@ -117,15 +117,15 @@ private struct ReportCard: View {
             }
 
             HStack(spacing: 12) {
-                ReportStat(value: "\(metrics.activeDays)/7", label: "Active days", emoji: "📅", tint: accent)
-                ReportStat(value: "\(metrics.checkins)", label: "Check-ins", emoji: "✅", tint: Color(hex: "2FB873"))
+                ReportStat(value: "\(metrics.activeDays)/7", label: "Активных дней", emoji: "📅", tint: accent)
+                ReportStat(value: "\(metrics.checkins)", label: "Отметок", emoji: "✅", tint: Color(hex: "2FB873"))
             }
             HStack(spacing: 12) {
-                ReportStat(value: "\(currentStreak)", label: "Current streak", emoji: "🔥", tint: Color(hex: "FF7A00"))
-                ReportStat(value: metrics.bestDayLabel, label: "Best day (\(metrics.bestDayCount))", emoji: "⭐️", tint: Color(hex: "FFB200"))
+                ReportStat(value: "\(currentStreak)", label: "Текущая серия", emoji: "🔥", tint: Color(hex: "FF7A00"))
+                ReportStat(value: metrics.bestDayLabel, label: "Лучший день (\(metrics.bestDayCount))", emoji: "⭐️", tint: Color(hex: "FFB200"))
             }
 
-            Text("Challenge · keep showing up")
+            Text("Challenge -- продолжай в том же духе")
                 .font(.manrope(.medium, size: 12))
                 .foregroundColor(.black.opacity(0.35))
                 .frame(maxWidth: .infinity, alignment: .center)

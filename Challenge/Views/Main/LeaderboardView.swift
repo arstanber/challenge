@@ -60,7 +60,7 @@ struct LeaderboardView: View {
             VStack(spacing: 0) {
                 // Header
                 HStack {
-                    Text("Leaderboard")
+                    Text("Рейтинг")
                         .font(.manrope(.extraBold, size: 24))
                     Spacer()
                     Image(systemName: "trophy.fill")
@@ -109,9 +109,9 @@ struct LeaderboardView: View {
         VStack(spacing: 14) {
             Text("🏆")
                 .font(.system(size: 56))
-            Text("No one to compete with yet")
+            Text("Пока не с кем соревноваться")
                 .font(.manrope(.bold, size: 18))
-            Text("Join a family to see your ranking")
+            Text("Присоединись к семье, чтобы увидеть свой рейтинг")
                 .font(.manrope(.medium, size: 14))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -204,14 +204,14 @@ private struct LeaderboardRow: View {
                     Text(entry.email.components(separatedBy: "@").first ?? entry.email)
                         .font(.manrope(.bold, size: 15))
                     if isMe {
-                        Text("You")
+                        Text("Ты")
                             .font(.manrope(.bold, size: 11))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 6).padding(.vertical, 2)
                             .background(Capsule().fill(Color(hex: "4580FF")))
                     }
                 }
-                Text("\(entry.totalCompleted) completed")
+                Text("Выполнено: \(entry.totalCompleted)")
                     .font(.manrope(.medium, size: 12))
                     .foregroundStyle(.secondary)
             }
@@ -224,7 +224,7 @@ private struct LeaderboardRow: View {
                     Image(systemName: "flame.fill").font(.subheadline).foregroundStyle(.orange)
                     Text("\(entry.streakCurrent)").font(.manrope(.extraBold, size: 18))
                 }
-                Text("best \(entry.streakBest)")
+                Text("рекорд \(entry.streakBest)")
                     .font(.manrope(.medium, size: 11))
                     .foregroundStyle(.secondary)
             }

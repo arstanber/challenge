@@ -6,7 +6,7 @@ struct FamilyView: View {
     var body: some View {
         List {
             if let family = vm.family {
-                Section("Family code") {
+                Section("Код семьи") {
                     HStack {
                         Text(family.inviteCode)
                             .font(.title2.bold().monospaced())
@@ -20,14 +20,14 @@ struct FamilyView: View {
                         }
                         .buttonStyle(.bordered)
                     }
-                    Text("Share this code with your children so they can join.")
+                    Text("Поделись этим кодом с детьми, чтобы они могли присоединиться.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
 
-            Section("Children (\(vm.children.count))") {
+            Section("Дети (\(vm.children.count))") {
                 if vm.children.isEmpty {
-                    Text("No children yet. Share your invite code.")
+                    Text("Пока нет детей. Поделись кодом приглашения.")
                         .font(.subheadline).foregroundStyle(.secondary)
                 } else {
                     ForEach(vm.children) { member in
@@ -39,9 +39,9 @@ struct FamilyView: View {
                                     Image(systemName: "person.fill").foregroundStyle(.purple)
                                 }
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(member.childUser?.email ?? "Child")
+                                Text(member.childUser?.email ?? "Ребёнок")
                                     .font(.subheadline.bold())
-                                Text("Joined \(member.joinedAt, style: .relative)")
+                                Text("Присоединился \(member.joinedAt, style: .relative)")
                                     .font(.caption).foregroundStyle(.secondary)
                             }
                         }
@@ -50,7 +50,7 @@ struct FamilyView: View {
                 }
             }
         }
-        .navigationTitle("Family")
+        .navigationTitle("Семья")
         .navigationBarTitleDisplayMode(.inline)
         .refreshable { await vm.loadProfile() }
         .task { await vm.loadProfile() }
