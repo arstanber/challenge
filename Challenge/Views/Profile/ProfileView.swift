@@ -243,7 +243,7 @@ struct PremiumView: View {
                 Button { Haptics.tap(); Task { await store.purchase() } } label: {
                     Group {
                         if store.isPurchasing { ProgressView().tint(.white) }
-                        else { Text("Individual — \(priceLabel)").fontWeight(.semibold) }
+                        else { Text("Individual: \(priceLabel)").fontWeight(.semibold) }
                     }
                     .frame(maxWidth: .infinity).frame(height: 50)
                 }
@@ -253,7 +253,7 @@ struct PremiumView: View {
                 Button { Haptics.tap(); Task { await store.purchaseFamily() } } label: {
                     Group {
                         if store.isPurchasing { ProgressView().tint(.white) }
-                        else { Text("Family — \(familyPriceLabel)").fontWeight(.semibold) }
+                        else { Text("Family: \(familyPriceLabel)").fontWeight(.semibold) }
                     }
                     .frame(maxWidth: .infinity).frame(height: 50)
                 }

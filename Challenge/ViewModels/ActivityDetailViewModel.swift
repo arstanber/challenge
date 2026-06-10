@@ -17,6 +17,10 @@ final class ActivityDetailViewModel {
     var lastAIResult: AIVerificationResult?
     var lastAIExplanation: String?
 
+    /// True when the server rejected verification with 429 (monthly AI quota spent) —
+    /// the view offers Premium instead of failing silently
+    var aiLimitReached = false
+
     /// Called after any successful counted submission so global streak refreshes
     var onReportSubmitted: (() -> Void)?
 
@@ -139,6 +143,10 @@ final class ActivityDetailViewModel {
                     break
                 }
             } catch {
+                if let fnError = error as? FunctionsError,
+                   case .httpError(let code, _) = fnError, code == 429 {
+                    aiLimitReached = true
+                }
                 // Verification unavailable (offline / monthly limit reached) — don't hard-block:
                 // accept the photo so the user can still complete the task.
                 lastAIResult = .notApplicable

@@ -10,6 +10,8 @@ struct ActivityDetailView: View {
     @State private var showLocationReminder = false
     // Habit calendar
     @State private var showHabitCalendar = false
+    // Paywall when monthly AI quota is spent
+    @State private var showPaywall = false
 
     init(activity: Activity, onReportSubmitted: (() -> Void)? = nil) {
         let viewModel = ActivityDetailViewModel(activity: activity)
@@ -88,6 +90,15 @@ struct ActivityDetailView: View {
             }
         }
         .task { await vm.loadReports() }
+        .alert("Лимит AI-проверок исчерпан", isPresented: $vm.aiLimitReached) {
+            Button("Challenge Premium") { Haptics.tap(); showPaywall = true }
+            Button("Позже", role: .cancel) {}
+        } message: {
+            Text("Бесплатные проверки фото на этот месяц закончились. Отчёт сохранён без проверки. В Premium проверки безлимитные.")
+        }
+        .sheet(isPresented: $showPaywall) {
+            NavigationStack { PremiumView() }
+        }
         .alert("Error", isPresented: Binding(
             get: { vm.errorMessage != nil },
             set: { if !$0 { vm.errorMessage = nil } }

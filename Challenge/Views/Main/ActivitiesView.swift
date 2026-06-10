@@ -5,6 +5,7 @@ struct ActivitiesView: View {
     @Environment(AuthService.self) private var authService
     @State private var showCreate = false
     @State private var showPlanner = false
+    @State private var showPaywall = false
     @State private var selectedTab = 0
 
     private var isChild: Bool { authService.currentUser?.role == .child }
@@ -100,7 +101,7 @@ struct ActivitiesView: View {
                         // Manual create button
                         Button {
                             if vm.canCreateMore { Haptics.tap(); showCreate = true }
-                            else { Haptics.warning() }
+                            else { Haptics.warning(); showPaywall = true }
                         } label: {
                             if vm.canCreateMore {
                                 Image(systemName: "plus.circle.fill")
@@ -122,6 +123,9 @@ struct ActivitiesView: View {
                 Task { await vm.loadActivities() }
             }) {
                 GoalPlannerView()
+            }
+            .sheet(isPresented: $showPaywall) {
+                NavigationStack { PremiumView() }
             }
             .alert("Error", isPresented: Binding(
                 get: { vm.errorMessage != nil },
