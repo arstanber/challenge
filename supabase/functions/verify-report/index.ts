@@ -1,6 +1,19 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const MODEL = "claude-sonnet-4-5";
+
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+function json(data: unknown, status = 200): Response {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+  });
+}
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
@@ -10,40 +23,84 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
 }
 
 Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: CORS_HEADERS });
+  }
   if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: { "Content-Type": "application/json" } });
+    return json({ error: "Method not allowed" }, 405);
   }
 
   try {
     const body = await req.json();
-    const { condition, photo_url, is_excuse = false } = body;
+    const { condition, photo_url, report_id, is_excuse = false } = body;
 
     if (!condition || !photo_url) {
-      return new Response(JSON.stringify({ error: "Missing condition or photo_url" }), { status: 400, headers: { "Content-Type": "application/json" } });
+      return json({ error: "Missing condition or photo_url" }, 400);
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+
+    // Only verify photos that live in our own reports bucket
+    if (!String(photo_url).startsWith(`${supabaseUrl}/storage/v1/object/public/reports/`)) {
+      return json({ error: "photo_url must point to the reports bucket" }, 400);
+    }
+
+    // 1. Authenticate the caller -- user id comes from the verified JWT, never the body
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user }, error: authError } = await anonClient.auth.getUser();
+    if (authError || !user) {
+      return json({ error: "Unauthorized" }, 401);
+    }
+
+    const adminClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+    // 2. The report being verified must belong to the caller
+    if (report_id) {
+      const { data: report } = await adminClient
+        .from("reports")
+        .select("id, activities!inner(user_id)")
+        .eq("id", report_id)
+        .maybeSingle();
+      const ownerId = (report as { activities?: { user_id?: string } } | null)?.activities?.user_id;
+      if (!report || ownerId !== user.id) {
+        return json({ error: "Report not found" }, 403);
+      }
+    }
+
+    // 3. Enforce the monthly quota server-side (atomic check-and-increment)
+    const month = new Date().toISOString().slice(0, 7); // "YYYY-MM"
+    const { data: quota, error: quotaError } = await adminClient.rpc("check_and_increment_usage", {
+      p_user_id: user.id,
+      p_feature: "verify-report",
+      p_month: month,
+    });
+    if (quotaError) {
+      console.error("rate limit rpc error:", quotaError);
+      return json({ error: "Internal error" }, 500);
+    }
+    if (!quota.allowed) {
+      return json({ error: "rate_limit_exceeded", remaining: 0, limit: quota.limit }, 429);
     }
 
     const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
     if (!anthropicKey) {
-      return new Response(
-        JSON.stringify({ approved: false, excused: false, explanation: "AI verification not configured." }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
-      );
+      return json({ approved: false, excused: false, explanation: "AI verification not configured." });
     }
 
-    // Fetch photo
+    // 4. Fetch photo
     const photoResponse = await fetch(photo_url);
     if (!photoResponse.ok) {
-      return new Response(
-        JSON.stringify({ approved: false, excused: false, explanation: "Could not retrieve the photo." }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
-      );
+      return json({ approved: false, excused: false, explanation: "Could not retrieve the photo." });
     }
     const photoBuffer = await photoResponse.arrayBuffer();
     const photoBase64 = arrayBufferToBase64(photoBuffer);
     const contentType = photoResponse.headers.get("content-type") || "image/jpeg";
     const mediaType = contentType.startsWith("image/") ? contentType.split(";")[0].trim() : "image/jpeg";
 
-    // Build prompt based on mode
+    // 5. Build prompt based on mode
     let prompt: string;
 
     if (is_excuse) {
@@ -105,10 +162,7 @@ Respond ONLY with valid JSON (no markdown):
     if (!res.ok) {
       const err = await res.text();
       console.error("Anthropic error:", err);
-      return new Response(
-        JSON.stringify({ approved: false, excused: false, explanation: "AI verification temporarily unavailable." }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
-      );
+      return json({ approved: false, excused: false, explanation: "AI verification temporarily unavailable." });
     }
 
     const data = await res.json();
@@ -124,20 +178,26 @@ Respond ONLY with valid JSON (no markdown):
       const approvedMatch = responseText.match(/"approved"\s*:\s*(true|false)/);
       const excusedMatch  = responseText.match(/"excused"\s*:\s*(true|false)/);
       result = {
-        approved: approvedMatch?.[1] === "true" ?? false,
-        excused:  excusedMatch?.[1]  === "true" ?? false,
+        approved: approvedMatch?.[1] === "true",
+        excused:  excusedMatch?.[1]  === "true",
         explanation: "Verification completed.",
       };
     }
 
-    return new Response(JSON.stringify(result), {
-      headers: { "Content-Type": "application/json", "Connection": "keep-alive" },
-    });
+    // 6. Write the verdict server-side. Clients cannot write ai_result/ai_explanation
+    //    (blocked by the protect_ai_verdict trigger) -- this is the only write path.
+    if (report_id) {
+      const aiResult = result.approved ? "approved" : result.excused ? "excused" : "rejected";
+      const { error: writeError } = await adminClient
+        .from("reports")
+        .update({ ai_result: aiResult, ai_explanation: result.explanation })
+        .eq("id", report_id);
+      if (writeError) console.error("verdict write error:", writeError);
+    }
+
+    return json({ ...result, remaining: quota.remaining });
   } catch (error) {
     console.error("verify-report error:", error);
-    return new Response(
-      JSON.stringify({ approved: false, excused: false, explanation: "An error occurred during verification." }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
-    );
+    return json({ approved: false, excused: false, explanation: "An error occurred during verification." });
   }
 });

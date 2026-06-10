@@ -21,6 +21,8 @@ struct AIVerificationResponse: Decodable {
     let approved: Bool
     let excused: Bool
     let explanation: String
+    /// Monthly verifications left, reported by the server-side rate limiter
+    let remaining: Int?
 
     // excused defaults to false if missing (backward compat)
     init(from decoder: Decoder) throws {
@@ -28,9 +30,10 @@ struct AIVerificationResponse: Decodable {
         approved    = try c.decode(Bool.self,   forKey: .approved)
         excused     = try c.decodeIfPresent(Bool.self, forKey: .excused) ?? false
         explanation = try c.decode(String.self, forKey: .explanation)
+        remaining   = try c.decodeIfPresent(Int.self, forKey: .remaining)
     }
 
-    enum CodingKeys: CodingKey { case approved, excused, explanation }
+    enum CodingKeys: CodingKey { case approved, excused, explanation, remaining }
 }
 
 final class AIVerificationService {

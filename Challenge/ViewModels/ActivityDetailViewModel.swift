@@ -94,7 +94,9 @@ final class ActivityDetailViewModel {
                     isExcuse:   isExcuse
                 )
 
-                // Determine result
+                // Determine result. The verdict row is written server-side by the
+                // verify-report edge function -- clients cannot write ai_result
+                // (blocked by the protect_ai_verdict DB trigger).
                 let resultEnum: AIVerificationResult
                 if aiResponse.approved {
                     resultEnum = .approved
@@ -104,11 +106,9 @@ final class ActivityDetailViewModel {
                     resultEnum = .rejected
                 }
 
-                try await supabase
-                    .from("reports")
-                    .update(["ai_result": resultEnum.rawValue, "ai_explanation": aiResponse.explanation])
-                    .eq("id", value: report.id.uuidString)
-                    .execute()
+                if let remaining = aiResponse.remaining {
+                    RateLimiterService.shared.syncRemaining(remaining, for: .verifyReport)
+                }
 
                 if let idx = reports.firstIndex(where: { $0.id == report.id }) {
                     reports[idx].aiResult      = resultEnum
