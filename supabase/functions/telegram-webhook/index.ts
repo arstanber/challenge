@@ -191,22 +191,27 @@ async function handleToday(chatId: number, userId: string) {
   const db = admin();
   const { data: activities } = await db
     .from("activities")
-    .select("title, type, frequency, streak_current")
+    .select("title, type, frequency, streak_current, schedule_days")
     .eq("user_id", userId)
     .eq("status", "active")
     .order("created_at", { ascending: false })
     .limit(20);
 
-  if (!activities || activities.length === 0) {
-    await sendMessage(chatId, "You have no active tasks. Send me a message to create one!");
+  const tz = await userTimezone(db, userId);
+  const todayDow = isoDowNow(tz);
+  const todays = ((activities ?? []) as { title: string; type: string; frequency: string; streak_current: number; schedule_days: number[] | null }[])
+    .filter((a) => a.frequency === "once" || isScheduledToday(a.schedule_days, todayDow));
+
+  if (todays.length === 0) {
+    await sendMessage(chatId, "You have no tasks scheduled for today. Send me a message to create one!");
     return;
   }
 
-  const lines = activities.map((a: { title: string; type: string; streak_current: number }) => {
+  const lines = todays.map((a) => {
     const streak = a.streak_current > 0 ? ` 🔥${a.streak_current}` : "";
     return `• ${a.title} <i>(${a.type})</i>${streak}`;
   });
-  await sendMessage(chatId, `<b>Active tasks</b>\n${lines.join("\n")}`);
+  await sendMessage(chatId, `<b>Today's tasks</b>\n${lines.join("\n")}`);
 }
 
 async function handleNewTask(chatId: number, userId: string, title: string) {
@@ -234,6 +239,23 @@ async function handleNewTask(chatId: number, userId: string, title: string) {
 
 function escapeHtml(s: string) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// ISO weekday (1 = Monday ... 7 = Sunday) for "now" in the given IANA timezone.
+// Matches Postgres extract(isodow) and activities.schedule_days.
+function isoDowNow(tz: string): number {
+  const wd = new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "short" }).format(new Date());
+  return ({ Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 7 } as Record<string, number>)[wd] ?? 1;
+}
+
+async function userTimezone(db: ReturnType<typeof admin>, userId: string): Promise<string> {
+  const { data } = await db.from("users").select("timezone").eq("id", userId).maybeSingle();
+  return data?.timezone || "UTC";
+}
+
+// schedule_days empty/null = every day; otherwise only listed ISO weekdays.
+function isScheduledToday(scheduleDays: number[] | null, todayDow: number): boolean {
+  return !scheduleDays || scheduleDays.length === 0 || scheduleDays.includes(todayDow);
 }
 
 // ---------------------------------------------------------------------------
@@ -279,7 +301,16 @@ async function handleDoneCallback(chatId: number, messageId: number, userId: str
     return;
   }
 
-  await db.from("reports").insert({ activity_id: activity.id, ai_result: "habit_done", comment: "Marked done via Telegram" });
+  // No ai_result here: defaults to 'not_applicable' (a plain check-in).
+  // 'habit_done' is not allowed by the reports CHECK constraint and used to fail silently.
+  const { error: reportError } = await db
+    .from("reports")
+    .insert({ activity_id: activity.id, comment: "Marked done via Telegram" });
+  if (reportError) {
+    console.error("done report insert failed:", reportError);
+    await editMessageText(chatId, messageId, "⚠️ Couldn't record that — please try again.");
+    return;
+  }
   if (activity.frequency === "once") {
     await db.from("activities").update({ status: "completed" }).eq("id", activity.id);
   }
