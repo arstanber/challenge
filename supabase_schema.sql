@@ -14,6 +14,8 @@ CREATE TABLE IF NOT EXISTS public.users (
   plan       TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'premium')),
   role       TEXT NOT NULL DEFAULT 'individual' CHECK (role IN ('individual', 'parent', 'child')),
   family_id  UUID,
+  -- IANA timezone identifier, upserted by the app on launch. Used for day bucketing in streaks and reminders.
+  timezone   TEXT NOT NULL DEFAULT 'UTC',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -96,6 +98,8 @@ CREATE TABLE IF NOT EXISTS public.activities (
   streak_best     INT NOT NULL DEFAULT 0,
   goal_progress   DOUBLE PRECISION NOT NULL DEFAULT 0,
   goal_target     DOUBLE PRECISION,
+  -- ISO weekdays (1=Mon..7=Sun) the activity is scheduled on. NULL/empty = every day.
+  schedule_days   SMALLINT[] CHECK (schedule_days IS NULL OR (schedule_days <@ ARRAY[1,2,3,4,5,6,7]::SMALLINT[] AND array_length(schedule_days, 1) >= 1)),
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -124,7 +128,7 @@ CREATE TABLE IF NOT EXISTS public.reports (
   activity_id    UUID NOT NULL REFERENCES public.activities(id) ON DELETE CASCADE,
   photo_url      TEXT,
   comment        TEXT,
-  ai_result      TEXT NOT NULL DEFAULT 'not_applicable' CHECK (ai_result IN ('approved', 'rejected', 'pending', 'not_applicable')),
+  ai_result      TEXT NOT NULL DEFAULT 'not_applicable' CHECK (ai_result IN ('approved', 'rejected', 'pending', 'not_applicable', 'excused')),
   ai_explanation TEXT,
   progress_value DOUBLE PRECISION,
   created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
