@@ -573,7 +573,10 @@ private struct TaskCardView: View {
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { isCompleting = false }
             }
         }
-        .swipeToDelete { onDelete(task) }
+        .swipeCardActions(
+            onComplete: isGoal ? nil : { handleToggle() },
+            onDelete: { onDelete(task) }
+        )
     }
 
     private func handleToggle() {
