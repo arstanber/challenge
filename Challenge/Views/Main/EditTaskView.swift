@@ -93,9 +93,9 @@ struct EditTaskView: View {
                     }
                 }
             }
-            .sensoryFeedback(.selection, trigger: frequency)
-            .sensoryFeedback(.selection, trigger: hasDeadline)
-            .sensoryFeedback(.selection, trigger: reminderEnabled)
+            .hapticFeedback(.selection, trigger: frequency)
+            .hapticFeedback(.selection, trigger: hasDeadline)
+            .hapticFeedback(.selection, trigger: reminderEnabled)
             .navigationTitle("Edit task")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

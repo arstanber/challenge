@@ -33,6 +33,7 @@ struct SettingsView: View {
     @AppStorage("units") private var units = "Метр. (км, мл)"
     @AppStorage("weekStart") private var weekStart = "Понедельник"
     @AppStorage("defaultView") private var defaultView = "День"
+    @AppStorage(Haptics.enabledKey) private var hapticsEnabled = true
     // Habits
     @AppStorage("groupCompleted") private var groupCompleted = false
     @AppStorage("strictMode") private var strictMode = true
@@ -203,6 +204,13 @@ struct SettingsView: View {
             SettingsDivider()
             SettingsMenuRow(icon: "rectangle.split.2x1", title: "Вид по умолчанию",
                             selection: $defaultView, options: ["День", "Неделя", "Месяц"])
+            SettingsDivider()
+            SettingsToggleRow(
+                icon: "iphone.radiowaves.left.and.right",
+                title: "Вибрация",
+                subtitle: "Тактильный отклик при нажатиях и действиях.",
+                isOn: $hapticsEnabled
+            )
         }
     }
 
@@ -434,7 +442,7 @@ private struct SettingsToggleRow: View {
                 Toggle("", isOn: $isOn)
                     .labelsHidden()
                     .tint(Color(hex: "30D158"))
-                    .sensoryFeedback(.selection, trigger: isOn)
+                    .hapticFeedback(.selection, trigger: isOn)
             }
             if let subtitle {
                 Text(subtitle)

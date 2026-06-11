@@ -9,6 +9,14 @@ import UIKit
 @MainActor
 enum Haptics {
 
+    /// UserDefaults key for the global haptics setting (toggled in SettingsView).
+    static let enabledKey = "hapticsEnabled"
+
+    /// Global switch — when off, every call below becomes a no-op.
+    static var isEnabled: Bool {
+        UserDefaults.standard.object(forKey: enabledKey) as? Bool ?? true
+    }
+
     // MARK: Impact
 
     /// Light tap — default for button presses and simple taps.
@@ -21,6 +29,7 @@ enum Haptics {
 
     static func impact(_ style: UIImpactFeedbackGenerator.FeedbackStyle,
                        intensity: CGFloat = 1.0) {
+        guard isEnabled else { return }
         let generator = UIImpactFeedbackGenerator(style: style)
         generator.prepare()
         generator.impactOccurred(intensity: intensity)
@@ -30,6 +39,7 @@ enum Haptics {
 
     /// Used when moving between discrete values — pickers, segmented controls, toggles.
     static func selection() {
+        guard isEnabled else { return }
         let generator = UISelectionFeedbackGenerator()
         generator.prepare()
         generator.selectionChanged()
@@ -42,6 +52,7 @@ enum Haptics {
     static func error()   { notify(.error) }
 
     static func notify(_ type: UINotificationFeedbackGenerator.FeedbackType) {
+        guard isEnabled else { return }
         let generator = UINotificationFeedbackGenerator()
         generator.prepare()
         generator.notificationOccurred(type)
@@ -88,5 +99,11 @@ extension View {
             Haptics.impact(style)
             action()
         }
+    }
+
+    /// Drop-in replacement for `sensoryFeedback(_:trigger:)` that respects
+    /// the global haptics setting.
+    func hapticFeedback<T: Equatable>(_ feedback: SensoryFeedback, trigger: T) -> some View {
+        sensoryFeedback(feedback, trigger: trigger) { _, _ in Haptics.isEnabled }
     }
 }

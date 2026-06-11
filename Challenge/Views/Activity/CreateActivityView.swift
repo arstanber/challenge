@@ -82,10 +82,10 @@ struct CreateActivityView: View {
                     }
                 }
             }
-            .sensoryFeedback(.selection, trigger: vm.type)
-            .sensoryFeedback(.selection, trigger: vm.frequency)
-            .sensoryFeedback(.selection, trigger: vm.hasDeadline)
-            .sensoryFeedback(.selection, trigger: vm.reminderEnabled)
+            .hapticFeedback(.selection, trigger: vm.type)
+            .hapticFeedback(.selection, trigger: vm.frequency)
+            .hapticFeedback(.selection, trigger: vm.hasDeadline)
+            .hapticFeedback(.selection, trigger: vm.reminderEnabled)
             .navigationTitle("New activity")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

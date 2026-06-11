@@ -86,7 +86,7 @@ struct ActivitiesView: View {
                 GlobalStreakBanner(vm: vm)
             }
             .navigationTitle("Challenge")
-            .sensoryFeedback(.selection, trigger: selectedTab)
+            .hapticFeedback(.selection, trigger: selectedTab)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     HStack(spacing: 4) {

@@ -52,7 +52,7 @@ struct LocationReminderPicker: View {
                             .foregroundColor(.black.opacity(0.5))
                         Slider(value: $radius, in: 100...1000, step: 50)
                             .tint(Color(hex: "4580FF"))
-                            .sensoryFeedback(.selection, trigger: radius)
+                            .hapticFeedback(.selection, trigger: radius)
                         Text("\(Int(radius))m")
                             .font(.manrope(.bold, size: 13))
                             .frame(width: 50, alignment: .trailing)
