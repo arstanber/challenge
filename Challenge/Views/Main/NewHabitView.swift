@@ -203,7 +203,9 @@ struct NewHabitView: View {
             }
             Rectangle().fill(Color.primary.opacity(0.1)).frame(height: 1)
             HStack(spacing: 8) {
-                ForEach(0..<7, id: \.self) { i in
+                // Ordered by the week-start setting; storage stays 0=Mon..6=Sun.
+                ForEach(AppPrefs.orderedIsoWeekdays, id: \.self) { iso in
+                    let i = iso - 1
                     let on = selectedDays.contains(i)
                     Button {
                         Haptics.selection()

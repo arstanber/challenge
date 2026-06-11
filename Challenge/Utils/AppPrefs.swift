@@ -46,6 +46,14 @@ enum AppPrefs {
         weekStartsMonday ? [1, 2, 3, 4, 5, 6, 7] : [7, 1, 2, 3, 4, 5, 6]
     }
 
+    /// Short Russian weekday labels indexed by ISO weekday - 1 (Mon..Sun).
+    static let isoWeekdayShortLabels = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
+
+    /// Weekday header labels ordered by the week-start setting.
+    static var orderedWeekdayLabels: [String] {
+        orderedIsoWeekdays.map { isoWeekdayShortLabels[$0 - 1] }
+    }
+
     /// Locale honoring "Формат времени" -- drives 12/24h in DatePickers and
     /// `.formatted()` output when injected via `.environment(\.locale, _)`.
     static var locale: Locale {

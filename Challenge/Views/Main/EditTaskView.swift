@@ -57,7 +57,8 @@ struct EditTaskView: View {
 
                     if frequency == .weekly {
                         HStack(spacing: 8) {
-                            ForEach(1...7, id: \.self) { day in
+                            // Ordered by the week-start setting; values stay ISO 1=Mon..7=Sun.
+                            ForEach(AppPrefs.orderedIsoWeekdays, id: \.self) { day in
                                 let on = selectedDays.contains(day)
                                 Button {
                                     Haptics.selection()

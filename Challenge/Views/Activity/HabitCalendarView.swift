@@ -12,7 +12,8 @@ struct HabitCalendarView: View {
     @State private var showCamera = false
     @State private var liveToday: Double?
 
-    private let cal = Calendar.current
+    // Honors the "Начало недели" setting (Mon/Sun-first grid).
+    private let cal = AppPrefs.calendar
     private let orange = Color(hex: "FF7A00")
     private let blue = Color(hex: "4580FF")
 
@@ -212,9 +213,9 @@ struct HabitCalendarView: View {
                 .disabled(monthOffset >= 0)
             }
 
-            // Weekday headers (Mon-first)
+            // Weekday headers, ordered by the week-start setting
             HStack(spacing: 0) {
-                ForEach(["Пн","Вт","Ср","Чт","Пт","Сб","Вс"], id: \.self) { d in
+                ForEach(AppPrefs.orderedWeekdayLabels, id: \.self) { d in
                     Text(d)
                         .font(.manrope(.medium, size: 13))
                         .foregroundColor(.primary.opacity(0.35))
@@ -241,13 +242,13 @@ struct HabitCalendarView: View {
         return f.string(from: monthDate).capitalized
     }
 
-    /// Cells for the month grid (with leading blanks for Monday alignment).
+    /// Cells for the month grid (with leading blanks aligned to the week start).
     private var monthCells: [DayCellModel] {
         guard let interval = cal.dateInterval(of: .month, for: monthDate) else { return [] }
         let firstDay = interval.start
-        // weekday 1=Sun..7=Sat → convert to Monday-first index 0..6
+        // weekday 1=Sun..7=Sat → offset from the calendar's first weekday 0..6
         let weekday = cal.component(.weekday, from: firstDay)
-        let leading = (weekday + 5) % 7
+        let leading = (weekday - cal.firstWeekday + 7) % 7
         let daysInMonth = cal.range(of: .day, in: .month, for: monthDate)?.count ?? 30
 
         var cells: [DayCellModel] = []
