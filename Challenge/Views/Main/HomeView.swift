@@ -258,6 +258,7 @@ struct HomeView: View {
         .task {
             await vm.loadActivities()
             NotificationService.shared.syncReminders(for: vm.myActivities + vm.parentActivities)
+            NotificationService.shared.scheduleDailyMotivationPlan(for: vm.myActivities + vm.parentActivities)
         }
         .fullScreenCover(isPresented: $showPerfectDay) {
             PerfectDayView { showPerfectDay = false }
