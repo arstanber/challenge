@@ -26,6 +26,7 @@ enum AppColorTheme: String, CaseIterable, Identifiable {
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
+    @State private var auth = AuthService.shared
 
     // Global
     @AppStorage("appTheme") private var appTheme = AppColorTheme.light.rawValue
