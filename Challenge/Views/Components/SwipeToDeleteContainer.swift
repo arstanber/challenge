@@ -33,9 +33,11 @@ private struct SwipeToDeleteModifier: ViewModifier {
             .buttonStyle(.plain)
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
 
+            // The tap-to-close layer must be attached BEFORE .offset: offset is a
+            // render/hit-test translation that does not move the layout frame, so
+            // an overlay added after it would stay on the original frame and cover
+            // (swallow taps on) the revealed delete button.
             content
-                .offset(x: offset)
-                .simultaneousGesture(dragGesture)
                 .overlay {
                     if isSwiped {
                         Color.black.opacity(0.001)
@@ -43,6 +45,8 @@ private struct SwipeToDeleteModifier: ViewModifier {
                             .onTapGesture { close() }
                     }
                 }
+                .offset(x: offset)
+                .simultaneousGesture(dragGesture)
         }
     }
 

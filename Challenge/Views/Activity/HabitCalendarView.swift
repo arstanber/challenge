@@ -275,7 +275,23 @@ struct HabitCalendarView: View {
         }
         .padding(.vertical, 18)
         .frame(maxWidth: .infinity)
-        .background(.ultraThinMaterial)
+        // No solid bar: the material fades in from transparent (top) to full
+        // blur (bottom), so the labels float over softly blurred content.
+        .background {
+            Rectangle()
+                .fill(.ultraThinMaterial)
+                .mask {
+                    LinearGradient(
+                        stops: [
+                            .init(color: .clear, location: 0),
+                            .init(color: .black, location: 0.4),
+                        ],
+                        startPoint: .top, endPoint: .bottom
+                    )
+                }
+                .padding(.top, -40)
+                .ignoresSafeArea(edges: .bottom)
+        }
     }
 
     private var goalTodayStat: some View {

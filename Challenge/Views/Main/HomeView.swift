@@ -117,6 +117,14 @@ struct HomeView: View {
         activeTasks.filter { $0.parentId == parent.id }
     }
 
+    /// Top-level tasks already handled today -- shown struck-through at the
+    /// bottom of the list instead of disappearing.
+    private var doneTodayTasks: [Activity] {
+        (vm.myActivities + vm.parentActivities)
+            .filter { $0.parentId == nil }
+            .filter { vm.isHandledToday($0.id) }
+    }
+
     /// True when every top-level task due today is done.
     private var allDone: Bool {
         let done = vm.todayDoneTopLevelCount
@@ -139,9 +147,9 @@ struct HomeView: View {
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 14) {
-                    if vm.isLoading && activeTasks.isEmpty {
+                    if vm.isLoading && activeTasks.isEmpty && doneTodayTasks.isEmpty {
                         ProgressView().padding(.top, 60)
-                    } else if todayTasks.isEmpty && upcomingTasks.isEmpty {
+                    } else if todayTasks.isEmpty && upcomingTasks.isEmpty && doneTodayTasks.isEmpty {
                         EmptyTodayView()
                             .padding(.top, 40)
                     } else {
@@ -182,6 +190,12 @@ struct HomeView: View {
                                 )
                                 .appearEffect(delay: 0.16 + Double(idx) * 0.05)
                             }
+                        }
+
+                        // Done today -- struck through at the bottom
+                        ForEach(Array(doneTodayTasks.enumerated()), id: \.element.id) { idx, task in
+                            DoneTaskCard(task: task) { detailActivity = task }
+                                .appearEffect(delay: 0.2 + Double(idx) * 0.05)
                         }
                     }
                 }
@@ -475,7 +489,8 @@ private struct TaskCardView: View {
                         .font(.system(size: 19, weight: .semibold))
                         .foregroundStyle(.primary)
                         .strikethrough(isCompleting, color: .primary)
-                        .lineLimit(1)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
                     if let subtitle {
                         Text(subtitle)
                             .font(.system(size: 14, weight: .medium))
@@ -529,6 +544,57 @@ private struct TaskCardView: View {
         Haptics.medium()
         withAnimation { isCompleting = true }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.55) { onToggle(task) }
+    }
+}
+
+// MARK: - Done task card (struck through, bottom of the list)
+
+private struct DoneTaskCard: View {
+    let task: Activity
+    let onOpen: () -> Void
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Image(systemName: task.type.icon)
+                .font(.system(size: 22, weight: .semibold))
+                .foregroundStyle(.secondary.opacity(0.6))
+                .frame(width: 30)
+
+            HStack(spacing: 8) {
+                Text(task.title)
+                    .font(.system(size: 19, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .strikethrough(true, color: .secondary)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                if task.type.hasStreak && task.streakCurrent > 0 {
+                    Text("🔥\(task.streakCurrent)")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            ZStack {
+                Circle().fill(Color(hex: "2FB873"))
+                Image(systemName: "checkmark")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(.white)
+            }
+            .frame(width: 48, height: 48)
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 18)
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(AppColors.cardBg.opacity(0.45))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+        )
+        .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .onTapGesture { Haptics.selection(); onOpen() }
     }
 }
 
