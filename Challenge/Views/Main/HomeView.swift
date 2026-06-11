@@ -48,7 +48,7 @@ struct HomeView: View {
     // Creation
     @State private var showAIPlanner = false
     @State private var showBySaying = false
-    @State private var showCreateMenu = false
+    @State private var showByYourself = false
     @State private var showAddHabit = false
     @State private var newHabitDraft: HabitDraft?
     // Navigation
@@ -216,25 +216,6 @@ struct HomeView: View {
 
             ConfettiView(trigger: confettiTrigger)
                 .ignoresSafeArea().zIndex(20).allowsHitTesting(false)
-
-            if showCreateMenu {
-                Color.black.opacity(0.3)
-                    .ignoresSafeArea()
-                    .hapticTap { withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) { showCreateMenu = false } }
-                    .zIndex(40)
-                VStack {
-                    Spacer()
-                    CreationMenuPopup(
-                        onAIStepByStep: { showCreateMenu = false; after { showAIPlanner = true } },
-                        onBySaying: { showCreateMenu = false; after { showBySaying = true } },
-                        onByYourself: { showCreateMenu = false; after { newHabitDraft = HabitDraft() } }
-                    )
-                    .padding(.horizontal, 12)
-                    .padding(.bottom, 100)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-                }
-                .zIndex(41)
-            }
         }
         // "The Challenge." tucked under the Dynamic Island
         .overlay(alignment: .top) {
@@ -293,11 +274,22 @@ struct HomeView: View {
                     showAddHabit = false
                     after { newHabitDraft = draft }
                 },
-                onCustom: {
+                onAIStepByStep: {
                     showAddHabit = false
-                    after { withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) { showCreateMenu = true } }
+                    after { showAIPlanner = true }
+                },
+                onBySaying: {
+                    showAddHabit = false
+                    after { showBySaying = true }
+                },
+                onByYourself: {
+                    showAddHabit = false
+                    after { showByYourself = true }
                 }
             )
+        }
+        .fullScreenCover(isPresented: $showByYourself, onDismiss: reload) {
+            ByYourselfView()
         }
         .sheet(item: $newHabitDraft, onDismiss: reload) { draft in
             NewHabitView(draft: draft, vm: vm) { Task { await vm.loadActivities() } }

@@ -87,11 +87,15 @@ private struct HabitTemplate: Identifiable {
 struct AddHabitView: View {
     /// Called when a preset is tapped — host opens the New-habit editor prefilled with this draft.
     let onPick: (HabitDraft) -> Void
-    /// Called when the user taps "Своя привычка" — host opens the by-saying/by-yourself/AI popup.
-    let onCustom: () -> Void
+    /// Creation-method popup choices ("Своя привычка" opens the popup right
+    /// on this page); the host presents the matching flow after dismissal.
+    let onAIStepByStep: () -> Void
+    let onBySaying: () -> Void
+    let onByYourself: () -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var category: HabitCategory = .popular
+    @State private var showCreateMenu = false
 
     private var templates: [HabitTemplate] {
         HabitTemplate.all.filter { $0.categories.contains(category) }
@@ -125,6 +129,25 @@ struct AddHabitView: View {
             }
 
             customButton
+
+            if showCreateMenu {
+                Color.black.opacity(0.3)
+                    .ignoresSafeArea()
+                    .hapticTap {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) { showCreateMenu = false }
+                    }
+                VStack {
+                    Spacer()
+                    CreationMenuPopup(
+                        onAIStepByStep: { choose(onAIStepByStep) },
+                        onBySaying: { choose(onBySaying) },
+                        onByYourself: { choose(onByYourself) }
+                    )
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 40)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
         }
     }
 
@@ -192,7 +215,7 @@ struct AddHabitView: View {
     private var customButton: some View {
         Button {
             Haptics.tap()
-            onCustom()
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) { showCreateMenu = true }
         } label: {
             HStack(spacing: 10) {
                 Image(systemName: "plus").font(.system(size: 18, weight: .bold))
@@ -209,6 +232,14 @@ struct AddHabitView: View {
     }
 
     // MARK: Actions
+
+    /// A creation method was chosen from the popup: close everything and let
+    /// the host present the flow once the sheet's dismissal settles.
+    private func choose(_ action: @escaping () -> Void) {
+        showCreateMenu = false
+        dismiss()
+        action()
+    }
 
     private func pick(_ template: HabitTemplate) {
         Haptics.selection()
