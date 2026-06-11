@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Adds a left-swipe-to-reveal "Удалить" action to cards that live outside a
 /// `List` (where the native `.swipeActions` modifier isn't available).
@@ -46,35 +47,70 @@ private struct SwipeToDeleteModifier: ViewModifier {
                     }
                 }
                 .offset(x: offset)
-                .simultaneousGesture(dragGesture)
+                .gesture(HorizontalPanGesture(onChanged: handleChanged, onEnded: handleEnded))
         }
     }
 
-    private var dragGesture: some Gesture {
-        DragGesture(minimumDistance: 12)
-            .onChanged { value in
-                let translation = value.translation.width
-                guard translation < 0 || isSwiped else { return }
-                let base: CGFloat = isSwiped ? -actionWidth : 0
-                offset = max(-actionWidth, min(0, base + translation))
+    private func handleChanged(_ dx: CGFloat) {
+        let base: CGFloat = isSwiped ? -actionWidth : 0
+        offset = max(-actionWidth, min(0, base + dx))
+    }
+
+    private func handleEnded(_ dx: CGFloat) {
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
+            if offset < -actionWidth / 2 {
+                offset = -actionWidth
+                isSwiped = true
+            } else {
+                offset = 0
+                isSwiped = false
             }
-            .onEnded { _ in
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
-                    if offset < -actionWidth / 2 {
-                        offset = -actionWidth
-                        isSwiped = true
-                    } else {
-                        offset = 0
-                        isSwiped = false
-                    }
-                }
-            }
+        }
     }
 
     private func close() {
         withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
             offset = 0
             isSwiped = false
+        }
+    }
+}
+
+/// Horizontal-only pan recognizer. A SwiftUI `DragGesture` here would compete
+/// with the enclosing ScrollView and freeze vertical scrolling; this recognizer
+/// refuses to begin unless the drag is predominantly horizontal, so vertical
+/// swipes fall through to the list.
+private struct HorizontalPanGesture: UIGestureRecognizerRepresentable {
+    let onChanged: (CGFloat) -> Void
+    let onEnded: (CGFloat) -> Void
+
+    func makeCoordinator(converter: CoordinateSpaceConverter) -> Coordinator {
+        Coordinator()
+    }
+
+    func makeUIGestureRecognizer(context: Context) -> UIPanGestureRecognizer {
+        let pan = UIPanGestureRecognizer()
+        pan.delegate = context.coordinator
+        return pan
+    }
+
+    func handleUIGestureRecognizerAction(_ recognizer: UIPanGestureRecognizer, context: Context) {
+        let dx = recognizer.translation(in: recognizer.view).x
+        switch recognizer.state {
+        case .changed:
+            onChanged(dx)
+        case .ended, .cancelled, .failed:
+            onEnded(dx)
+        default:
+            break
+        }
+    }
+
+    final class Coordinator: NSObject, UIGestureRecognizerDelegate {
+        func gestureRecognizerShouldBegin(_ gesture: UIGestureRecognizer) -> Bool {
+            guard let pan = gesture as? UIPanGestureRecognizer, let view = pan.view else { return false }
+            let t = pan.translation(in: view)
+            return abs(t.x) > abs(t.y)
         }
     }
 }
