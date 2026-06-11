@@ -35,6 +35,7 @@ struct ChallengeApp: App {
 struct RootView: View {
     @Environment(AuthService.self) private var authService
     @AppStorage("appTheme") private var appTheme = AppColorTheme.light.rawValue
+    @AppStorage(AppPrefs.Key.timeFormat) private var timeFormat = AppPrefs.Option.h24
 
     var body: some View {
         Group {
@@ -48,6 +49,15 @@ struct RootView: View {
         }
         .animation(.easeInOut(duration: 0.35), value: authService.isRestoring)
         .preferredColorScheme(AppColorTheme(rawValue: appTheme)?.colorScheme)
+        // 12/24h override for every DatePicker and .formatted() time in the app.
+        // Reading `timeFormat` here makes the whole tree re-render on change.
+        .environment(\.locale, locale(hourCycle: timeFormat))
+    }
+
+    private func locale(hourCycle: String) -> Locale {
+        var comps = Locale.Components(locale: .current)
+        comps.hourCycle = hourCycle == AppPrefs.Option.h12 ? .oneToTwelve : .zeroToTwentyThree
+        return Locale(components: comps)
     }
 }
 

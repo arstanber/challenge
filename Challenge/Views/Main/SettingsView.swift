@@ -37,7 +37,8 @@ struct SettingsView: View {
     @AppStorage("defaultView") private var defaultView = "День"
     @AppStorage(Haptics.enabledKey) private var hapticsEnabled = true
     // Habits
-    @AppStorage("groupCompleted") private var groupCompleted = false
+    // Default true: done tasks collect at the bottom (HomeView reads this too).
+    @AppStorage("groupCompleted") private var groupCompleted = true
     @AppStorage("strictMode") private var strictMode = true
     @AppStorage("requirePhotoVerification") private var requirePhoto = true
 
