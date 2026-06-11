@@ -275,22 +275,14 @@ struct HabitCalendarView: View {
         }
         .padding(.vertical, 18)
         .frame(maxWidth: .infinity)
-        // No solid bar: the material fades in from transparent (top) to full
-        // blur (bottom), so the labels float over softly blurred content.
+        // No bar at all: a tintless progressive blur ramps from sharp (top)
+        // to fully blurred (bottom), so content scrolls into soft focus
+        // behind the controls without any gray material wash.
         .background {
-            Rectangle()
-                .fill(.ultraThinMaterial)
-                .mask {
-                    LinearGradient(
-                        stops: [
-                            .init(color: .clear, location: 0),
-                            .init(color: .black, location: 0.4),
-                        ],
-                        startPoint: .top, endPoint: .bottom
-                    )
-                }
-                .padding(.top, -40)
+            VariableBlurView(maxBlurRadius: 16)
+                .padding(.top, -50)
                 .ignoresSafeArea(edges: .bottom)
+                .allowsHitTesting(false)
         }
     }
 
