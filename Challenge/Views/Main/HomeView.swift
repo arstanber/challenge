@@ -66,6 +66,9 @@ struct HomeView: View {
     // Connector suggestions (queued by creation flows, presented here)
     @State private var suggestionEngine = ConnectorSuggestionEngine.shared
     @State private var connectorSuggestion: ConnectorSuggestionEngine.Suggestion?
+    // Bumped exactly at 00:00 (NSCalendarDayChanged) so the date label and
+    // the today/upcoming buckets recompute without an app restart.
+    @State private var today = Date()
 
     // MARK: Derived data
 
@@ -88,7 +91,7 @@ struct HomeView: View {
 
     private var todayTasks: [Activity] {
         let cal = Calendar.current
-        let endOfToday = cal.date(bySettingHour: 23, minute: 59, second: 59, of: Date())!
+        let endOfToday = cal.date(bySettingHour: 23, minute: 59, second: 59, of: today)!
         return activeTasks.filter { a in
             guard isTopLevel(a) else { return false }
             if a.type == .goal, activeTasks.contains(where: { $0.parentId == a.id }) { return true }
@@ -98,15 +101,15 @@ struct HomeView: View {
             }
             // Recurring: only on scheduled weekdays; deadline is an expiry
             // date ("repeat until"), not a due date.
-            guard a.isScheduled(on: Date()) else { return false }
-            if let d = a.deadline, d < Date() { return false }
+            guard a.isScheduled(on: today) else { return false }
+            if let d = a.deadline, d < today { return false }
             return true
         }
     }
 
     private var upcomingTasks: [Activity] {
         let cal = Calendar.current
-        let endOfToday = cal.date(bySettingHour: 23, minute: 59, second: 59, of: Date())!
+        let endOfToday = cal.date(bySettingHour: 23, minute: 59, second: 59, of: today)!
         return activeTasks.filter { a in
             guard isTopLevel(a) else { return false }
             // Off-day recurring tasks are intentionally absent from Home entirely.
@@ -139,7 +142,7 @@ struct HomeView: View {
         let f = DateFormatter()
         f.locale = .current
         f.dateFormat = "d MMMM"
-        return f.string(from: Date())
+        return f.string(from: today)
     }
 
     // MARK: Body
@@ -262,6 +265,18 @@ struct HomeView: View {
             await vm.loadActivities()
             NotificationService.shared.syncReminders(for: vm.myActivities + vm.parentActivities)
             NotificationService.shared.scheduleDailyMotivationPlan(for: vm.myActivities + vm.parentActivities)
+        }
+        // Rollover exactly at 00:00 (also posted on resume when the day
+        // changed while suspended): reset day-scoped state and re-render.
+        .task {
+            let dayChanges = NotificationCenter.default
+                .notifications(named: .NSCalendarDayChanged)
+                .map { _ in () }
+            for await _ in dayChanges {
+                today = Date()
+                await TaskEngine.shared.handleDayChange()
+                await vm.loadActivities()
+            }
         }
         .fullScreenCover(isPresented: $showPerfectDay) {
             PerfectDayView { showPerfectDay = false }

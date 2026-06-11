@@ -180,6 +180,17 @@ final class TaskEngine {
         await refreshStreaks()
     }
 
+    /// Midnight rollover: yesterday's done/handled state must not leak into
+    /// the new day. Re-reads the overlay from the new day-keyed cache (empty
+    /// for a fresh day) and re-pulls today's reports and streaks.
+    func handleDayChange() async {
+        optimisticDoneIds = Self.readIdSet(key: Self.doneKey)
+        handledTodayIds = []
+        doneTodayIds = []
+        serverTodayCount = 0
+        await resync()
+    }
+
     /// Today's reports for this activity were deleted (undo) -- drop every
     /// local trace, then re-sync with the server.
     func undoToday(activityId: UUID) async {
