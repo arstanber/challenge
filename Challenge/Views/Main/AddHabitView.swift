@@ -37,6 +37,9 @@ private struct HabitTemplate: Identifiable {
     let goalTarget: Double?
     let healthLinked: Bool
     let categories: Set<HabitCategory>
+    /// Data connector this habit pairs with -- shown as a badge; the
+    /// suggestion engine offers to connect it right after creation.
+    var connector: DataConnector? = nil
 
     static func tint(_ hex: String) -> Color { Color(hex: hex) }
 
@@ -44,9 +47,26 @@ private struct HabitTemplate: Identifiable {
         .init(title: "Просыпаться рано", icon: "sunrise.fill", tint: tint("FF8A3D"), subtitle: nil,
               type: .habit, goalTarget: nil, healthLinked: false, categories: [.popular]),
         .init(title: "Ежедневные шаги", icon: "figure.walk", tint: tint("2FB873"), subtitle: "10 000 шагов",
-              type: .goal, goalTarget: 10000, healthLinked: true, categories: [.popular, .health]),
+              type: .goal, goalTarget: 10000, healthLinked: true, categories: [.popular, .health],
+              connector: .appleHealth),
         .init(title: "Тренировка", icon: "figure.run", tint: tint("FF4D4D"), subtitle: "30 мин",
-              type: .goal, goalTarget: 30, healthLinked: true, categories: [.popular, .health]),
+              type: .goal, goalTarget: 30, healthLinked: true, categories: [.popular, .health],
+              connector: .appleFitness),
+        .init(title: "Вставать по будильнику", icon: "alarm.fill", tint: tint("FF9F0A"), subtitle: "07:00",
+              type: .habit, goalTarget: nil, healthLinked: false, categories: [.popular, .productivity],
+              connector: .appleClock),
+        .init(title: "Утренняя пробежка", icon: "figure.outdoor.cycle", tint: tint("FC4C02"), subtitle: "3 км",
+              type: .goal, goalTarget: 3, healthLinked: true, categories: [.popular, .health],
+              connector: .strava),
+        .init(title: "День по календарю", icon: "calendar", tint: tint("4285F4"), subtitle: "Без пропущенных встреч",
+              type: .habit, goalTarget: nil, healthLinked: false, categories: [.popular, .productivity],
+              connector: .appleCalendar),
+        .init(title: "Фото-отчёт в Telegram", icon: "paperplane.fill", tint: tint("29A9EA"), subtitle: nil,
+              type: .habit, goalTarget: nil, healthLinked: false, categories: [.popular],
+              connector: .telegram),
+        .init(title: "Здоровый сон", icon: "moon.zzz.fill", tint: tint("A86CFF"), subtitle: "8 часов",
+              type: .habit, goalTarget: nil, healthLinked: true, categories: [.popular, .health],
+              connector: .appleHealth),
         .init(title: "Читать", icon: "book.fill", tint: tint("3D9BFF"), subtitle: "30 мин",
               type: .habit, goalTarget: nil, healthLinked: false, categories: [.popular, .mind]),
         .init(title: "Медитировать", icon: "figure.mind.and.body", tint: tint("A86CFF"), subtitle: "10 мин",
@@ -318,12 +338,24 @@ private struct TemplateRow: View {
                             Text(sub)
                                 .font(.system(size: 14, weight: .medium))
                                 .foregroundStyle(.secondary)
-                            if template.healthLinked {
+                            if template.healthLinked && template.connector == nil {
                                 Image(systemName: "heart.fill")
                                     .font(.system(size: 10))
                                     .foregroundStyle(.secondary)
                             }
                         }
+                    }
+                    if let connector = template.connector {
+                        HStack(spacing: 4) {
+                            Image(systemName: connector.icon)
+                                .font(.system(size: 9, weight: .semibold))
+                            Text(connector.displayName)
+                                .font(.system(size: 12, weight: .semibold))
+                        }
+                        .foregroundStyle(connector.tint)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Capsule().fill(connector.tint.opacity(0.12)))
                     }
                 }
 

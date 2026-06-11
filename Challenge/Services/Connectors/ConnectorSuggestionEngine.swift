@@ -148,6 +148,10 @@ final class ConnectorSuggestionEngine {
         if has(["файл", "диск", "drive", "бэкап", "backup", "архив"]) {
             add(.googleDrive)
         }
+        // Telegram bot reports
+        if has(["telegram", "телеграм", "фото-отч", "фото отч", "боту"]) {
+            add(.telegram)
+        }
 
         // AI category as a fallback when keywords didn't hit.
         if result.isEmpty, let category = category?.uppercased() {
