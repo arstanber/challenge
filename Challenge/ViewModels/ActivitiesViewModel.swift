@@ -392,6 +392,7 @@ final class ActivitiesViewModel {
                 .execute()
                 .value
             myActivities.insert(created, at: 0)
+            ConnectorSuggestionEngine.shared.taskCreated(title: created.title, description: created.description)
         } catch {
             errorMessage = error.localizedDescription
         }

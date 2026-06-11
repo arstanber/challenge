@@ -355,6 +355,10 @@ final class ActivityDetailViewModel {
                 return
             }
         }
+        // The AI split inherits the goal's topic: suggest connectors once per batch.
+        let createdTopics: [(title: String, description: String, category: String?)] =
+            subtasks.map { ($0.title, "", nil) }
+        ConnectorSuggestionEngine.shared.tasksCreated(createdTopics)
     }
 
     // MARK: - Helpers

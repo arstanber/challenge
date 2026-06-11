@@ -81,6 +81,11 @@ final class CreateActivityViewModel {
                 "type": type.rawValue,
                 "frequency": frequency.rawValue
             ])
+            ConnectorSuggestionEngine.shared.taskCreated(
+                title: created.title,
+                description: created.description,
+                category: category
+            )
             didCreate = true
         } catch {
             errorMessage = error.localizedDescription

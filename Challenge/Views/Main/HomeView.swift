@@ -63,6 +63,9 @@ struct HomeView: View {
     // Celebration
     @State private var confettiTrigger = 0
     @State private var showPerfectDay = false
+    // Connector suggestions (queued by creation flows, presented here)
+    @State private var suggestionEngine = ConnectorSuggestionEngine.shared
+    @State private var connectorSuggestion: ConnectorSuggestionEngine.Suggestion?
 
     // MARK: Derived data
 
@@ -285,6 +288,14 @@ struct HomeView: View {
             NewHabitView(draft: draft, vm: vm) { Task { await vm.loadActivities() } }
         }
         .sheet(isPresented: $showAIPlanner, onDismiss: reload) { GoalPlannerView() }
+        .sheet(item: $connectorSuggestion, onDismiss: { suggestionEngine.dismissPending() }) { suggestion in
+            ConnectorSuggestionSheet(suggestion: suggestion)
+        }
+        .onChange(of: suggestionEngine.pending) { _, newValue in
+            // Creation usually happens inside another sheet; wait out its
+            // dismissal animation before presenting ours.
+            if newValue != nil { presentConnectorSuggestion(delay: 1.0) }
+        }
         .sheet(isPresented: $showBySaying, onDismiss: reload) { BySayingView() }
         .sheet(isPresented: $showSettings) { SettingsView() }
         .sheet(item: $editingActivity) { activity in
@@ -337,9 +348,19 @@ struct HomeView: View {
         }
     }
 
-    private func reload() { Task { await vm.loadActivities() } }
+    private func reload() {
+        Task { await vm.loadActivities() }
+        presentConnectorSuggestion(delay: 0.6)
+    }
     private func after(_ action: @escaping () -> Void) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.35, execute: action)
+    }
+    /// Presents the queued connector suggestion once no other sheet is in the way.
+    private func presentConnectorSuggestion(delay: TimeInterval) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+            guard connectorSuggestion == nil, let pending = suggestionEngine.pending else { return }
+            connectorSuggestion = pending
+        }
     }
 }
 

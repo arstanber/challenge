@@ -167,6 +167,11 @@ final class GoalPlannerViewModel {
                 logger.error("Failed to create subtask '\(activity.title)': \(error)")
             }
         }
+        // One combined connector suggestion for the whole AI plan
+        // (e.g. a running goal proposes Health/Strava once, not per subtask).
+        let createdTopics: [(title: String, description: String, category: String?)] =
+            [(plan.title, plan.summary, nil)] + plan.activities.map { ($0.title, $0.description, nil) }
+        ConnectorSuggestionEngine.shared.tasksCreated(createdTopics)
         step = .done
     }
 
