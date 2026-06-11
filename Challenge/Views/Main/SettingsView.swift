@@ -27,6 +27,7 @@ enum AppColorTheme: String, CaseIterable, Identifiable {
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var auth = AuthService.shared
+    @State private var cloudSync = CloudSyncService.shared
 
     // Global
     @AppStorage("appTheme") private var appTheme = AppColorTheme.light.rawValue
@@ -244,9 +245,11 @@ struct SettingsView: View {
             SettingsStatusRow(
                 icon: "icloud",
                 title: "iCloud",
-                statusText: "Синхронизировано",
-                statusColor: Color(hex: "30D158"),
-                subtitle: "Чтобы отключить синхронизацию, выключите iCloud для The Challenge в системных настройках."
+                statusText: cloudSync.status.title,
+                statusColor: cloudSync.status == .synced ? Color(hex: "30D158") : .secondary,
+                subtitle: cloudSync.status == .synced
+                    ? "Настройки синхронизируются через iCloud. Чтобы отключить, выключите iCloud для The Challenge в системных настройках."
+                    : "Войдите в iCloud в системных настройках, чтобы синхронизировать настройки между устройствами."
             )
         }
     }
@@ -266,16 +269,16 @@ struct SettingsView: View {
     private var infoSection: some View {
         SettingsSection(title: "Инфо") {
             SettingsLinkRow(icon: "questionmark.circle", title: "FAQ",
-                            url: URL(string: "https://thechallenge.app/faq")!)
+                            url: URL(string: "https://thechallenges.app/support.html")!)
             SettingsDivider()
             SettingsLinkRow(icon: "sparkles", title: "Что нового",
-                            url: URL(string: "https://thechallenge.app/changelog")!)
+                            url: URL(string: "https://thechallenges.app/features.html")!)
             SettingsDivider()
             SettingsShareRow(icon: "square.and.arrow.up", title: "Поделиться приложением",
-                             url: URL(string: "https://thechallenge.app")!)
+                             url: URL(string: "https://thechallenges.app")!)
             SettingsDivider()
             SettingsLinkRow(icon: "envelope", title: "Связаться с нами", showArrow: false,
-                            url: URL(string: "mailto:support@thechallenge.app")!)
+                            url: URL(string: "mailto:berdongar@gmail.com")!)
             SettingsDivider()
             SettingsLinkRow(icon: "star", title: "Написать отзыв",
                             url: URL(string: "https://apps.apple.com/app/id000000000?action=write-review")!)
@@ -302,14 +305,22 @@ struct SettingsView: View {
                 .font(.system(size: 15))
                 .foregroundStyle(.tertiary)
 
-            Link(destination: URL(string: "https://thechallenge.app/terms")!) {
+            Link(destination: URL(string: "https://thechallenges.app/terms.html")!) {
                 Label("Условия использования", systemImage: "signature")
                     .font(.system(size: 14))
                     .foregroundStyle(.tertiary)
             }
             .padding(.top, 18)
-            Link(destination: URL(string: "https://thechallenge.app/privacy")!) {
+            Link(destination: URL(string: "https://thechallenges.app/privacy.html")!) {
                 Label("Политика конфиденциальности", systemImage: "checkmark.shield")
+                    .font(.system(size: 14))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(.top, 6)
+            // Apple's standard EULA -- required reference for apps with
+            // auto-renewing subscriptions (App Review 3.1.2).
+            Link(destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!) {
+                Label("Лицензионное соглашение (EULA)", systemImage: "doc.text")
                     .font(.system(size: 14))
                     .foregroundStyle(.tertiary)
             }

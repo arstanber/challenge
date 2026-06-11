@@ -20,6 +20,7 @@ struct ChallengeApp: App {
             RootView()
                 .environment(authService)
                 .task {
+                    CloudSyncService.shared.start()
                     await NotificationService.shared.requestPermission()
                 }
                 .onOpenURL { url in

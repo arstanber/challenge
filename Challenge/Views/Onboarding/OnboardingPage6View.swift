@@ -457,12 +457,12 @@ private struct P6Terms: View {
         if let range = str.range(of: "Terms of Service") {
             str[range].foregroundColor = Color(hex: "0048E2")
             str[range].underlineStyle = .single
-            str[range].link = URL(string: "https://thechallenge.app/terms")
+            str[range].link = URL(string: "https://thechallenges.app/terms.html")
         }
         if let range = str.range(of: "Privacy Policy") {
             str[range].foregroundColor = Color(hex: "0048E2")
             str[range].underlineStyle = .single
-            str[range].link = URL(string: "https://thechallenge.app/privacy")
+            str[range].link = URL(string: "https://thechallenges.app/privacy.html")
         }
         return str
     }
