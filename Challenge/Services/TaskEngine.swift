@@ -281,8 +281,9 @@ final class TaskEngine {
     }
 
     /// Offline fallback, server is canonical. Approximates the server rule
-    /// (distinct activities per day, >= minDailyActivitiesForStreak) with
-    /// device-local day bucketing. Used only when the RPC is unreachable.
+    /// (>= 75% of the day's scheduled tasks done) with device-local day
+    /// bucketing and today's roster as the denominator for every day.
+    /// Used only when the RPC is unreachable.
     private func computeStreaksFallback() async {
         guard !knownActivityIds.isEmpty else { return }
         do {
@@ -294,7 +295,8 @@ final class TaskEngine {
                 .execute()
                 .value
 
-            let minPerDay = Constants.App.minDailyActivitiesForStreak
+            let minPerDay = max(1, Int((Constants.App.streakDailyCompletionRatio
+                                        * Double(knownActivityIds.count)).rounded(.up)))
             var dayActivities: [Date: Set<UUID>] = [:]
             for row in rows {
                 let day = calendar.startOfDay(for: row.createdAt)

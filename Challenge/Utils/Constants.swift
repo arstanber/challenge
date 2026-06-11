@@ -10,7 +10,17 @@ enum Constants {
         static let maxFreeActivities = 3
         static let freezeIntervalDays = 7
         static let streakMilestones = [7, 14, 30, 100]
-        static let minDailyActivitiesForStreak = 3
+        /// A day counts toward the global streak when the user completed at
+        /// least this share of the recurring tasks scheduled for that day
+        /// (minimum 1). MUST match the server engine (`compute_user_streak`,
+        /// migration `20260612_streak_75_percent.sql`); change them together.
+        static let streakDailyCompletionRatio = 0.75
+
+        /// Tasks the user must complete today for the day to count toward the
+        /// streak, given how many recurring tasks are scheduled today.
+        static func dailyStreakGoal(scheduledToday: Int) -> Int {
+            max(1, Int((streakDailyCompletionRatio * Double(scheduledToday)).rounded(.up)))
+        }
     }
 
     enum Storage {

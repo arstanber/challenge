@@ -187,7 +187,7 @@ final class ActivitiesViewModel {
             streakCurrent: globalStreakCurrent,
             streakBest: globalStreakBest,
             todayDone: todayDoneTopLevelCount,
-            dailyGoal: Constants.App.minDailyActivitiesForStreak,
+            dailyGoal: dailyStreakGoal,
             activeCount: activeCount,
             tasks: tasks,
             updatedAt: Date()
@@ -198,9 +198,9 @@ final class ActivitiesViewModel {
         let nextTask = myActivities
             .filter { $0.parentId == nil && $0.status == .active && !engine.isHandledToday($0.id) }
             .first?.title ?? ""
-        let goalReached = todayDoneTopLevelCount >= Constants.App.minDailyActivitiesForStreak
+        let goalReached = todayDoneTopLevelCount >= dailyStreakGoal
         LiveActivityService.shared.update(
-            dailyGoal: Constants.App.minDailyActivitiesForStreak,
+            dailyGoal: dailyStreakGoal,
             todayDone: todayDoneTopLevelCount,
             streakCurrent: globalStreakCurrent,
             nextTaskTitle: nextTask,
@@ -468,6 +468,16 @@ final class ActivitiesViewModel {
     /// Top-level activities completed today (recurring habits + one-time tasks).
     var todayDoneTopLevelCount: Int {
         myActivities.filter { $0.parentId == nil && engine.isDoneToday($0.id) }.count
+    }
+
+    /// Today's streak goal under the 75% rule: share of the recurring tasks
+    /// scheduled today (mirrors the server's compute_user_streak denominator).
+    var dailyStreakGoal: Int {
+        let scheduledToday = myActivities.filter {
+            $0.parentId == nil && $0.status == .active
+            && $0.frequency != .once && $0.isScheduled(on: Date())
+        }.count
+        return Constants.App.dailyStreakGoal(scheduledToday: scheduledToday)
     }
 
     private func checkAndCompleteParent(parentId: UUID) async {

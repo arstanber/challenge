@@ -10,6 +10,7 @@ private let logger = Logger(subsystem: "com.challenge", category: "StatisticsVie
 struct StatisticsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var dayCounts: [Date: Int] = [:]
+    @State private var dailyGoal = 1
     @State private var totalCheckins = 0
     @State private var totalCompleted = 0
     @State private var currentStreak = 0
@@ -64,7 +65,7 @@ struct StatisticsView: View {
                             // Streak risk prediction (#16)
                             StreakRiskCard(result: StreakRisk.evaluate(
                                 todayDone: dayCounts[calendar.startOfDay(for: Date())] ?? 0,
-                                dailyGoal: Constants.App.minDailyActivitiesForStreak,
+                                dailyGoal: dailyGoal,
                                 currentStreak: currentStreak
                             ))
                             .appearEffect(delay: 0.13)
@@ -162,14 +163,27 @@ struct StatisticsView: View {
         guard let user = AuthService.shared.currentUser else { isLoading = false; return }
         do {
             // 1. User's activity ids + completed count
-            struct ActivityRow: Decodable { let id: UUID; let status: String }
+            struct ActivityRow: Decodable {
+                let id: UUID; let status: String; let frequency: String
+                let scheduleDays: [Int]?
+                enum CodingKeys: String, CodingKey {
+                    case id, status, frequency
+                    case scheduleDays = "schedule_days"
+                }
+            }
             let activities: [ActivityRow] = try await supabase
                 .from("activities")
-                .select("id,status")
+                .select("id,status,frequency,schedule_days")
                 .eq("user_id", value: user.id.uuidString)
                 .execute()
                 .value
             totalCompleted = activities.filter { $0.status == "completed" }.count
+            let isoToday = Activity.isoWeekday(of: Date())
+            let scheduledToday = activities.filter {
+                $0.status == "active" && $0.frequency != "once"
+                && ($0.scheduleDays?.isEmpty != false || $0.scheduleDays!.contains(isoToday))
+            }.count
+            dailyGoal = Constants.App.dailyStreakGoal(scheduledToday: scheduledToday)
             let ids = activities.map { $0.id.uuidString }
 
             guard !ids.isEmpty else { isLoading = false; return }
@@ -217,7 +231,7 @@ struct StatisticsView: View {
             let beforeNoon = calendar.component(.hour, from: Date()) < 12
             QuestEngine.shared.refresh(with: QuestInput(
                 checkinsToday: todayCheckins,
-                dailyGoal: Constants.App.minDailyActivitiesForStreak,
+                dailyGoal: dailyGoal,
                 currentStreak: currentStreak,
                 didCheckInBeforeNoon: todayCheckins > 0 && beforeNoon
             ))

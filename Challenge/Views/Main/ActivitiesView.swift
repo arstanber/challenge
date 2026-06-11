@@ -229,7 +229,7 @@ struct PlanGroupRow: View {
 
 struct GlobalStreakBanner: View {
     let vm: ActivitiesViewModel
-    private let minPerDay = Constants.App.minDailyActivitiesForStreak
+    private var minPerDay: Int { vm.dailyStreakGoal }
 
     var body: some View {
         HStack(spacing: 12) {

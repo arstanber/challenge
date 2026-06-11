@@ -61,7 +61,7 @@ Gamification/               ← GamificationEngine, QuestEngine
 - Supabase URL: `https://tvuvfuguxjvzyzsjnepr.supabase.co`
 - Free tier: 3 activities max, 10 AI verifications/month
 - Streak milestones: 7, 14, 30, 100 days
-- Min daily activities for streak: 3 -- MUST match `p_min` in the server streak engine (`compute_user_streak` / `refresh_my_streaks` / `get_leaderboard`, migration `20260610b_task_core_redesign.sql`); change them together
+- Streak day rule: >= 75% of the recurring tasks scheduled that day (min 1) -- `streakDailyCompletionRatio` / `dailyStreakGoal(scheduledToday:)` MUST match the server engine (`compute_user_streak`, migration `20260612_streak_75_percent.sql`); change them together. The `p_min` parameter is legacy and ignored.
 - IAP product IDs: `com.challenge.premium.monthly`, `com.challenge.premium.family`
 
 ### Task core (single source of truth)
