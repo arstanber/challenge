@@ -268,7 +268,7 @@ struct OAuthConfig {
 enum OAuthSecrets {
     static let strava = "256944"
     static let whoop  = "<WHOOP_CLIENT_ID>"
-    static let notion = "<NOTION_CLIENT_ID>"
+    static let notion = "37cd872b-594c-813a-afff-003799004c78"
 
     /// Same OAuth client used for "Sign in with Google" (`GIDClientID` in Info.plist).
     /// Google's installed-app flow needs no client secret -- PKCE covers it.
