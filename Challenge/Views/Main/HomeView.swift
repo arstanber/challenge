@@ -296,6 +296,14 @@ struct HomeView: View {
                 Task { await vm.loadActivities() }
             }
         }
+        .alert("Ошибка", isPresented: Binding(
+            get: { vm.errorMessage != nil },
+            set: { if !$0 { vm.errorMessage = nil } }
+        )) {
+            Button("OK") { Haptics.tap(); vm.errorMessage = nil }
+        } message: {
+            Text(vm.errorMessage ?? "")
+        }
     }
 
     // MARK: Actions

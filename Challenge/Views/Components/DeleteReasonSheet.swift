@@ -56,7 +56,9 @@ struct DeleteReasonSheet: View {
             }
         }
         .presentationDetents([.medium])
-        .onAppear { focused = true }
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { focused = true }
+        }
     }
 }
 
