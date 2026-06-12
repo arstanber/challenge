@@ -43,6 +43,7 @@ struct SettingsView: View {
     @AppStorage("requirePhotoVerification") private var requirePhoto = true
 
     @State private var showPremium = false
+    @State private var showAppIcon = false
     @State private var showHallOfFame = false
     @State private var showSignOut = false
     @State private var showTelegramLink = false
@@ -80,6 +81,9 @@ struct SettingsView: View {
         }
         .sheet(isPresented: $showPremium) {
             NavigationStack { PremiumView() }
+        }
+        .sheet(isPresented: $showAppIcon) {
+            AppIconPickerView()
         }
         .sheet(isPresented: $showTelegramLink) {
             NavigationStack { TelegramLinkView() }
@@ -186,7 +190,13 @@ struct SettingsView: View {
     private var globalSection: some View {
         SettingsSection(title: "Глобальные настройки") {
             SettingsRow(icon: "app", title: "Значок приложения", badge: "PRO", trailing: .chevron) {
-                Haptics.tap(); showPremium = true
+                Haptics.tap()
+                // Paywall for free users, the actual picker for subscribers.
+                if (auth.currentUser?.plan ?? .free) == .free {
+                    showPremium = true
+                } else {
+                    showAppIcon = true
+                }
             }
             SettingsDivider()
             SettingsRow(icon: "globe", title: "Язык", value: "Русский", trailing: .chevron) {
