@@ -509,7 +509,10 @@ struct HomeView: View {
         let minute = await TaskEngine.shared.typicalCompletionMinute()
         // A touch before the habitual time, so the push lands while the
         // usual completion window is still open.
-        notifications.schedulePersonalNudge(minuteOfDay: minute.map { $0 - 15 })
+        notifications.schedulePersonalNudge(
+            minuteOfDay: minute.map { $0 - 15 },
+            streak: vm.globalStreakCurrent
+        )
     }
     private func after(_ action: @escaping () -> Void) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.35, execute: action)

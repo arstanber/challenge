@@ -52,8 +52,10 @@ final class NotificationService: NSObject {
 
         let content = UNMutableNotificationContent()
         if AppPrefs.zoomerMode {
-            content.title = "Ну чё, движ будет? 👀"
-            content.body = "«\(activity.title)» сам себя не закроет. Скинь пруф, делов на минуту."
+            let pick = ZoomerCopy.taskReminder(createdAt: activity.createdAt)
+            content.title = pick.title
+            content.subtitle = "«\(activity.title)»"
+            content.body = pick.body
         } else {
             content.title = NSLocalizedString("Don't forget!", comment: "")
             content.body = String(format: NSLocalizedString("Submit your report for %@", comment: ""), activity.title)
@@ -111,10 +113,13 @@ final class NotificationService: NSObject {
 
         let remaining = Self.remainingPhrase(tasksToSave)
         if AppPrefs.zoomerMode {
+            // Rotating meme intro, but the concrete numbers stay: the whole
+            // point of the evening pushes is "what exactly do I lose tonight".
+            let pick = ZoomerCopy.streakRisk(streak: streak)
             scheduleOnceToday(
                 id: "streak-nudge", hour: 20, minute: 0,
-                title: "🔥 Алло, стрик \(streak) дн. горит",
-                body: "До полуночи \(remaining), потом всё, гг. Не сливай катку."
+                title: pick.title,
+                body: "\(pick.body) До полуночи \(remaining)."
             )
             scheduleOnceToday(
                 id: "streak-nudge-final", hour: 22, minute: 30,
@@ -173,7 +178,7 @@ final class NotificationService: NSObject {
     /// tasks (median report minute, computed by TaskEngine). Morning and
     /// afternoon only: evenings belong to the streak-risk pushes, and two
     /// pushes about the same thing within an hour train people to ignore both.
-    func schedulePersonalNudge(minuteOfDay: Int?) {
+    func schedulePersonalNudge(minuteOfDay: Int?, streak: Int) {
         let id = "personal-nudge"
         let center = UNUserNotificationCenter.current()
         center.removePendingNotificationRequests(withIdentifiers: [id])
@@ -181,8 +186,9 @@ final class NotificationService: NSObject {
 
         let content = UNMutableNotificationContent()
         if AppPrefs.zoomerMode {
-            content.title = "Твой прайм-тайм 🎯"
-            content.body = "Обычно ты именно сейчас на изи закрываешь задачи. Один отчёт, и ты снова в деле."
+            let pick = ZoomerCopy.personalNudge(streak: streak)
+            content.title = pick.title
+            content.body = pick.body
         } else {
             content.title = "Твоё обычное время 🎯"
             content.body = "Обычно ты закрываешь задачи примерно сейчас. Один отчёт, и день уже не зря."
