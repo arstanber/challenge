@@ -8,7 +8,6 @@ enum AppPrefs {
         static let timeFormat = "timeFormat"
         static let units = "units"
         static let weekStart = "weekStart"
-        static let defaultView = "defaultView"
         static let groupCompleted = "groupCompleted"
         static let strictMode = "strictMode"
     }
@@ -20,9 +19,6 @@ enum AppPrefs {
         static let imperial = "Имп. (мили)"
         static let monday = "Понедельник"
         static let sunday = "Воскресенье"
-        static let day = "День"
-        static let week = "Неделя"
-        static let month = "Месяц"
     }
 
     private static var defaults: UserDefaults { .standard }
@@ -32,7 +28,6 @@ enum AppPrefs {
     static var weekStartsMonday: Bool { defaults.string(forKey: Key.weekStart) != Option.sunday }
     static var groupCompleted: Bool { (defaults.object(forKey: Key.groupCompleted) as? Bool) ?? true }
     static var strictMode: Bool { (defaults.object(forKey: Key.strictMode) as? Bool) ?? true }
-    static var defaultView: String { defaults.string(forKey: Key.defaultView) ?? Option.day }
 
     /// Calendar honoring "Начало недели".
     static var calendar: Calendar {

@@ -34,7 +34,6 @@ struct SettingsView: View {
     @AppStorage("timeFormat") private var timeFormat = "24 часа"
     @AppStorage("units") private var units = "Метр. (км, мл)"
     @AppStorage("weekStart") private var weekStart = "Понедельник"
-    @AppStorage("defaultView") private var defaultView = "День"
     @AppStorage(Haptics.enabledKey) private var hapticsEnabled = true
     // Habits
     // Default true: done tasks collect at the bottom (HomeView reads this too).
@@ -48,6 +47,8 @@ struct SettingsView: View {
     @State private var showSignOut = false
     @State private var showTelegramLink = false
     @State private var showConnectors = false
+    @State private var showDuels = false
+    @State private var showLeaderboard = false
 
     private let blue = Color(hex: "0A84FF")
 
@@ -90,6 +91,12 @@ struct SettingsView: View {
         }
         .sheet(isPresented: $showConnectors) {
             NavigationStack { ConnectorsView() }
+        }
+        .sheet(isPresented: $showDuels) {
+            NavigationStack { DuelsView().environment(auth) }
+        }
+        .sheet(isPresented: $showLeaderboard) {
+            NavigationStack { LeaderboardView().environment(auth) }
         }
         .fullScreenCover(isPresented: $showHallOfFame) {
             ZStack(alignment: .topTrailing) {
@@ -184,6 +191,14 @@ struct SettingsView: View {
             SettingsRow(icon: "trophy", title: "Зал славы", trailing: .chevron) {
                 Haptics.tap(); showHallOfFame = true
             }
+            SettingsDivider()
+            SettingsRow(icon: "figure.fencing", title: "Дуэли с друзьями", trailing: .chevron) {
+                Haptics.tap(); showDuels = true
+            }
+            SettingsDivider()
+            SettingsRow(icon: "chart.bar.fill", title: "Рейтинг по сериям", trailing: .chevron) {
+                Haptics.tap(); showLeaderboard = true
+            }
         }
     }
 
@@ -215,9 +230,6 @@ struct SettingsView: View {
             SettingsDivider()
             SettingsMenuRow(icon: "calendar", title: "Начало недели",
                             selection: $weekStart, options: ["Понедельник", "Воскресенье"])
-            SettingsDivider()
-            SettingsMenuRow(icon: "rectangle.split.2x1", title: "Вид по умолчанию",
-                            selection: $defaultView, options: ["День", "Неделя", "Месяц"])
             SettingsDivider()
             SettingsToggleRow(
                 icon: "iphone.radiowaves.left.and.right",

@@ -2,9 +2,9 @@ import SwiftUI
 import UIKit
 
 /// Adds swipe actions to cards that live outside a `List` (where the native
-/// `.swipeActions` modifier isn't available): left swipe reveals a red
-/// "Удалить", right swipe (when `onComplete` is provided) reveals a green
-/// "Готово".
+/// `.swipeActions` modifier isn't available): left swipe (when `onComplete`
+/// is provided) reveals a green "Готово", right swipe reveals a red
+/// "Удалить".
 private struct SwipeActionsModifier: ViewModifier {
     let onComplete: (() -> Void)?
     let onDelete: () -> Void
@@ -13,36 +13,36 @@ private struct SwipeActionsModifier: ViewModifier {
     @State private var restingOffset: CGFloat = 0
     private let actionWidth: CGFloat = 84
 
-    private var maxLeading: CGFloat { onComplete != nil ? actionWidth : 0 }
+    private var minTrailing: CGFloat { onComplete != nil ? -actionWidth : 0 }
 
     func body(content: Content) -> some View {
         ZStack {
-            // Trailing (left swipe): delete
+            // Trailing (left swipe): complete
             if offset < 0 {
-                Button {
-                    Haptics.warning()
-                    onDelete()
-                    close()
-                } label: {
-                    Color.red
-                        .overlay(alignment: .trailing) {
-                            actionLabel(icon: "trash.fill", text: "Удалить")
-                        }
-                }
-                .buttonStyle(.plain)
-                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-            }
-
-            // Leading (right swipe): complete
-            if offset > 0 {
                 Button {
                     Haptics.success()
                     onComplete?()
                     close()
                 } label: {
                     Color(hex: "2FB873")
-                        .overlay(alignment: .leading) {
+                        .overlay(alignment: .trailing) {
                             actionLabel(icon: "checkmark.circle.fill", text: "Готово")
+                        }
+                }
+                .buttonStyle(.plain)
+                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+            }
+
+            // Leading (right swipe): delete
+            if offset > 0 {
+                Button {
+                    Haptics.warning()
+                    onDelete()
+                    close()
+                } label: {
+                    Color.red
+                        .overlay(alignment: .leading) {
+                            actionLabel(icon: "trash.fill", text: "Удалить")
                         }
                 }
                 .buttonStyle(.plain)
@@ -80,7 +80,7 @@ private struct SwipeActionsModifier: ViewModifier {
     }
 
     private func handleChanged(_ dx: CGFloat) {
-        offset = max(-actionWidth, min(maxLeading, restingOffset + dx))
+        offset = max(minTrailing, min(actionWidth, restingOffset + dx))
     }
 
     private func handleEnded(_ dx: CGFloat) {
@@ -144,12 +144,12 @@ private struct HorizontalPanGesture: UIGestureRecognizerRepresentable {
 }
 
 extension View {
-    /// Reveals a red "Удалить" action on left swipe and calls `onDelete` when tapped.
+    /// Reveals a red "Удалить" action on right swipe and calls `onDelete` when tapped.
     func swipeToDelete(onDelete: @escaping () -> Void) -> some View {
         modifier(SwipeActionsModifier(onComplete: nil, onDelete: onDelete))
     }
 
-    /// Left swipe reveals "Удалить"; right swipe reveals a green "Готово"
+    /// Right swipe reveals "Удалить"; left swipe reveals a green "Готово"
     /// when `onComplete` is not nil (pass nil for cards without a manual
     /// complete action, e.g. auto-tracked goals). Named to avoid colliding
     /// with SwiftUI's List-only `swipeActions`.
