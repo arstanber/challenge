@@ -45,6 +45,17 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
         }
     }
 
+    /// False while the OAuth app registration is missing (placeholder client
+    /// ID in `OAuthSecrets`) -- such connectors are hidden from the UI
+    /// instead of failing with a config error on tap.
+    var isConfigured: Bool {
+        switch self {
+        case .whoop:  return !OAuthSecrets.whoop.hasPrefix("<")
+        case .notion: return !OAuthSecrets.notion.hasPrefix("<")
+        default:      return true
+        }
+    }
+
     /// Whether a user on `plan` can connect this source.
     func isUnlocked(for plan: UserPlan) -> Bool {
         requiredPlan == .free || plan.hasMaxConnectors

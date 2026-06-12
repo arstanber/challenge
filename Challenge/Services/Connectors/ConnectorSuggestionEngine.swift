@@ -105,7 +105,8 @@ final class ConnectorSuggestionEngine {
 
         var result: [DataConnector] = []
         func add(_ connectors: DataConnector...) {
-            for c in connectors where !result.contains(c) { result.append(c) }
+            // Never suggest sources whose OAuth app isn't registered yet.
+            for c in connectors where !result.contains(c) && c.isConfigured { result.append(c) }
         }
 
         // Running / cycling / swimming

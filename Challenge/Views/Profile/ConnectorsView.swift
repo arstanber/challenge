@@ -12,11 +12,11 @@ struct ConnectorsView: View {
     private var plan: UserPlan { auth.currentUser?.plan ?? .free }
 
     private var freeConnectors: [DataConnector] {
-        DataConnector.allCases.filter { $0.requiredPlan == .free }
+        DataConnector.allCases.filter { $0.requiredPlan == .free && $0.isConfigured }
     }
 
     private var maxConnectors: [DataConnector] {
-        DataConnector.allCases.filter { $0.requiredPlan == .max }
+        DataConnector.allCases.filter { $0.requiredPlan == .max && $0.isConfigured }
     }
 
     var body: some View {
