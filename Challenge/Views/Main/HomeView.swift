@@ -314,8 +314,26 @@ struct HomeView: View {
         }
         .task {
             await vm.loadActivities()
-            NotificationService.shared.syncReminders(for: vm.myActivities + vm.parentActivities)
-            NotificationService.shared.scheduleDailyMotivationPlan(for: vm.myActivities + vm.parentActivities)
+            let notifications = NotificationService.shared
+            notifications.clearLegacyMotivationPlan()
+            notifications.syncReminders(for: vm.myActivities + vm.parentActivities)
+            notifications.scheduleStreakNudge(
+                streak: vm.globalStreakCurrent,
+                tasksToSave: max(0, vm.dailyStreakGoal - vm.todayDoneTopLevelCount)
+            )
+            notifications.scheduleWeeklyReview()
+            let minute = await TaskEngine.shared.typicalCompletionMinute()
+            // A touch before the habitual time, so the push lands while the
+            // usual completion window is still open.
+            notifications.schedulePersonalNudge(minuteOfDay: minute.map { $0 - 15 })
+        }
+        // Keep the evening push numbers honest as tasks get completed during
+        // the day (also cancels both nudges once the 75% goal is met).
+        .onChange(of: vm.todayDoneTopLevelCount) { _, done in
+            NotificationService.shared.scheduleStreakNudge(
+                streak: vm.globalStreakCurrent,
+                tasksToSave: max(0, vm.dailyStreakGoal - done)
+            )
         }
         // Rollover exactly at 00:00 (also posted on resume when the day
         // changed while suspended): reset day-scoped state and re-render.

@@ -235,6 +235,41 @@ final class TaskEngine {
         }
     }
 
+    // MARK: - Typical completion time
+
+    private struct ReportTimeRow: Decodable {
+        let createdAt: Date
+        enum CodingKeys: String, CodingKey { case createdAt = "created_at" }
+    }
+
+    /// Median minute-of-day (device timezone) of the user's recent reports --
+    /// drives the "your usual time" nudge. Needs at least 5 reports over the
+    /// last 30 days to be meaningful; returns nil otherwise.
+    func typicalCompletionMinute() async -> Int? {
+        guard !knownActivityIds.isEmpty else { return nil }
+        let monthAgo = calendar.date(byAdding: .day, value: -30, to: Date())!
+        do {
+            let rows: [ReportTimeRow] = try await supabase
+                .from("reports")
+                .select("created_at")
+                .in("activity_id", values: knownActivityIds.map(\.uuidString))
+                .gte("created_at", value: ISO8601DateFormatter().string(from: monthAgo))
+                .order("created_at", ascending: false)
+                .limit(200)
+                .execute()
+                .value
+            guard rows.count >= 5 else { return nil }
+            let minutes = rows
+                .map { calendar.component(.hour, from: $0.createdAt) * 60
+                     + calendar.component(.minute, from: $0.createdAt) }
+                .sorted()
+            return minutes[minutes.count / 2]
+        } catch {
+            logger.error("typicalCompletionMinute failed: \(error)")
+            return nil
+        }
+    }
+
     // MARK: - Streaks
 
     private struct StreakPayload: Decodable {
