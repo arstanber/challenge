@@ -50,12 +50,14 @@ struct HabitCalendarView: View {
                 .padding(.horizontal, 22)
                 .padding(.top, 12)
                 .padding(.bottom, 170)
+                .readableWidth()
             }
 
             VStack {
                 topBar
                 Spacer()
                 todayBar
+                    .readableWidth()
             }
         }
         .task {
@@ -288,8 +290,13 @@ struct HabitCalendarView: View {
     }
 
     private var goalTodayStat: some View {
-        let target = vm.activity.goalTarget ?? 0
-        let current = liveToday ?? vm.activity.goalProgress
+        let isDistance = ConnectorMetric.infer(from: vm.activity) == .distance
+        // Distance goals are stored in km; convert for display when imperial.
+        let target = isDistance ? AppPrefs.displayDistance(vm.activity.goalTarget ?? 0)
+                                : (vm.activity.goalTarget ?? 0)
+        let rawCurrent = liveToday ?? vm.activity.goalProgress
+        let current = isDistance ? AppPrefs.displayDistance(rawCurrent) : rawCurrent
+        let unitSuffix = isDistance ? " \(AppPrefs.distanceUnit)" : ""
         let fraction = target > 0 ? min(current / target, 1.0) : 0
         return HStack(spacing: 16) {
             ZStack {
@@ -304,7 +311,7 @@ struct HabitCalendarView: View {
             .frame(width: 64, height: 64)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("\(grouped(current)) / \(grouped(target))")
+                Text("\(grouped(current)) / \(grouped(target))\(unitSuffix)")
                     .font(.manrope(.extraBold, size: 22))
                     .foregroundColor(.primary)
                 Text(liveToday != nil ? "по данным приложений" : "выполнено сегодня")
@@ -466,7 +473,8 @@ private let groupedFormatter: NumberFormatter = {
     let f = NumberFormatter()
     f.numberStyle = .decimal
     f.groupingSeparator = " "
-    f.maximumFractionDigits = 0
+    // 1 digit so converted distances (3.1 миль) don't round to whole numbers.
+    f.maximumFractionDigits = 1
     return f
 }()
 
