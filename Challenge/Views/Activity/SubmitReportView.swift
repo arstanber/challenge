@@ -267,11 +267,79 @@ private struct AIVerificationResultScreen: View {
     let onDone: () -> Void
     let onRetry: () -> Void
 
-    var body: some View {
-        VStack(spacing: 32) {
-            Spacer()
+    // The verdict is the emotional payoff of the photo flow, so AI results
+    // hide behind a short scanning beat before snapping in with a spring.
+    @State private var revealed = false
+    @State private var scanPulse = false
+    @State private var scanSpin = false
+    @State private var confettiTrigger = 0
+    @State private var bonusXP: Int?
 
-            // Icon
+    /// Only real AI verdicts earn the suspense beat; plain check-ins and
+    /// still-pending results reveal immediately.
+    private var hasSuspense: Bool {
+        switch result {
+        case .approved, .rejected, .excused: return true
+        case .notApplicable, .pending:       return false
+        }
+    }
+
+    var body: some View {
+        ZStack {
+            VStack(spacing: 32) {
+                Spacer()
+
+                if revealed {
+                    verdictContent
+                        .transition(.scale(scale: 0.5).combined(with: .opacity))
+                } else {
+                    scanningContent
+                }
+
+                Spacer()
+
+                if revealed {
+                    actionButtons
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            ConfettiView(trigger: confettiTrigger)
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+        }
+        .onAppear(perform: runReveal)
+    }
+
+    // MARK: Scanning beat
+
+    private var scanningContent: some View {
+        VStack(spacing: 24) {
+            ZStack {
+                Circle()
+                    .stroke(Color.purple.opacity(0.15), lineWidth: 6)
+                    .frame(width: 120, height: 120)
+                Circle()
+                    .trim(from: 0, to: 0.28)
+                    .stroke(Color.purple, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                    .frame(width: 120, height: 120)
+                    .rotationEffect(.degrees(scanSpin ? 360 : 0))
+                Image(systemName: "brain")
+                    .font(.system(size: 44))
+                    .foregroundStyle(.purple)
+                    .scaleEffect(scanPulse ? 1.1 : 0.92)
+            }
+            Text(wasExcuse ? "AI is checking your excuse…" : "AI is checking your photo…")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    // MARK: Verdict
+
+    private var verdictContent: some View {
+        VStack(spacing: 32) {
             ZStack {
                 Circle()
                     .fill(bgColor.opacity(0.15))
@@ -281,11 +349,23 @@ private struct AIVerificationResultScreen: View {
                     .foregroundStyle(bgColor)
             }
 
-            // Title + explanation
             VStack(spacing: 12) {
                 Text(title)
                     .font(.title2.bold())
                     .multilineTextAlignment(.center)
+
+                if let bonusXP {
+                    HStack(spacing: 6) {
+                        Text("🎁")
+                        Text("Lucky bonus: +\(bonusXP) XP")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.orange)
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(.yellow.opacity(0.18), in: Capsule())
+                    .transition(.scale(scale: 0.3).combined(with: .opacity))
+                }
 
                 if let explanation {
                     Text(explanation)
@@ -296,7 +376,6 @@ private struct AIVerificationResultScreen: View {
                 }
             }
 
-            // Contextual tip
             if result == .rejected {
                 HStack(spacing: 8) {
                     Image(systemName: "info.circle").foregroundStyle(Color(hex: "0048E2"))
@@ -307,37 +386,76 @@ private struct AIVerificationResultScreen: View {
                 .background(Color(hex: "0048E2").opacity(0.07), in: RoundedRectangle(cornerRadius: 10))
                 .padding(.horizontal)
             }
-
-            Spacer()
-
-            // Action buttons
-            VStack(spacing: 10) {
-                Button { Haptics.tap(); onDone() } label: {
-                    Text(result == .approved || result == .excused ? "Done 🎉" : "Close")
-                        .fontWeight(.semibold)
-                        .frame(maxWidth: .infinity).frame(height: 50)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(bgColor)
-
-                if result == .rejected {
-                    Button { Haptics.tap(); onRetry() } label: {
-                        Text("Try again")
-                            .frame(maxWidth: .infinity).frame(height: 44)
-                    }
-                    .buttonStyle(.bordered)
-                    .tint(.secondary)
-                }
-            }
-            .padding(.horizontal)
-            .padding(.bottom, 20)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .onAppear {
-            switch result {
-            case .approved, .excused, .notApplicable: Haptics.success()
-            case .rejected:                            Haptics.error()
-            case .pending:                             Haptics.warning()
+    }
+
+    private var actionButtons: some View {
+        VStack(spacing: 10) {
+            Button { Haptics.tap(); onDone() } label: {
+                Text(result == .approved || result == .excused ? "Done 🎉" : "Close")
+                    .fontWeight(.semibold)
+                    .frame(maxWidth: .infinity).frame(height: 50)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(bgColor)
+
+            if result == .rejected {
+                Button { Haptics.tap(); onRetry() } label: {
+                    Text("Try again")
+                        .frame(maxWidth: .infinity).frame(height: 44)
+                }
+                .buttonStyle(.bordered)
+                .tint(.secondary)
+            }
+        }
+        .padding(.horizontal)
+        .padding(.bottom, 20)
+    }
+
+    // MARK: Reveal choreography
+
+    private func runReveal() {
+        guard hasSuspense else {
+            revealed = true
+            playVerdictFeedback()
+            return
+        }
+        withAnimation(.easeInOut(duration: 0.7).repeatForever(autoreverses: true)) {
+            scanPulse = true
+        }
+        withAnimation(.linear(duration: 0.9).repeatForever(autoreverses: false)) {
+            scanSpin = true
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
+                revealed = true
+            }
+            playVerdictFeedback()
+            if result == .approved {
+                confettiTrigger += 1
+                maybeAwardBonus()
+            }
+        }
+    }
+
+    private func playVerdictFeedback() {
+        switch result {
+        case .approved, .excused, .notApplicable: Haptics.success()
+        case .rejected:                            Haptics.error()
+        case .pending:                             Haptics.warning()
+        }
+    }
+
+    /// Variable reward: roughly one approved report in five lands a surprise
+    /// XP drop. The unpredictability is the point -- do not make it constant.
+    private func maybeAwardBonus() {
+        guard Int.random(in: 0..<5) == 0 else { return }
+        let amount = [15, 15, 25, 25, 50].randomElement()! // non-empty literal
+        GamificationEngine.shared.awardBonusXP(amount)
+        AnalyticsService.shared.track(.bonusXPDropped, ["amount": amount])
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.55)) {
+                bonusXP = amount
             }
         }
     }
