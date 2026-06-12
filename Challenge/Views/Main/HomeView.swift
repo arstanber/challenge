@@ -12,7 +12,7 @@ private enum AppColors {
 
 private enum AppSpacing {
     static let buttonSize: CGFloat = 68
-    static let wideButtonWidth: CGFloat = 135
+    static let wideButtonWidth: CGFloat = 200
 }
 
 // MARK: - Per-type accent + number formatting
@@ -83,6 +83,7 @@ struct HomeView: View {
     @State private var newHabitDraft: HabitDraft?
     // Navigation
     @State private var showSettings = false
+    @State private var showReorder = false
     // Task interaction
     @State private var taskToComplete: Activity?
     @State private var lastPhotoTask: Activity?
@@ -297,6 +298,7 @@ struct HomeView: View {
         .safeAreaInset(edge: .bottom) {
             BottomButtons(
                 onSettings: { Haptics.tap(); showSettings = true },
+                onReorder: { Haptics.tap(); showReorder = true },
                 onAI: { Haptics.tap(); showAIPlanner = true },
                 onPlus: { Haptics.tap(); showAddHabit = true }
             )
@@ -386,6 +388,7 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showBySaying, onDismiss: reload) { BySayingView() }
         .sheet(isPresented: $showSettings) { SettingsView() }
+        .sheet(isPresented: $showReorder, onDismiss: reload) { ReorderSheet(vm: vm) }
         .alert(
             "Строгий режим",
             isPresented: .init(get: { strictBlock != nil }, set: { if !$0 { strictBlock = nil } }),
@@ -868,12 +871,13 @@ private struct SubTaskRow: View {
 
 private struct BottomButtons: View {
     let onSettings: () -> Void
+    let onReorder: () -> Void
     let onAI: () -> Void
     let onPlus: () -> Void
 
     var body: some View {
         HStack {
-            // Wide pill: settings (left) + AI (right)
+            // Wide pill: settings | reorder | AI
             ZStack {
                 RoundedRectangle(cornerRadius: 1000)
                     .fill(AppColors.buttonBg)
@@ -882,6 +886,15 @@ private struct BottomButtons: View {
                     Button(action: onSettings) {
                         Image(systemName: "gearshape")
                             .font(.system(size: 22, weight: .medium))
+                            .foregroundStyle(.primary)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
+                    Rectangle()
+                        .fill(AppColors.separatorLine)
+                        .frame(width: 1, height: AppSpacing.buttonSize * 0.75)
+                    Button(action: onReorder) {
+                        Image(systemName: "arrow.up.arrow.down")
+                            .font(.system(size: 20, weight: .semibold))
                             .foregroundStyle(.primary)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }

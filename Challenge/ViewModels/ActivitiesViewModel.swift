@@ -283,6 +283,25 @@ final class ActivitiesViewModel {
         myActivities.insert(item, at: to)
     }
 
+    /// Reorder the top-level active tasks (ReorderSheet) and remap the new
+    /// order into myActivities, leaving every other row in place.
+    func moveTopLevel(fromOffsets: IndexSet, toOffset: Int) {
+        var top = myActivities.filter { $0.parentId == nil && $0.status == .active }
+        // Same semantics as SwiftUI's move(fromOffsets:toOffset:) without
+        // importing SwiftUI into the view model.
+        let indices = fromOffsets.sorted()
+        let moving = indices.map { top[$0] }
+        for index in indices.reversed() { top.remove(at: index) }
+        let adjusted = toOffset - indices.filter { $0 < toOffset }.count
+        top.insert(contentsOf: moving, at: min(adjusted, top.count))
+        var iterator = top.makeIterator()
+        myActivities = myActivities.map { item in
+            guard item.parentId == nil, item.status == .active,
+                  let next = iterator.next() else { return item }
+            return next
+        }
+    }
+
     /// Persist the current order to the DB by writing sequential sort_order values.
     func persistOrder() async {
         let ordered = myActivities
