@@ -40,6 +40,13 @@ struct AppUser: Codable, Identifiable {
     var role: UserRole
     var familyId: UUID?
     var createdAt: Date
+    // Referral program (20260612c_referrals.sql)
+    var referralCode: String?
+    var referredBy: UUID?
+    /// Temporary PRO from referral rewards; premium while in the future.
+    var proUntil: Date?
+    /// Streak freezes claimed from referrals, added to the freeze wallet.
+    var bonusFreezes: Int?
 
     enum CodingKeys: String, CodingKey {
         case id, email
@@ -47,10 +54,21 @@ struct AppUser: Codable, Identifiable {
         case plan, role
         case familyId = "family_id"
         case createdAt = "created_at"
+        case referralCode = "referral_code"
+        case referredBy = "referred_by"
+        case proUntil = "pro_until"
+        case bonusFreezes = "bonus_freezes"
     }
 
     var isParent: Bool { role == .parent }
-    var isPremium: Bool { plan != .free }
+
+    /// True while referral-granted PRO time is still running.
+    var hasReferralPro: Bool {
+        guard let proUntil else { return false }
+        return proUntil > Date()
+    }
+
+    var isPremium: Bool { plan != .free || hasReferralPro }
 }
 
 struct AuthSession: Codable {

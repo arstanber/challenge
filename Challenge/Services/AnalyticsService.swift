@@ -44,6 +44,8 @@ final class AnalyticsService {
         case duelCreated = "duel_created"
         case duelJoined = "duel_joined"
         case duelFinished = "duel_finished"
+        case referralRedeemed = "referral_redeemed"
+        case referralRewardClaimed = "referral_reward_claimed"
         // Activation funnel: time-to-first-report is the aha-moment metric.
         case firstReportSubmitted = "first_report_submitted"
         case firstWinShown = "first_win_shown"

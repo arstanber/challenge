@@ -74,6 +74,13 @@ final class AuthService {
         syncTimezone(userId: id)
     }
 
+    /// Re-pull the users row; plan, pro_until and bonus_freezes change
+    /// server-side (referral rewards, plan grants).
+    func refreshProfile() async {
+        guard let id = currentUser?.id else { return }
+        try? await loadUserProfile(id: id)
+    }
+
     /// Fire-and-forget upsert of the device timezone -- the server uses it for
     /// streak day-bucketing and reminder scheduling (users.timezone).
     func syncTimezone(userId: UUID) {

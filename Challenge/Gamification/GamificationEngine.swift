@@ -64,9 +64,11 @@ final class GamificationEngine {
     // MARK: - Freeze wallet (#2)
 
     /// Freezes earned over the player's lifetime: one per 7 days of best streak,
-    /// plus one for every 3 achievements unlocked.
+    /// plus one for every 3 achievements unlocked, plus freezes claimed from
+    /// referral rewards (server-side counter on the users row).
     var earnedFreezes: Int {
         stats.bestStreak / 7 + unlockedIds.count / 3
+            + (AuthService.shared.currentUser?.bonusFreezes ?? 0)
     }
 
     /// Freezes currently available to spend.

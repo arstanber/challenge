@@ -50,6 +50,7 @@ struct SettingsView: View {
     @State private var showConnectors = false
     @State private var showDuels = false
     @State private var showLeaderboard = false
+    @State private var showReferral = false
 
     private let blue = Color(hex: "0A84FF")
 
@@ -98,6 +99,9 @@ struct SettingsView: View {
         }
         .sheet(isPresented: $showLeaderboard) {
             NavigationStack { LeaderboardView().environment(auth) }
+        }
+        .sheet(isPresented: $showReferral) {
+            NavigationStack { ReferralView().environment(auth) }
         }
         .fullScreenCover(isPresented: $showHallOfFame) {
             ZStack(alignment: .topTrailing) {
@@ -200,6 +204,10 @@ struct SettingsView: View {
             SettingsRow(icon: "chart.bar.fill", title: "Рейтинг по сериям", trailing: .chevron) {
                 Haptics.tap(); showLeaderboard = true
             }
+            SettingsDivider()
+            SettingsRow(icon: "gift.fill", title: "Пригласить друга", badge: "PRO дни", trailing: .chevron) {
+                Haptics.tap(); showReferral = true
+            }
         }
     }
 
@@ -207,11 +215,12 @@ struct SettingsView: View {
         SettingsSection(title: "Глобальные настройки") {
             SettingsRow(icon: "app", title: "Значок приложения", badge: "PRO", trailing: .chevron) {
                 Haptics.tap()
-                // Paywall for free users, the actual picker for subscribers.
-                if (auth.currentUser?.plan ?? .free) == .free {
-                    showPremium = true
-                } else {
+                // Paywall for free users, the actual picker for subscribers
+                // (isPremium also covers temporary referral PRO).
+                if auth.currentUser?.isPremium == true {
                     showAppIcon = true
+                } else {
+                    showPremium = true
                 }
             }
             SettingsDivider()
