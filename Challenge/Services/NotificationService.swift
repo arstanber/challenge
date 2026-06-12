@@ -50,21 +50,18 @@ final class NotificationService: NSObject {
         // Replace any previously scheduled variant (frequency/days may have changed).
         cancelReminder(for: activity.id)
 
-        let content = UNMutableNotificationContent()
-        if AppPrefs.zoomerMode {
-            let pick = ZoomerCopy.taskReminder(createdAt: activity.createdAt)
-            content.title = pick.title
-            content.subtitle = "«\(activity.title)»"
-            content.body = pick.body
-        } else {
-            content.title = NSLocalizedString("Don't forget!", comment: "")
-            content.body = String(format: NSLocalizedString("Submit your report for %@", comment: ""), activity.title)
-        }
-        content.sound = .default
-        content.userInfo = ["activity_id": activity.id.uuidString]
-
         var components = Calendar.current.dateComponents([.hour, .minute], from: reminderTime)
         components.second = 0
+
+        let content = UNMutableNotificationContent()
+        let pick = AppPrefs.zoomerMode
+            ? ZoomerCopy.taskReminder(createdAt: activity.createdAt)
+            : StandardCopy.push(hour: components.hour ?? 12, streak: activity.streakCurrent)
+        content.title = pick.title
+        content.subtitle = "«\(activity.title)»"
+        content.body = pick.body
+        content.sound = .default
+        content.userInfo = ["activity_id": activity.id.uuidString]
 
         let center = UNUserNotificationCenter.current()
         if activity.frequency == .weekly, let days = activity.scheduleDays, !days.isEmpty {
@@ -185,14 +182,21 @@ final class NotificationService: NSObject {
         guard let minuteOfDay, (8 * 60)...(19 * 60) ~= minuteOfDay else { return }
 
         let content = UNMutableNotificationContent()
+        let pick: PushText
         if AppPrefs.zoomerMode {
-            let pick = ZoomerCopy.personalNudge(streak: streak)
-            content.title = pick.title
-            content.body = pick.body
+            pick = ZoomerCopy.personalNudge(streak: streak)
         } else {
-            content.title = "Твоё обычное время 🎯"
-            content.body = "Обычно ты закрываешь задачи примерно сейчас. Один отчёт, и день уже не зря."
+            // The habitual-time explanation stays in the rotation -- it is
+            // the only variant that says why the push fires at this minute.
+            var pool = StandardCopy.pool(hour: minuteOfDay / 60, streak: streak)
+            pool.append(PushText(
+                title: "Твоё обычное время 🎯",
+                body: "Обычно ты закрываешь задачи примерно сейчас. Один отчёт, и день уже не зря."
+            ))
+            pick = pool.randomElement() ?? StandardCopy.general[0]
         }
+        content.title = pick.title
+        content.body = pick.body
         content.sound = .default
 
         var comps = DateComponents()

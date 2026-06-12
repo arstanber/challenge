@@ -1,17 +1,11 @@
 import Foundation
 
-/// Push-text pool for zoomer mode (`AppPrefs.zoomerMode`). A variant is
-/// picked at schedule time, so the copy rotates on every re-schedule
-/// (app open, completion, toggle flip), not on every delivery.
+/// Push-text pool for zoomer mode (`AppPrefs.zoomerMode`). See `PushText`
+/// for the rotation mechanics; `StandardCopy` is the default-tone twin.
 enum ZoomerCopy {
-    struct Push {
-        let title: String
-        let body: String
-    }
-
     // MARK: - General motivation -- task reminders and the personal-time nudge
 
-    static let motivation: [Push] = [
+    static let motivation: [PushText] = [
         .init(title: "Это не цитата. Это режим.", body: "Дисциплина > мотивация. Всегда."),
         .init(title: "Productive era не ждёт", body: "Ты сейчас на пике. Не сломай это."),
         .init(title: "Glow up era началась", body: "Villain era отменяется. Сегодня ты растёшь."),
@@ -36,7 +30,7 @@ enum ZoomerCopy {
 
     /// Reminder copy for one task; the shared pool plus a variant built
     /// from the goal's creation date ("Тот ты верил в тебя").
-    static func taskReminder(createdAt: Date) -> Push {
+    static func taskReminder(createdAt: Date) -> PushText {
         var pool = motivation
         pool.append(.init(
             title: "Тот ты верил в тебя",
@@ -46,7 +40,7 @@ enum ZoomerCopy {
     }
 
     /// Personal-time nudge; no streak unlocks the "could have been 67" guilt trip.
-    static func personalNudge(streak: Int) -> Push {
+    static func personalNudge(streak: Int) -> PushText {
         var pool = motivation
         if streak == 0 {
             pool.append(.init(
@@ -59,42 +53,22 @@ enum ZoomerCopy {
 
     // MARK: - Evening streak risk (caller appends the concrete numbers)
 
-    static func streakRisk(streak: Int) -> Push {
-        var pool: [Push] = [
-            .init(title: "WE ARE SO BACK 🔥", body: "\(days(streak)) подряд. Серия не останавливается."),
+    static func streakRisk(streak: Int) -> PushText {
+        var pool: [PushText] = [
+            .init(title: "WE ARE SO BACK 🔥", body: "\(RuPlural.days(streak)) подряд. Серия не останавливается."),
             .init(title: "Один шаг решает всё", body: "Один пропуск -- it's over. Один отчёт -- we're back."),
             .init(title: "Не fumble свой streak", body: "2027 не твой год спасения. Сделай сейчас."),
             .init(title: "Я клубника ты клубника", body: "А почему у нас такой плохой стрик? Исправляй."),
             .init(title: "Rest if you must. But don't quit.", body: "Streak ждёт. Одно действие -- и ты снова в игре."),
-            .init(title: "Small steps. Every day. No excuses.", body: "\(days(streak)) позади. Добавь ещё один."),
+            .init(title: "Small steps. Every day. No excuses.", body: "\(RuPlural.days(streak)) позади. Добавь ещё один."),
         ]
         if streak < 67 {
             pool.append(.init(
-                title: "До 67-дневного streak \(remainingDays(67 - streak))",
+                title: "До 67-дневного streak \(RuPlural.remainingDays(67 - streak))",
                 body: "Это уже легенда. Иди к ней."
             ))
         }
         return pool.randomElement() ?? pool[0]
-    }
-
-    // MARK: - Russian plurals
-
-    /// "1 день" / "2 дня" / "5 дней".
-    static func days(_ n: Int) -> String {
-        "\(n) \(dayWord(n))"
-    }
-
-    /// "остался 1 день" / "осталось 2 дня" / "осталось 5 дней".
-    static func remainingDays(_ n: Int) -> String {
-        let verb = n % 10 == 1 && n % 100 != 11 ? "остался" : "осталось"
-        return "\(verb) \(n) \(dayWord(n))"
-    }
-
-    private static func dayWord(_ n: Int) -> String {
-        let mod10 = n % 10, mod100 = n % 100
-        if mod10 == 1 && mod100 != 11 { return "день" }
-        if (2...4).contains(mod10) && !(12...14).contains(mod100) { return "дня" }
-        return "дней"
     }
 
     /// "12 июня" -- the ru locale yields the genitive month with "d MMMM".
