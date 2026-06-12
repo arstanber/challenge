@@ -36,6 +36,7 @@ struct DeleteReasonSheet: View {
                 Spacer()
             }
             .padding(20)
+            .readableWidth(560)
             .navigationTitle("Удаление задачи")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

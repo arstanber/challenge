@@ -97,6 +97,7 @@ struct LeaderboardView: View {
                         }
                         .padding(.horizontal, 22)
                         .padding(.bottom, 40)
+                        .readableWidth()
                     }
                 }
             }

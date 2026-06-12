@@ -72,6 +72,7 @@ struct SubmitReportView: View {
                 submitButtons
             }
             .padding()
+            .readableWidth()
         }
     }
 

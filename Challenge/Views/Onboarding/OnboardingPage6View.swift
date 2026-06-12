@@ -219,6 +219,7 @@ struct GetStartedScreen: View {
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                 }
+                .readableWidth(560)
             }
             .onAppear {
                 physics.configure(

@@ -30,3 +30,17 @@ extension View {
         modifier(ReadableWidthModifier(maxWidth: maxWidth, alignment: alignment))
     }
 }
+
+extension Array where Element == GridItem {
+    /// Flexible grid columns whose count depends on the horizontal size class:
+    /// `regular` columns on iPad, `compact` on iPhone.
+    static func adaptive(
+        compact: Int,
+        regular: Int,
+        for sizeClass: UserInterfaceSizeClass?,
+        spacing: CGFloat = 12
+    ) -> [GridItem] {
+        let count = sizeClass == .regular ? regular : compact
+        return Array(repeating: GridItem(.flexible(), spacing: spacing), count: count)
+    }
+}

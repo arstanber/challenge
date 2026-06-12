@@ -229,6 +229,7 @@ private struct DescribeGoalView: View {
                         .padding(.horizontal, 20)
                         .padding(.bottom, 28)
                     }
+                    .readableWidth()
                 }
             }
         }
@@ -463,6 +464,7 @@ private struct QuestionsView: View {
                 .padding(.horizontal, 12)
                 .padding(.bottom, 32)
             }
+            .readableWidth()
         }
     }
 }
@@ -558,6 +560,7 @@ private struct PlanPreviewView: View {
                     .padding(.top, 12)
                     .disabled(vm.step == .creating)
                 }
+                .readableWidth()
             }
         }
         .onAppear { Haptics.success() }
@@ -719,6 +722,7 @@ private struct DoneView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 14))
             }
             .padding(.horizontal, 40)
+            .readableWidth(480)
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

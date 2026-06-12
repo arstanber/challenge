@@ -54,6 +54,7 @@ struct PerfectDayView: View {
                 .opacity(contentOpacity)
             }
             .padding(.bottom, 40)
+            .frame(maxWidth: 480)
         }
         .onAppear {
             withAnimation(.spring(response: 0.5, dampingFraction: 0.55)) {

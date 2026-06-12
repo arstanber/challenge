@@ -85,6 +85,7 @@ struct LocationReminderPicker: View {
                 .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 22))
                 .padding(.horizontal, 16)
                 .padding(.bottom, 16)
+                .readableWidth(560)
             }
             .navigationTitle("Location reminder")
             .navigationBarTitleDisplayMode(.inline)

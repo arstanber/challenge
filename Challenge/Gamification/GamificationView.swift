@@ -22,6 +22,7 @@ struct GamificationView: View {
             }
             .padding(.horizontal, 22)
             .padding(.vertical, 16)
+            .readableWidth()
         }
         .background(Color.white)
     }
@@ -250,8 +251,7 @@ private struct ThemeChip: View {
 
 private struct AchievementsSection: View {
     let engine: GamificationEngine
-
-    private let columns = [GridItem(.flexible()), GridItem(.flexible())]
+    @Environment(\.horizontalSizeClass) private var hSizeClass
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -265,7 +265,7 @@ private struct AchievementsSection: View {
                     .foregroundColor(.black.opacity(0.4))
             }
 
-            LazyVGrid(columns: columns, spacing: 12) {
+            LazyVGrid(columns: .adaptive(compact: 2, regular: 3, for: hSizeClass, spacing: 12), spacing: 12) {
                 ForEach(Achievement.catalog) { achievement in
                     AchievementCard(
                         achievement: achievement,

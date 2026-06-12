@@ -107,6 +107,7 @@ struct ProgressGalleryView: View {
                     }
                     .padding(.horizontal, 22)
                     .padding(.vertical, 16)
+                    .readableWidth()
                 }
             }
         }
@@ -232,6 +233,7 @@ private struct ActivityGalleryDetail: View {
                 }
             }
             .padding(22)
+            .readableWidth()
         }
         .navigationTitle(activity.title)
         .navigationBarTitleDisplayMode(.inline)

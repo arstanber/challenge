@@ -119,6 +119,7 @@ struct PremiumView: View {
             .padding(.horizontal, 20)
             .padding(.top, 8)
             .padding(.bottom, 32)
+            .readableWidth(560)
         }
         .background(PaywallColors.background.ignoresSafeArea())
         .navigationTitle("Подписка")

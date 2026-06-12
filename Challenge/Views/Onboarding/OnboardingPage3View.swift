@@ -50,6 +50,7 @@ struct ChallengePhotoView: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 36)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .readableWidth(560)
             }
             .frame(width: geo.size.width, height: geo.size.height)
             .ignoresSafeArea()

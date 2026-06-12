@@ -145,6 +145,7 @@ struct AddHabitView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 6)
                     .padding(.bottom, 130)
+                    .readableWidth()
                 }
             }
 
@@ -165,6 +166,7 @@ struct AddHabitView: View {
                     )
                     .padding(.horizontal, 12)
                     .padding(.bottom, 40)
+                    .readableWidth(480)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
@@ -249,6 +251,7 @@ struct AddHabitView: View {
         }
         .buttonStyle(.haptic)
         .padding(.bottom, 30)
+        .readableWidth(480)
     }
 
     // MARK: Actions

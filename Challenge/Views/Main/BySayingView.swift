@@ -76,6 +76,7 @@ struct BySayingView: View {
                     }
                     .padding(.horizontal, 15)
                     .padding(.vertical, 12)
+                    .readableWidth()
                 }
             }
             .toolbar {

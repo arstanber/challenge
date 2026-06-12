@@ -31,6 +31,7 @@ struct ActivityDetailView: View {
                 }
             }
             .padding()
+            .readableWidth()
         }
         .navigationTitle(vm.activity.title)
         .navigationBarTitleDisplayMode(.large)

@@ -135,6 +135,7 @@ struct StatisticsView: View {
                         .padding(.horizontal, 22)
                         .padding(.top, 8)
                         .padding(.bottom, 40)
+                        .readableWidth()
                     }
                 }
             }

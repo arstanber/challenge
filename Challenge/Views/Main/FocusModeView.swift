@@ -23,6 +23,7 @@ struct FocusModeView: View {
                 }
             }
             .padding(22)
+            .readableWidth()
         }
         .background(Color.white)
         .navigationTitle("Focus Mode")

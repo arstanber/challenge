@@ -78,6 +78,7 @@ struct NewHabitView: View {
                 }
                 .padding(.horizontal, 18)
                 .padding(.top, 70)
+                .readableWidth()
             }
 
             createButton
@@ -338,6 +339,7 @@ struct NewHabitView: View {
         .disabled(!canCreate || creating)
         .padding(.horizontal, 18)
         .padding(.bottom, 30)
+        .readableWidth(480)
     }
 
     // MARK: Helpers

@@ -21,6 +21,7 @@ struct PushNotificationsOnboardingView: View {
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.bottom, OBStyle.ctaBottomPad)
         }
+        .readableWidth(560)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         // Extend to the physical bottom edge so the CTA lines up with the
         // full-bleed pages (which ignore the safe area) at OBStyle.ctaBottomPad.

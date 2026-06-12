@@ -51,6 +51,7 @@ struct TheChallengeView: View {
                         .frame(maxWidth: .infinity, alignment: .center)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .readableWidth(560)
             }
             .frame(width: geo.size.width, height: geo.size.height)
             .ignoresSafeArea()

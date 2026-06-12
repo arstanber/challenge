@@ -50,6 +50,7 @@ struct ConnectorSuggestionSheet: View {
         }
         .padding(.horizontal, 18)
         .padding(.top, 26)
+        .readableWidth(560)
         .presentationDetents([.medium])
         .presentationDragIndicator(.visible)
         .sheet(isPresented: $showPremium) {

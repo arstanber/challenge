@@ -127,7 +127,6 @@ struct OnboardingView: View {
 
     var body: some View {
         ZStack {
-            // Full-bleed backdrop so the capped column on iPad sits on white.
             Color.white.ignoresSafeArea()
 
             TabView(selection: $currentPage) {
@@ -159,7 +158,6 @@ struct OnboardingView: View {
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
             .ignoresSafeArea()
-            .readableWidth(620)
         }
     }
 }
@@ -225,6 +223,7 @@ private struct OnboardingLandingPage: View {
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.horizontal, OBStyle.hPad)
                 .padding(.bottom, OBStyle.ctaBottomPad)
+                .readableWidth(480)
             }
             .frame(width: geo.size.width, height: geo.size.height)
             .ignoresSafeArea()

@@ -71,6 +71,7 @@ struct WorkspaceHomeView: View {
                     .padding(.horizontal, 22)
                     .padding(.top, 16)
                     .padding(.bottom, 120)
+                    .readableWidth()
                 }
             }
             .safeAreaInset(edge: .top, spacing: 0) {
@@ -141,6 +142,7 @@ struct WorkspaceHomeView: View {
                     )
                     .padding(.horizontal, 12)
                     .padding(.bottom, 32)
+                    .readableWidth(480)
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
@@ -193,14 +195,10 @@ private struct WorkspaceEmptyState: View {
 
 private struct HomeCategorySummaryGrid: View {
     let summary: [(category: TaskCategory, count: Int)]
-
-    private let columns = [
-        GridItem(.flexible(), spacing: 8),
-        GridItem(.flexible(), spacing: 8)
-    ]
+    @Environment(\.horizontalSizeClass) private var hSizeClass
 
     var body: some View {
-        LazyVGrid(columns: columns, spacing: 8) {
+        LazyVGrid(columns: .adaptive(compact: 2, regular: 3, for: hSizeClass, spacing: 8), spacing: 8) {
             ForEach(summary, id: \.category.label) { item in
                 HStack(spacing: 4) {
                     Text("\(item.count)")

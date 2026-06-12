@@ -102,6 +102,7 @@ struct AICoachSheet: View {
                 }
                 .padding(.horizontal, 22)
                 .padding(.bottom, 40)
+                .readableWidth()
             }
         }
         .background(Color.white)
@@ -222,6 +223,7 @@ struct FailureAnalysisSheet: View {
             }
             .padding(.horizontal, 22)
             .padding(.vertical, 20)
+            .readableWidth()
         }
     }
 
@@ -310,6 +312,7 @@ struct GoalSplitSheet: View {
                 }
                 .padding(.horizontal, 22)
                 .padding(.vertical, 20)
+                .readableWidth()
             }
 
             Button {
@@ -325,6 +328,7 @@ struct GoalSplitSheet: View {
             }
             .padding(.horizontal, 22)
             .padding(.bottom, 32)
+            .readableWidth(480)
         }
     }
 

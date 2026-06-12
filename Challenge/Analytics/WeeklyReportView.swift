@@ -51,6 +51,7 @@ struct WeeklyReportView: View {
 
             Spacer()
         }
+        .readableWidth(560)
         .background(Color.white)
     }
 

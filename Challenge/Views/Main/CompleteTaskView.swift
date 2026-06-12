@@ -102,6 +102,7 @@ struct CompleteTaskView: View {
                 }
             }
             .padding(.horizontal, 20)
+            .readableWidth()
 
             // Close
             VStack {
@@ -248,6 +249,7 @@ struct CompleteTaskView: View {
             }
             .padding(.horizontal)
             .padding(.bottom, 24)
+            .readableWidth(480)
         }
     }
 
@@ -365,6 +367,7 @@ private struct VerdictOverlay: View {
             .background(Color.white)
             .clipShape(RoundedRectangle(cornerRadius: 28))
             .padding(.horizontal, 32)
+            .frame(maxWidth: 480)
         }
     }
 }

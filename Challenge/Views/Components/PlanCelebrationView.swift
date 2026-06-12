@@ -105,6 +105,7 @@ struct PlanCelebrationView: View {
         }
         .padding(.horizontal, 24)
         .padding(.bottom, 24)
+        .readableWidth(480)
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
         .onAppear { Haptics.success() }
