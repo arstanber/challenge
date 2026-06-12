@@ -64,7 +64,11 @@ struct SettingsView: View {
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 26) {
-                    premiumCard
+                    // Upsell only makes sense for free users; isPremium also
+                    // covers temporary referral PRO (pro_until).
+                    if auth.currentUser?.isPremium != true {
+                        premiumCard
+                    }
                     personalSection
                     globalSection
                     habitsSection
@@ -156,11 +160,11 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Перейдите на Премиум")
                         .font(.system(size: 23, weight: .bold))
-                        .foregroundColor(.black)
+                        .foregroundStyle(.primary)
                         .fixedSize(horizontal: false, vertical: true)
                     Text("Откройте неограниченные привычки")
                         .font(.system(size: 16))
-                        .foregroundColor(.black.opacity(0.5))
+                        .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                     Text("Перейти")
                         .font(.system(size: 17, weight: .semibold))
@@ -184,7 +188,8 @@ struct SettingsView: View {
                     .offset(x: 6)
             }
             .padding(20)
-            .background(RoundedRectangle(cornerRadius: 26, style: .continuous).fill(Color.white))
+            .background(RoundedRectangle(cornerRadius: 26, style: .continuous)
+                .fill(Color(.secondarySystemBackground)))
         }
         .buttonStyle(.plain)
     }
