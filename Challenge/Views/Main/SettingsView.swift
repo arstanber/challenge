@@ -51,6 +51,8 @@ struct SettingsView: View {
     @State private var showDuels = false
     @State private var showLeaderboard = false
     @State private var showReferral = false
+    @State private var showFamily = false
+    @State private var showStatistics = false
 
     private let blue = Color(hex: "0A84FF")
 
@@ -106,6 +108,12 @@ struct SettingsView: View {
         }
         .sheet(isPresented: $showReferral) {
             NavigationStack { ReferralView().environment(auth) }
+        }
+        .sheet(isPresented: $showFamily) {
+            NavigationStack { FamilyView().environment(auth) }
+        }
+        .sheet(isPresented: $showStatistics) {
+            StatisticsView()
         }
         .fullScreenCover(isPresented: $showHallOfFame) {
             ZStack(alignment: .topTrailing) {
@@ -200,6 +208,14 @@ struct SettingsView: View {
         SettingsSection(title: "Личное") {
             SettingsRow(icon: "trophy", title: "Зал славы", trailing: .chevron) {
                 Haptics.tap(); showHallOfFame = true
+            }
+            SettingsDivider()
+            SettingsRow(icon: "chart.xyaxis.line", title: "Статистика", trailing: .chevron) {
+                Haptics.tap(); showStatistics = true
+            }
+            SettingsDivider()
+            SettingsRow(icon: "person.3", title: "Семейная группа", trailing: .chevron) {
+                Haptics.tap(); showFamily = true
             }
             SettingsDivider()
             SettingsRow(icon: "figure.fencing", title: "Дуэли с друзьями", trailing: .chevron) {
