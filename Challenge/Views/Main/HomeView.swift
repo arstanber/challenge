@@ -39,11 +39,40 @@ private func grouped(_ value: Double) -> String {
     groupedFormatter.string(from: NSNumber(value: value)) ?? "\(Int(value))"
 }
 
+// MARK: - Strict mode
+
+/// Refusal details when strict mode blocks completion: a connected data
+/// source reports today's value below the task's goal.
+private struct StrictBlock: Identifiable {
+    let id = UUID()
+    let title: String
+    let current: Double
+    let target: Double
+
+    /// "6 500 из 10 000" -- one decimal for small (distance-like) values.
+    var progressText: String {
+        func num(_ v: Double) -> String {
+            let f = NumberFormatter()
+            f.numberStyle = .decimal
+            f.groupingSeparator = " "
+            f.maximumFractionDigits = v < 100 ? 1 : 0
+            return f.string(from: NSNumber(value: v)) ?? "\(Int(v))"
+        }
+        return "\(num(current)) из \(num(target))"
+    }
+}
+
 // MARK: - Home
 
 struct HomeView: View {
     @State private var vm = ActivitiesViewModel()
     @AppStorage("requirePhotoVerification") private var requirePhoto = true
+    // ON: done tasks collect struck-through at the bottom. OFF: they stay
+    // in place in the list order.
+    @AppStorage(AppPrefs.Key.groupCompleted) private var groupCompleted = true
+    @AppStorage(AppPrefs.Key.strictMode) private var strictMode = true
+    // Strict-mode refusal: connector says the goal is not reached yet.
+    @State private var strictBlock: StrictBlock?
 
     // Creation
     @State private var showAIPlanner = false
@@ -131,6 +160,24 @@ struct HomeView: View {
             .filter { vm.isHandledToday($0.id) }
     }
 
+    /// Main list rows: pending tasks, with done ones interleaved in their
+    /// original positions when "Группировать выполненные" is off.
+    private var mainRows: [(task: Activity, isDone: Bool)] {
+        if groupCompleted { return todayTasks.map { ($0, false) } }
+        let pendingIds = Set(todayTasks.map(\.id))
+        let doneIds = Set(doneTodayTasks.map(\.id))
+        return (vm.myActivities + vm.parentActivities).compactMap { a in
+            if pendingIds.contains(a.id) { return (a, false) }
+            if doneIds.contains(a.id) { return (a, true) }
+            return nil
+        }
+    }
+
+    /// Done tasks rendered as the bottom group (grouped mode only).
+    private var bottomDoneTasks: [Activity] {
+        groupCompleted ? doneTodayTasks : []
+    }
+
     /// True when every top-level task due today is done.
     private var allDone: Bool {
         let done = vm.todayDoneTopLevelCount
@@ -159,19 +206,24 @@ struct HomeView: View {
                         EmptyTodayView()
                             .padding(.top, 40)
                     } else {
-                        ForEach(Array(todayTasks.enumerated()), id: \.element.id) { idx, task in
-                            TaskCardView(
-                                task: task,
-                                subtasks: pendingSubtasks(of: task),
-                                isDone: { vm.isDoneToday($0.id) },
-                                onOpen: { detailActivity = task },
-                                onToggle: completeTask,
-                                onEdit: { editingActivity = $0 },
-                                onDelete: { act in deletingActivity = act },
-                                onTomorrow: { act in Task { await vm.moveToTomorrow(act); await vm.loadActivities() } },
-                                cancelledTaskId: cancelledTaskId
-                            )
-                            .appearEffect(delay: 0.1 + Double(idx) * 0.05)
+                        ForEach(Array(mainRows.enumerated()), id: \.element.task.id) { idx, row in
+                            if row.isDone {
+                                DoneTaskCard(task: row.task) { detailActivity = row.task }
+                                    .appearEffect(delay: 0.1 + Double(idx) * 0.05)
+                            } else {
+                                TaskCardView(
+                                    task: row.task,
+                                    subtasks: pendingSubtasks(of: row.task),
+                                    isDone: { vm.isDoneToday($0.id) },
+                                    onOpen: { detailActivity = row.task },
+                                    onToggle: completeTask,
+                                    onEdit: { editingActivity = $0 },
+                                    onDelete: { act in deletingActivity = act },
+                                    onTomorrow: { act in Task { await vm.moveToTomorrow(act); await vm.loadActivities() } },
+                                    cancelledTaskId: cancelledTaskId
+                                )
+                                .appearEffect(delay: 0.1 + Double(idx) * 0.05)
+                            }
                         }
 
                         if !upcomingTasks.isEmpty {
@@ -198,8 +250,8 @@ struct HomeView: View {
                             }
                         }
 
-                        // Done today -- struck through at the bottom
-                        ForEach(Array(doneTodayTasks.enumerated()), id: \.element.id) { idx, task in
+                        // Done today -- struck through at the bottom (grouped mode)
+                        ForEach(Array(bottomDoneTasks.enumerated()), id: \.element.id) { idx, task in
                             DoneTaskCard(task: task) { detailActivity = task }
                                 .appearEffect(delay: 0.2 + Double(idx) * 0.05)
                         }
@@ -208,6 +260,7 @@ struct HomeView: View {
                 .padding(.horizontal, 18)
                 .padding(.top, 84)
                 .padding(.bottom, 20)
+                .readableWidth()
             }
             .safeAreaInset(edge: .top, spacing: 0) {
                 HomeTopBar(dateLabel: todayLabel, count: todayTasks.count,
@@ -305,6 +358,15 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showBySaying, onDismiss: reload) { BySayingView() }
         .sheet(isPresented: $showSettings) { SettingsView() }
+        .alert(
+            "Строгий режим",
+            isPresented: .init(get: { strictBlock != nil }, set: { if !$0 { strictBlock = nil } }),
+            presenting: strictBlock
+        ) { _ in
+            Button("Понятно", role: .cancel) { strictBlock = nil }
+        } message: { block in
+            Text("«\(block.title)»: цель пока не достигнута -- \(block.progressText) по данным приложений. Завершите цель полностью или отключите строгий режим в настройках.")
+        }
         .sheet(item: $editingActivity) { activity in
             EditTaskView(activity: activity) { title, frequency, deadline, reminderTime, scheduleDays in
                 Task { await vm.updateActivity(activity, title: title, frequency: frequency, deadline: deadline, reminderTime: reminderTime, scheduleDays: scheduleDays) }
@@ -342,6 +404,27 @@ struct HomeView: View {
     // MARK: Actions
 
     private func completeTask(_ activity: Activity) {
+        Task {
+            if strictMode, let block = await strictModeBlock(for: activity) {
+                Haptics.warning()
+                strictBlock = block
+                return
+            }
+            proceedWithCompletion(activity)
+        }
+    }
+
+    /// Strict mode: when a connected data source reports today's value below
+    /// the task's goal, completion is refused with an explanation. Tasks
+    /// without a goal or without connector data are never blocked.
+    private func strictModeBlock(for activity: Activity) async -> StrictBlock? {
+        guard let target = activity.goalTarget, target > 0 else { return nil }
+        guard let current = await ConnectorService.shared.todayValue(for: activity),
+              current < target else { return nil }
+        return StrictBlock(title: activity.title, current: current, target: target)
+    }
+
+    private func proceedWithCompletion(_ activity: Activity) {
         if requirePhoto {
             // Don't mark done yet — wait for photo submission
             lastPhotoTask = activity
@@ -760,6 +843,7 @@ private struct BottomButtons: View {
             .buttonStyle(.haptic)
         }
         .padding(.horizontal, 22)
+        .readableWidth()
     }
 }
 

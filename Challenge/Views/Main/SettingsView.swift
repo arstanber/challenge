@@ -73,6 +73,7 @@ struct SettingsView: View {
                 .padding(.horizontal, 18)
                 .padding(.top, 64)
                 .padding(.bottom, 50)
+                .readableWidth()
             }
 
             header
