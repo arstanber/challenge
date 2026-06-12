@@ -35,15 +35,35 @@ struct TodayProgressWidgetView: View {
         }
     }
 
+    /// Ring goes orange at 18:00 and red at 21:00 while the day is unfinished
+    /// and a streak is on the line -- the home screen should feel the heat
+    /// before the streak actually dies.
+    private var ringColor: Color {
+        switch snapshot.risk {
+        case .none:     return .green
+        case .atRisk:   return .orange
+        case .critical: return .red
+        }
+    }
+
+    private var captionText: String {
+        if snapshot.goalReached { return "Goal reached!" }
+        switch snapshot.risk {
+        case .none:     return "Today's goal"
+        case .atRisk:   return "Streak at risk"
+        case .critical: return "Until 00:00!"
+        }
+    }
+
     private var ring: some View {
         VStack(spacing: 8) {
             ZStack {
                 Circle()
-                    .stroke(Color.green.opacity(0.18), lineWidth: 10)
+                    .stroke(ringColor.opacity(0.18), lineWidth: 10)
                 Circle()
                     .trim(from: 0, to: snapshot.todayProgress)
                     .stroke(
-                        snapshot.goalReached ? Color.green : Color.green.opacity(0.85),
+                        snapshot.goalReached ? Color.green : ringColor.opacity(0.85),
                         style: StrokeStyle(lineWidth: 10, lineCap: .round)
                     )
                     .rotationEffect(.degrees(-90))
@@ -62,9 +82,10 @@ struct TodayProgressWidgetView: View {
                 }
             }
             .padding(4)
-            Text(snapshot.goalReached ? "Goal reached!" : "Today's goal")
+            Text(captionText)
                 .font(.system(.caption, design: .rounded).weight(.semibold))
-                .foregroundStyle(snapshot.goalReached ? .green : .secondary)
+                .foregroundStyle(snapshot.goalReached ? .green
+                                 : snapshot.risk == .none ? .secondary : ringColor)
         }
     }
 

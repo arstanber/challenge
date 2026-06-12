@@ -1,5 +1,6 @@
 import WidgetKit
 import SwiftUI
+import AppIntents
 
 struct TasksWidget: Widget {
     let kind = "TasksWidget"
@@ -41,20 +42,45 @@ struct TasksWidgetView: View {
         HStack(spacing: 6) {
             Text("Today")
                 .font(.system(.headline, design: .rounded).weight(.bold))
+            if snapshot.risk == .critical {
+                Text("until 00:00!")
+                    .font(.system(.caption2, design: .rounded).weight(.bold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(.red, in: Capsule())
+            }
             Spacer()
             HStack(spacing: 4) {
                 Image(systemName: "flame.fill")
                     .font(.caption)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(flameColor)
                 Text("\(snapshot.streakCurrent)")
                     .font(.system(.subheadline, design: .rounded).weight(.bold))
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(flameColor)
             }
             Text("·")
                 .foregroundStyle(.secondary)
             Text("\(snapshot.todayDone)/\(snapshot.dailyGoal)")
                 .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                .foregroundStyle(snapshot.goalReached ? .green : .secondary)
+                .foregroundStyle(progressColor)
+        }
+    }
+
+    private var flameColor: Color {
+        switch snapshot.risk {
+        case .none:     return .orange
+        case .atRisk:   return .orange
+        case .critical: return .red
+        }
+    }
+
+    private var progressColor: Color {
+        if snapshot.goalReached { return .green }
+        switch snapshot.risk {
+        case .none:     return .secondary
+        case .atRisk:   return .orange
+        case .critical: return .red
         }
     }
 
@@ -77,12 +103,26 @@ struct TasksWidgetView: View {
 private struct TaskRow: View {
     let task: WidgetTask
 
+    /// Non-photo tasks complete in place via AppIntent; photo tasks open the
+    /// app, since the proof shot needs the camera.
+    private var isCheckable: Bool { !task.isDone && task.requiresPhoto != true }
+
     var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: task.isDone ? "checkmark.circle.fill" : task.typeIcon)
-                .font(.system(size: 15))
-                .foregroundStyle(task.isDone ? .green : task.color)
-                .frame(width: 22)
+            if isCheckable {
+                Button(intent: CompleteTaskIntent(taskId: task.id)) {
+                    Image(systemName: "circle")
+                        .font(.system(size: 17, weight: .medium))
+                        .foregroundStyle(task.color)
+                        .frame(width: 22)
+                }
+                .buttonStyle(.plain)
+            } else {
+                Image(systemName: task.isDone ? "checkmark.circle.fill" : task.typeIcon)
+                    .font(.system(size: 15))
+                    .foregroundStyle(task.isDone ? .green : task.color)
+                    .frame(width: 22)
+            }
 
             Text(task.title)
                 .font(.system(.subheadline, design: .rounded).weight(.medium))

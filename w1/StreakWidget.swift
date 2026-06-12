@@ -45,19 +45,22 @@ struct StreakWidgetView: View {
         }
     }
 
+    /// Red flame + warning once the evening arrives with the day unfinished.
+    private var atRisk: Bool { snapshot.risk != .none }
+
     private var small: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 4) {
                 Image(systemName: "flame.fill")
-                    .foregroundStyle(.orange)
-                Text("Streak")
+                    .foregroundStyle(atRisk ? .red : .orange)
+                Text(atRisk ? "At risk!" : "Streak")
                     .font(.system(.caption, design: .rounded).weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(atRisk ? .red : .secondary)
             }
             Spacer(minLength: 0)
             Text("\(snapshot.streakCurrent)")
                 .font(.system(size: 52, weight: .heavy, design: .rounded))
-                .foregroundStyle(.orange)
+                .foregroundStyle(atRisk ? .red : .orange)
                 .minimumScaleFactor(0.5)
                 .lineLimit(1)
             Text(snapshot.streakCurrent == 1 ? "day" : "days")

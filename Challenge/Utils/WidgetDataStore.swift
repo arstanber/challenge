@@ -26,9 +26,9 @@ struct WidgetSnapshot: Codable {
         dailyGoal: 3,
         activeCount: 5,
         tasks: [
-            WidgetTask(id: UUID(), title: "Morning workout", typeIcon: "camera.fill", typeColorName: "blue", deadline: nil, isDone: true),
-            WidgetTask(id: UUID(), title: "Read 20 pages", typeIcon: "checkmark.circle.fill", typeColorName: "orange", deadline: nil, isDone: false),
-            WidgetTask(id: UUID(), title: "Drink water", typeIcon: "repeat.circle.fill", typeColorName: "purple", deadline: nil, isDone: false)
+            WidgetTask(id: UUID(), title: "Morning workout", typeIcon: "camera.fill", typeColorName: "blue", deadline: nil, isDone: true, requiresPhoto: true),
+            WidgetTask(id: UUID(), title: "Read 20 pages", typeIcon: "checkmark.circle.fill", typeColorName: "orange", deadline: nil, isDone: false, requiresPhoto: false),
+            WidgetTask(id: UUID(), title: "Drink water", typeIcon: "repeat.circle.fill", typeColorName: "purple", deadline: nil, isDone: false, requiresPhoto: false)
         ],
         updatedAt: Date()
     )
@@ -41,6 +41,9 @@ struct WidgetTask: Codable, Identifiable {
     var typeColorName: String
     var deadline: Date?
     var isDone: Bool
+    /// Photo tasks can't complete from the widget (the camera needs the app).
+    /// Optional so snapshots written by older app builds still decode.
+    var requiresPhoto: Bool?
 }
 
 // MARK: - App Group store
@@ -67,6 +70,20 @@ enum WidgetDataStore {
     static func load() -> WidgetSnapshot? {
         guard let defaults, let data = defaults.data(forKey: snapshotKey) else { return nil }
         return try? JSONDecoder.widget.decode(WidgetSnapshot.self, from: data)
+    }
+
+    // MARK: Widget check-in queue
+
+    static let checkinQueueKey = "widget_checkin_queue"
+
+    /// Completions tapped on the widget while the app was closed (the
+    /// extension has no Supabase session, so it only queues). Read & clear;
+    /// the caller turns them into real check-in reports.
+    static func drainPendingCheckins() -> [UUID] {
+        guard let defaults else { return [] }
+        let ids = (defaults.stringArray(forKey: checkinQueueKey) ?? []).compactMap(UUID.init)
+        if !ids.isEmpty { defaults.removeObject(forKey: checkinQueueKey) }
+        return ids
     }
 }
 

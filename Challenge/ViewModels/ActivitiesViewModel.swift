@@ -99,6 +99,7 @@ final class ActivitiesViewModel {
             myActivities = all.filter { $0.assignedBy == nil }
             parentActivities = all.filter { $0.assignedBy != nil }
             await engine.refresh(activityIds: all.map(\.id))
+            await replayWidgetCheckins()
             await engine.refreshStreaks()
             applyEngineStreaks()
             publishWidgetSnapshot()
@@ -106,6 +107,22 @@ final class ActivitiesViewModel {
             errorMessage = error.localizedDescription
         }
         isLoading = false
+    }
+
+    /// Turn completions tapped on the home-screen widget into real check-in
+    /// reports (the widget extension has no Supabase session, so it only
+    /// queues ids in the App Group).
+    private func replayWidgetCheckins() async {
+        let ids = WidgetDataStore.drainPendingCheckins()
+        guard !ids.isEmpty else { return }
+        for id in ids {
+            guard let activity = (myActivities + parentActivities).first(where: { $0.id == id }),
+                  activity.status == .active,
+                  !activity.type.hasAIVerification,
+                  !engine.isDoneToday(id)
+            else { continue }
+            await engine.markDone(activity)
+        }
     }
 
     /// Patch server-maintained streaks into the in-memory activities.
@@ -179,7 +196,8 @@ final class ActivitiesViewModel {
                     typeIcon: activity.type.icon,
                     typeColorName: widgetColorName(for: activity.type),
                     deadline: activity.deadline,
-                    isDone: engine.isDoneToday(activity.id)
+                    isDone: engine.isDoneToday(activity.id),
+                    requiresPhoto: activity.type.hasAIVerification
                 )
             }
 
