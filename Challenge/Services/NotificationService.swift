@@ -14,6 +14,10 @@ final class NotificationService: NSObject {
 
     var permissionGranted = false
 
+    /// Branded notification chime (Challenge/Resources/chime.caf).
+    /// iOS falls back to the system default if the file is missing.
+    static let chime = UNNotificationSound(named: UNNotificationSoundName("chime.caf"))
+
     private override init() {
         super.init()
         checkPermission()
@@ -60,7 +64,7 @@ final class NotificationService: NSObject {
         content.title = pick.title
         content.subtitle = "«\(activity.title)»"
         content.body = pick.body
-        content.sound = .default
+        content.sound = NotificationService.chime
         content.userInfo = ["activity_id": activity.id.uuidString]
 
         let center = UNUserNotificationCenter.current()
@@ -153,7 +157,7 @@ final class NotificationService: NSObject {
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
-        content.sound = .default
+        content.sound = NotificationService.chime
 
         let comps = cal.dateComponents([.year, .month, .day, .hour, .minute], from: fireDate)
         let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)
@@ -197,7 +201,7 @@ final class NotificationService: NSObject {
         }
         content.title = pick.title
         content.body = pick.body
-        content.sound = .default
+        content.sound = NotificationService.chime
 
         var comps = DateComponents()
         comps.hour = minuteOfDay / 60
@@ -221,7 +225,7 @@ final class NotificationService: NSObject {
             content.title = "Твоя неделя в цифрах 📊"
             content.body = "Посмотри, сколько задач закрыто за неделю, и спланируй следующую."
         }
-        content.sound = .default
+        content.sound = NotificationService.chime
 
         var comps = DateComponents()
         comps.weekday = 1 // Sunday
