@@ -98,6 +98,8 @@ struct HomeView: View {
     // Bumped exactly at 00:00 (NSCalendarDayChanged) so the date label and
     // the today/upcoming buckets recompute without an app restart.
     @State private var today = Date()
+    // День / Неделя / Месяц; starts on the "Вид по умолчанию" setting.
+    @State private var viewMode = HomeViewMode(rawValue: AppPrefs.defaultView) ?? .day
 
     // MARK: Derived data
 
@@ -200,7 +202,22 @@ struct HomeView: View {
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 14) {
-                    if vm.isLoading && activeTasks.isEmpty && doneTodayTasks.isEmpty {
+                    HomeModeSwitcher(mode: $viewMode)
+                        .padding(.bottom, 4)
+
+                    if viewMode == .week {
+                        WeekAgendaView(
+                            activities: vm.myActivities + vm.parentActivities,
+                            isHandledToday: { vm.isHandledToday($0) },
+                            onOpen: { detailActivity = $0 }
+                        )
+                    } else if viewMode == .month {
+                        MonthPlannerView(
+                            activities: vm.myActivities + vm.parentActivities,
+                            isHandledToday: { vm.isHandledToday($0) },
+                            onOpen: { detailActivity = $0 }
+                        )
+                    } else if vm.isLoading && activeTasks.isEmpty && doneTodayTasks.isEmpty {
                         ProgressView().padding(.top, 60)
                     } else if todayTasks.isEmpty && upcomingTasks.isEmpty && doneTodayTasks.isEmpty {
                         EmptyTodayView()
