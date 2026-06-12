@@ -10,6 +10,7 @@ enum AppPrefs {
         static let weekStart = "weekStart"
         static let groupCompleted = "groupCompleted"
         static let strictMode = "strictMode"
+        static let zoomerMode = "zoomerMode"
     }
 
     enum Option {
@@ -28,6 +29,8 @@ enum AppPrefs {
     static var weekStartsMonday: Bool { defaults.string(forKey: Key.weekStart) != Option.sunday }
     static var groupCompleted: Bool { (defaults.object(forKey: Key.groupCompleted) as? Bool) ?? true }
     static var strictMode: Bool { (defaults.object(forKey: Key.strictMode) as? Bool) ?? true }
+    /// Gen-Z tone for push notifications and nudges. Off by default.
+    static var zoomerMode: Bool { (defaults.object(forKey: Key.zoomerMode) as? Bool) ?? false }
 
     /// Calendar honoring "Начало недели".
     static var calendar: Calendar {

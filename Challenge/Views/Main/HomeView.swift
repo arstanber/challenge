@@ -71,6 +71,7 @@ struct HomeView: View {
     // in place in the list order.
     @AppStorage(AppPrefs.Key.groupCompleted) private var groupCompleted = true
     @AppStorage(AppPrefs.Key.strictMode) private var strictMode = true
+    @AppStorage(AppPrefs.Key.zoomerMode) private var zoomerMode = false
     // Strict-mode refusal: connector says the goal is not reached yet.
     @State private var strictBlock: StrictBlock?
 
@@ -311,18 +312,13 @@ struct HomeView: View {
         }
         .task {
             await vm.loadActivities()
-            let notifications = NotificationService.shared
-            notifications.clearLegacyMotivationPlan()
-            notifications.syncReminders(for: vm.myActivities + vm.parentActivities)
-            notifications.scheduleStreakNudge(
-                streak: vm.globalStreakCurrent,
-                tasksToSave: max(0, vm.dailyStreakGoal - vm.todayDoneTopLevelCount)
-            )
-            notifications.scheduleWeeklyReview()
-            let minute = await TaskEngine.shared.typicalCompletionMinute()
-            // A touch before the habitual time, so the push lands while the
-            // usual completion window is still open.
-            notifications.schedulePersonalNudge(minuteOfDay: minute.map { $0 - 15 })
+            NotificationService.shared.clearLegacyMotivationPlan()
+            await syncAllNotifications()
+        }
+        // Pending pushes carry the tone they were scheduled with, so flipping
+        // zoomer mode must rebuild them all to take effect before next launch.
+        .onChange(of: zoomerMode) {
+            Task { await syncAllNotifications() }
         }
         // Keep the evening push numbers honest as tasks get completed during
         // the day (also cancels both nudges once the 75% goal is met).
@@ -497,6 +493,23 @@ struct HomeView: View {
     private func reload() {
         Task { await vm.loadActivities() }
         presentConnectorSuggestion(delay: 0.6)
+    }
+
+    /// (Re-)schedules every local push from the current vm state: per-task
+    /// reminders, streak-risk nudges, weekly review and the personal-time
+    /// nudge. Runs on appear and again whenever zoomer mode flips.
+    private func syncAllNotifications() async {
+        let notifications = NotificationService.shared
+        notifications.syncReminders(for: vm.myActivities + vm.parentActivities)
+        notifications.scheduleStreakNudge(
+            streak: vm.globalStreakCurrent,
+            tasksToSave: max(0, vm.dailyStreakGoal - vm.todayDoneTopLevelCount)
+        )
+        notifications.scheduleWeeklyReview()
+        let minute = await TaskEngine.shared.typicalCompletionMinute()
+        // A touch before the habitual time, so the push lands while the
+        // usual completion window is still open.
+        notifications.schedulePersonalNudge(minuteOfDay: minute.map { $0 - 15 })
     }
     private func after(_ action: @escaping () -> Void) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.35, execute: action)

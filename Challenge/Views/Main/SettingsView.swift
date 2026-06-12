@@ -35,6 +35,7 @@ struct SettingsView: View {
     @AppStorage("units") private var units = "Метр. (км, мл)"
     @AppStorage("weekStart") private var weekStart = "Понедельник"
     @AppStorage(Haptics.enabledKey) private var hapticsEnabled = true
+    @AppStorage(AppPrefs.Key.zoomerMode) private var zoomerMode = false
     // Habits
     // Default true: done tasks collect at the bottom (HomeView reads this too).
     @AppStorage("groupCompleted") private var groupCompleted = true
@@ -236,6 +237,13 @@ struct SettingsView: View {
                 title: "Вибрация",
                 subtitle: "Тактильный отклик при нажатиях и действиях.",
                 isOn: $hapticsEnabled
+            )
+            SettingsDivider()
+            SettingsToggleRow(
+                icon: "theatermasks",
+                title: "Режим зумера",
+                subtitle: "Пуши начнут общаться с тобой на сленге: стрики, пруфы, вайб. Без кринжа (почти).",
+                isOn: $zoomerMode
             )
         }
     }

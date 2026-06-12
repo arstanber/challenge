@@ -38,7 +38,8 @@ final class CloudSyncService {
     /// in SettingsView / HomeView.
     private static let syncedKeys = [
         "appTheme", "timeFormat", "units", "weekStart", "defaultView",
-        Haptics.enabledKey, "groupCompleted", "strictMode", "requirePhotoVerification"
+        Haptics.enabledKey, "groupCompleted", "strictMode", "requirePhotoVerification",
+        "zoomerMode"
     ]
 
     private init() {}

@@ -51,8 +51,13 @@ final class NotificationService: NSObject {
         cancelReminder(for: activity.id)
 
         let content = UNMutableNotificationContent()
-        content.title = NSLocalizedString("Don't forget!", comment: "")
-        content.body = String(format: NSLocalizedString("Submit your report for %@", comment: ""), activity.title)
+        if AppPrefs.zoomerMode {
+            content.title = "Ну чё, движ будет? 👀"
+            content.body = "«\(activity.title)» сам себя не закроет. Скинь пруф, делов на минуту."
+        } else {
+            content.title = NSLocalizedString("Don't forget!", comment: "")
+            content.body = String(format: NSLocalizedString("Submit your report for %@", comment: ""), activity.title)
+        }
         content.sound = .default
         content.userInfo = ["activity_id": activity.id.uuidString]
 
@@ -105,16 +110,29 @@ final class NotificationService: NSObject {
         guard streak >= 1, tasksToSave >= 1 else { return }
 
         let remaining = Self.remainingPhrase(tasksToSave)
-        scheduleOnceToday(
-            id: "streak-nudge", hour: 20, minute: 0,
-            title: "🔥 Серия \(streak) дн. сгорит в полночь",
-            body: "Чтобы день засчитался, \(remaining). Закрой до 00:00, и серия живёт."
-        )
-        scheduleOnceToday(
-            id: "streak-nudge-final", hour: 22, minute: 30,
-            title: "🚨 Последний шанс: серия \(streak) дн.",
-            body: "Через полтора часа день закроется навсегда. Ещё успеваешь: \(remaining)."
-        )
+        if AppPrefs.zoomerMode {
+            scheduleOnceToday(
+                id: "streak-nudge", hour: 20, minute: 0,
+                title: "🔥 Алло, стрик \(streak) дн. горит",
+                body: "До полуночи \(remaining), потом всё, гг. Не сливай катку."
+            )
+            scheduleOnceToday(
+                id: "streak-nudge-final", hour: 22, minute: 30,
+                title: "🚨 Вообще не рофл: стрик \(streak) дн.",
+                body: "Полтора часа и день закрыт навсегда. Ещё успеваешь: \(remaining). Погнали!"
+            )
+        } else {
+            scheduleOnceToday(
+                id: "streak-nudge", hour: 20, minute: 0,
+                title: "🔥 Серия \(streak) дн. сгорит в полночь",
+                body: "Чтобы день засчитался, \(remaining). Закрой до 00:00, и серия живёт."
+            )
+            scheduleOnceToday(
+                id: "streak-nudge-final", hour: 22, minute: 30,
+                title: "🚨 Последний шанс: серия \(streak) дн.",
+                body: "Через полтора часа день закроется навсегда. Ещё успеваешь: \(remaining)."
+            )
+        }
     }
 
     func cancelStreakNudge() {
@@ -162,8 +180,13 @@ final class NotificationService: NSObject {
         guard let minuteOfDay, (8 * 60)...(19 * 60) ~= minuteOfDay else { return }
 
         let content = UNMutableNotificationContent()
-        content.title = "Твоё обычное время 🎯"
-        content.body = "Обычно ты закрываешь задачи примерно сейчас. Один отчёт, и день уже не зря."
+        if AppPrefs.zoomerMode {
+            content.title = "Твой прайм-тайм 🎯"
+            content.body = "Обычно ты именно сейчас на изи закрываешь задачи. Один отчёт, и ты снова в деле."
+        } else {
+            content.title = "Твоё обычное время 🎯"
+            content.body = "Обычно ты закрываешь задачи примерно сейчас. Один отчёт, и день уже не зря."
+        }
         content.sound = .default
 
         var comps = DateComponents()
@@ -181,8 +204,13 @@ final class NotificationService: NSObject {
         let center = UNUserNotificationCenter.current()
 
         let content = UNMutableNotificationContent()
-        content.title = "Твоя неделя в цифрах 📊"
-        content.body = "Посмотри, сколько задач закрыто за неделю, и спланируй следующую."
+        if AppPrefs.zoomerMode {
+            content.title = "Недельный рекап 📊"
+            content.body = "Глянь, сколько ты затащил за неделю. Спойлер: есть чем флексить (или нет)."
+        } else {
+            content.title = "Твоя неделя в цифрах 📊"
+            content.body = "Посмотри, сколько задач закрыто за неделю, и спланируй следующую."
+        }
         content.sound = .default
 
         var comps = DateComponents()
