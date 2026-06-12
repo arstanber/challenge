@@ -14,10 +14,10 @@ struct ActivityRowView: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(activity.title)
-                        .font(.headline)
+                        .font(.manrope(.semiBold, size: 17))
                         .lineLimit(1)
                     Text(activity.type.displayName)
-                        .font(.caption)
+                        .font(.manrope(.medium, size: 12))
                         .foregroundStyle(.secondary)
                 }
 
@@ -36,7 +36,7 @@ struct ActivityRowView: View {
                     ProgressView(value: activity.goalProgress, total: target)
                         .tint(Color(hex: "0048E2"))
                     Text(String(format: "%.0f / %.0f", activity.goalProgress, target))
-                        .font(.caption2)
+                        .font(.manrope(.medium, size: 11))
                         .foregroundStyle(.secondary)
                 }
             }
@@ -46,14 +46,14 @@ struct ActivityRowView: View {
                     Image(systemName: "calendar")
                         .font(.caption2)
                     Text(deadline, style: .date)
-                        .font(.caption2)
+                        .font(.manrope(.medium, size: 11))
                 }
                 .foregroundStyle(deadlineColor(deadline))
             }
 
             if activity.isFromParent {
-                Label("From parent", systemImage: "person.2.fill")
-                    .font(.caption2)
+                Label("От родителя", systemImage: "person.2.fill")
+                    .font(.manrope(.medium, size: 11))
                     .foregroundStyle(.purple)
             }
         }
@@ -88,7 +88,7 @@ struct StatusBadge: View {
 
     var body: some View {
         Text(status.displayName)
-            .font(.caption2.weight(.semibold))
+            .font(.manrope(.semiBold, size: 11))
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
             .background(color.opacity(0.15), in: Capsule())
