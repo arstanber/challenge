@@ -18,6 +18,9 @@ struct LocationReminderPicker: View {
     @State private var placeName = ""
     @State private var radius: Double = 150
     @State private var existingReminder: String?
+    @State private var isSaving = false
+    @State private var alertMessage: String?
+    @State private var showOpenSettings = false
 
     private let service = LocationReminderService.shared
 
@@ -41,34 +44,40 @@ struct LocationReminderPicker: View {
 
                 // Bottom panel
                 VStack(spacing: 14) {
-                    TextField("Place name (e.g. Gym)", text: $placeName)
+                    TextField("Название места (например, Спортзал)", text: $placeName)
                         .font(.manrope(.medium, size: 15))
                         .padding(12)
-                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.black.opacity(0.05)))
+                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.primary.opacity(0.05)))
 
                     HStack {
-                        Text("Radius")
+                        Text("Радиус")
                             .font(.manrope(.medium, size: 13))
-                            .foregroundColor(.black.opacity(0.5))
+                            .foregroundStyle(.secondary)
                         Slider(value: $radius, in: 100...1000, step: 50)
                             .tint(Color(hex: "4580FF"))
                             .hapticFeedback(.selection, trigger: radius)
-                        Text("\(Int(radius))m")
+                        Text("\(Int(radius)) м")
                             .font(.manrope(.bold, size: 13))
                             .frame(width: 50, alignment: .trailing)
                     }
 
                     Button {
-                        save()
+                        Task { await save() }
                     } label: {
-                        Text(existingReminder == nil ? "Set reminder here" : "Update reminder")
-                            .font(.manrope(.bold, size: 16))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(RoundedRectangle(cornerRadius: 14).fill(Color(hex: "4580FF")))
+                        Group {
+                            if isSaving {
+                                ProgressView().tint(.white)
+                            } else {
+                                Text(existingReminder == nil ? "Поставить напоминание здесь" : "Обновить напоминание")
+                            }
+                        }
+                        .font(.manrope(.bold, size: 16))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(RoundedRectangle(cornerRadius: 14).fill(Color(hex: "4580FF")))
                     }
-                    .disabled(placeName.trimmingCharacters(in: .whitespaces).isEmpty)
+                    .disabled(placeName.trimmingCharacters(in: .whitespaces).isEmpty || isSaving)
 
                     if existingReminder != nil {
                         Button(role: .destructive) {
@@ -76,7 +85,7 @@ struct LocationReminderPicker: View {
                             service.removeReminder(activityId: activity.id)
                             existingReminder = nil
                         } label: {
-                            Text("Remove reminder")
+                            Text("Удалить напоминание")
                                 .font(.manrope(.bold, size: 14))
                         }
                     }
@@ -87,30 +96,75 @@ struct LocationReminderPicker: View {
                 .padding(.bottom, 16)
                 .readableWidth(560)
             }
-            .navigationTitle("Location reminder")
+            .navigationTitle("Напоминание по месту")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") { Haptics.tap(); dismiss() }
+                    Button("Отмена") { Haptics.tap(); dismiss() }
                 }
             }
+            .alert("Не получилось", isPresented: .init(
+                get: { alertMessage != nil },
+                set: { if !$0 { alertMessage = nil; showOpenSettings = false } }
+            )) {
+                if showOpenSettings {
+                    Button("Открыть настройки") {
+                        if let url = URL(string: UIApplication.openSettingsURLString) {
+                            UIApplication.shared.open(url)
+                        }
+                    }
+                }
+                Button("Понятно", role: .cancel) {}
+            } message: {
+                Text(alertMessage ?? "")
+            }
             .onAppear {
-                service.requestAuthorization()
                 existingReminder = service.reminderPlaceName(for: activity.id)
                 if let existing = existingReminder { placeName = existing }
+                centerOnUserIfPossible()
             }
         }
     }
 
-    private func save() {
-        service.setReminder(
-            activityId: activity.id,
-            title: activity.title,
-            coordinate: centerCoordinate,
-            radius: radius,
-            placeName: placeName.trimmingCharacters(in: .whitespaces)
+    private func centerOnUserIfPossible() {
+        guard let location = service.currentLocation else { return }
+        let region = MKCoordinateRegion(
+            center: location.coordinate,
+            span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
         )
-        Haptics.success()
-        dismiss()
+        cameraPosition = .region(region)
+        centerCoordinate = location.coordinate
+    }
+
+    private func save() async {
+        isSaving = true
+        defer { isSaving = false }
+
+        switch await service.ensureAuthorized() {
+        case .notificationsDenied:
+            showOpenSettings = true
+            alertMessage = "Уведомления выключены. Разрешите их в настройках, чтобы напоминание сработало."
+            return
+        case .locationDenied:
+            showOpenSettings = true
+            alertMessage = "Нет доступа к геолокации. Разрешите доступ в настройках, чтобы напоминание сработало."
+            return
+        case .granted:
+            break
+        }
+
+        do {
+            try await service.setReminder(
+                activityId: activity.id,
+                title: activity.title,
+                coordinate: centerCoordinate,
+                radius: radius,
+                placeName: placeName.trimmingCharacters(in: .whitespaces)
+            )
+            Haptics.success()
+            dismiss()
+        } catch {
+            alertMessage = "Система не приняла напоминание: \(error.localizedDescription)"
+        }
     }
 }

@@ -14,8 +14,10 @@ final class LocationReminderService: NSObject, CLLocationManagerDelegate {
 
     private let manager = CLLocationManager()
     private let defaults = UserDefaults(suiteName: WidgetDataStore.appGroup) ?? .standard
+    private var authContinuations: [CheckedContinuation<CLAuthorizationStatus, Never>] = []
 
     var authorizationStatus: CLAuthorizationStatus { manager.authorizationStatus }
+    var currentLocation: CLLocation? { manager.location }
 
     override private init() {
         super.init()
@@ -24,12 +26,44 @@ final class LocationReminderService: NSObject, CLLocationManagerDelegate {
 
     // MARK: - Authorization
 
-    func requestAuthorization() {
-        // "When In Use" is enough to register location-notification triggers.
-        manager.requestWhenInUseAuthorization()
+    enum AuthResult {
+        case granted
+        /// Location permission denied or restricted.
+        case locationDenied
+        /// Notification permission denied (location triggers still fire notifications).
+        case notificationsDenied
     }
 
-    nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {}
+    /// Requests notification permission, then location "When In Use"
+    /// (enough to register location-notification triggers), and reports
+    /// what is missing so the UI can point the user to system settings.
+    func ensureAuthorized() async -> AuthResult {
+        await NotificationService.shared.requestPermission()
+        guard NotificationService.shared.permissionGranted else { return .notificationsDenied }
+
+        var status = manager.authorizationStatus
+        if status == .notDetermined {
+            status = await withCheckedContinuation { continuation in
+                authContinuations.append(continuation)
+                manager.requestWhenInUseAuthorization()
+            }
+        }
+        switch status {
+        case .authorizedAlways, .authorizedWhenInUse: return .granted
+        default: return .locationDenied
+        }
+    }
+
+    nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        let status = manager.authorizationStatus
+        Task { @MainActor in
+            // .notDetermined fires once on delegate attach -- not an answer yet.
+            guard status != .notDetermined else { return }
+            let continuations = self.authContinuations
+            self.authContinuations.removeAll()
+            for continuation in continuations { continuation.resume(returning: status) }
+        }
+    }
 
     // MARK: - Reminders
 
@@ -37,7 +71,7 @@ final class LocationReminderService: NSObject, CLLocationManagerDelegate {
 
     /// Schedules a notification that fires when the user enters the region.
     func setReminder(activityId: UUID, title: String, coordinate: CLLocationCoordinate2D,
-                     radius: CLLocationDistance = 150, placeName: String) {
+                     radius: CLLocationDistance = 150, placeName: String) async throws {
         let center = CLLocationCoordinate2D(latitude: coordinate.latitude, longitude: coordinate.longitude)
         let region = CLCircularRegion(
             center: center,
@@ -49,14 +83,17 @@ final class LocationReminderService: NSObject, CLLocationManagerDelegate {
 
         let content = UNMutableNotificationContent()
         content.title = "📍 \(title)"
-        content.body = "You're near \(placeName) — time to get it done!"
+        content.body = "Вы рядом с \(placeName) -- самое время сделать задачу!"
         content.sound = .default
 
         let trigger = UNLocationNotificationTrigger(region: region, repeats: true)
         let request = UNNotificationRequest(identifier: identifier(for: activityId),
                                             content: content, trigger: trigger)
-        UNUserNotificationCenter.current().add(request) { error in
-            if let error { logger.error("LocationReminder add error: \(error)") }
+        do {
+            try await UNUserNotificationCenter.current().add(request)
+        } catch {
+            logger.error("LocationReminder add error: \(error)")
+            throw error
         }
 
         // Persist a marker so UI can show "reminder set"
