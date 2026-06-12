@@ -41,6 +41,9 @@ final class AnalyticsService {
         case premiumRevoked = "premium_revoked"
         case premiumPaywallShown = "premium_paywall_shown"
         case bonusXPDropped = "bonus_xp_dropped"
+        case duelCreated = "duel_created"
+        case duelJoined = "duel_joined"
+        case duelFinished = "duel_finished"
         // Activation funnel: time-to-first-report is the aha-moment metric.
         case firstReportSubmitted = "first_report_submitted"
         case firstWinShown = "first_win_shown"

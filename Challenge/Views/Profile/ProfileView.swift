@@ -76,6 +76,10 @@ struct ProfileView: View {
                         Label("Рейтинг по сериям", systemImage: "trophy.fill")
                             .foregroundStyle(.yellow)
                     }
+                    NavigationLink(destination: DuelsView().environment(authService)) {
+                        Label("Дуэли с друзьями", systemImage: "figure.fencing")
+                            .foregroundStyle(.red)
+                    }
                 }
 
                 Section("Прогресс") {          // #16

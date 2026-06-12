@@ -1,0 +1,153 @@
+import Foundation
+import Supabase
+import PostgREST
+import Observation
+import os.log
+
+private let logger = Logger(subsystem: "com.challenge", category: "DuelService")
+
+/// Friend duels client. All mutations go through SECURITY DEFINER RPCs
+/// (create_duel / join_duel / cancel_duel / finish_duel_if_due); the list
+/// comes from get_my_duels in one round trip.
+@MainActor
+@Observable
+final class DuelService {
+    static let shared = DuelService()
+
+    private(set) var duels: [Duel] = []
+    private(set) var isLoading = false
+    var errorMessage: String?
+
+    private init() {}
+
+    private var myUserId: UUID? { AuthService.shared.currentUser?.id }
+
+    // MARK: - Load
+
+    func load() async {
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            duels = try await supabase.rpc("get_my_duels").execute().value
+            if await finalizeOverdue() {
+                duels = try await supabase.rpc("get_my_duels").execute().value
+            }
+        } catch {
+            logger.error("get_my_duels failed: \(error)")
+            errorMessage = "Не удалось загрузить дуэли"
+        }
+    }
+
+    /// Ask the server to finalize overdue duels. Returns true when at least
+    /// one transitioned, so the caller re-fetches. The participant who
+    /// triggers the transition also notifies the other side.
+    private func finalizeOverdue() async -> Bool {
+        struct FinishedRow: Decodable {
+            let status: Duel.Status
+            let winnerId: UUID?
+            enum CodingKeys: String, CodingKey {
+                case status
+                case winnerId = "winner_id"
+            }
+        }
+        var finalizedAny = false
+        for duel in duels where duel.isOverdue {
+            do {
+                let row: FinishedRow = try await supabase
+                    .rpc("finish_duel_if_due", params: ["p_duel_id": duel.id.uuidString])
+                    .execute()
+                    .value
+                guard row.status == .finished else { continue }
+                finalizedAny = true
+                AnalyticsService.shared.track(.duelFinished)
+                await notifyOpponentAboutFinish(duel: duel, winnerId: row.winnerId)
+            } catch {
+                logger.error("finish_duel_if_due failed for \(duel.id): \(error)")
+            }
+        }
+        return finalizedAny
+    }
+
+    private func notifyOpponentAboutFinish(duel: Duel, winnerId: UUID?) async {
+        guard let me = myUserId else { return }
+        let otherId = duel.isChallenger(me) ? duel.opponentId : duel.challengerId
+        guard let otherId else { return }
+        let body: String
+        if winnerId == nil {
+            body = "Ничья: оба продержались до конца. Реванш?"
+        } else if winnerId == otherId {
+            body = "Ты победил! Соперник не удержал темп."
+        } else {
+            body = "Победил соперник. Реванш расставит всё по местам."
+        }
+        await NotificationService.shared.sendPush(
+            toUserId: otherId,
+            title: "Дуэль завершена ⚔️",
+            body: body
+        )
+    }
+
+    // MARK: - Mutations
+
+    /// Creates a duel and returns its invite code for sharing.
+    func createDuel(days: Int = 7) async -> String? {
+        struct CreatedRow: Decodable {
+            let inviteCode: String
+            enum CodingKeys: String, CodingKey { case inviteCode = "invite_code" }
+        }
+        do {
+            let row: CreatedRow = try await supabase
+                .rpc("create_duel", params: ["p_days": days])
+                .execute()
+                .value
+            AnalyticsService.shared.track(.duelCreated, ["days": days])
+            await load()
+            return row.inviteCode
+        } catch {
+            logger.error("create_duel failed: \(error)")
+            errorMessage = "Не удалось создать дуэль"
+            return nil
+        }
+    }
+
+    func joinDuel(code: String) async -> Bool {
+        struct JoinedRow: Decodable {
+            let challengerId: UUID
+            let days: Int
+            enum CodingKeys: String, CodingKey {
+                case challengerId = "challenger_id"
+                case days
+            }
+        }
+        do {
+            let row: JoinedRow = try await supabase
+                .rpc("join_duel", params: ["p_code": code.trimmingCharacters(in: .whitespacesAndNewlines)])
+                .execute()
+                .value
+            AnalyticsService.shared.track(.duelJoined)
+            await NotificationService.shared.sendPush(
+                toUserId: row.challengerId,
+                title: "Вызов принят ⚔️",
+                body: "Соперник в игре: \(row.days) дн., начиная с сегодня. Не проиграй!"
+            )
+            await load()
+            return true
+        } catch {
+            logger.error("join_duel failed: \(error)")
+            errorMessage = "Код не найден или дуэль уже началась"
+            return false
+        }
+    }
+
+    func cancelDuel(_ duel: Duel) async {
+        do {
+            try await supabase
+                .rpc("cancel_duel", params: ["p_duel_id": duel.id.uuidString])
+                .execute()
+            await load()
+        } catch {
+            logger.error("cancel_duel failed: \(error)")
+            errorMessage = "Не удалось отменить дуэль"
+        }
+    }
+}
