@@ -357,7 +357,10 @@ final class ActivitiesViewModel {
         }
     }
 
-    /// Create a brand-new activity (used by the habit template picker / editor).
+    /// Create a brand-new activity (used by the habit template picker / editor
+    /// and the first-win card, which needs the created value back to open the
+    /// photo flow immediately).
+    @discardableResult
     func createActivity(
         title: String,
         type: ActivityType,
@@ -366,8 +369,8 @@ final class ActivitiesViewModel {
         reminderTime: Date? = nil,
         condition: String? = nil,
         scheduleDays: [Int]? = nil
-    ) async {
-        guard let user = authService.currentUser else { return }
+    ) async -> Activity? {
+        guard let user = authService.currentUser else { return nil }
         let req = CreateActivityRequest(
             userId: user.id,
             assignedBy: nil,
@@ -393,8 +396,10 @@ final class ActivitiesViewModel {
                 .value
             myActivities.insert(created, at: 0)
             ConnectorSuggestionEngine.shared.taskCreated(title: created.title, description: created.description)
+            return created
         } catch {
             errorMessage = error.localizedDescription
+            return nil
         }
     }
 

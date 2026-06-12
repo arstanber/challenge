@@ -309,6 +309,11 @@ final class TaskEngine {
             activityStreaks = Dictionary(
                 uniqueKeysWithValues: payload.activities.map { ($0.id, (current: $0.streakCurrent, best: $0.streakBest)) }
             )
+            // Anyone with streak history is past their first report -- they
+            // must never see the first-win activation card.
+            if payload.globalBest > 0 || payload.todayCount > 0 {
+                UserDefaults.standard.set(true, forKey: "hasSubmittedFirstReport")
+            }
         } catch {
             logger.error("refresh_my_streaks failed, using offline fallback: \(error)")
             await computeStreaksFallback()

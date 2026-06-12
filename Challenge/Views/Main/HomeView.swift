@@ -92,6 +92,11 @@ struct HomeView: View {
     // Celebration
     @State private var confettiTrigger = 0
     @State private var showPerfectDay = false
+    // Activation: first-win card until the first photo report lands.
+    // hasSubmittedFirstReport is set by ActivityDetailViewModel on the first
+    // verdict and backfilled by TaskEngine for accounts with streak history.
+    @AppStorage("hasSubmittedFirstReport") private var hasSubmittedFirstReport = false
+    @AppStorage("firstWinCardDismissed") private var firstWinCardDismissed = false
     // Connector suggestions (queued by creation flows, presented here)
     @State private var suggestionEngine = ConnectorSuggestionEngine.shared
     @State private var connectorSuggestion: ConnectorSuggestionEngine.Suggestion?
@@ -204,6 +209,15 @@ struct HomeView: View {
                 VStack(spacing: 14) {
                     HomeModeSwitcher(mode: $viewMode)
                         .padding(.bottom, 4)
+
+                    if viewMode == .day && !hasSubmittedFirstReport && !firstWinCardDismissed {
+                        FirstWinCard(
+                            onAccept: acceptFirstWin,
+                            onDismiss: { Haptics.tap(); firstWinCardDismissed = true }
+                        )
+                        .appearEffect(delay: 0.05)
+                        .onAppear(perform: trackFirstWinShownOnce)
+                    }
 
                     if viewMode == .week {
                         WeekAgendaView(
@@ -471,6 +485,30 @@ struct HomeView: View {
             vm.markDoneLocally(activity)   // instant feedback
             Task { await vm.markCompleted(activity); await vm.loadActivities() }
         }
+    }
+
+    /// Creates the starter challenge and drops the user straight into the
+    /// camera flow -- the goal is a first AI verdict in this very session.
+    private func acceptFirstWin() {
+        Haptics.tap()
+        AnalyticsService.shared.track(.firstWinAccepted)
+        Task {
+            guard let activity = await vm.createActivity(
+                title: "Выпить стакан воды",
+                type: .challenge,
+                frequency: .once,
+                condition: "На фото человек пьёт воду или держит стакан/бутылку с водой"
+            ) else { return }
+            lastPhotoTask = activity
+            taskToComplete = activity
+        }
+    }
+
+    private func trackFirstWinShownOnce() {
+        let key = "firstWinShownTracked"
+        guard !UserDefaults.standard.bool(forKey: key) else { return }
+        UserDefaults.standard.set(true, forKey: key)
+        AnalyticsService.shared.track(.firstWinShown)
     }
 
     private func reload() {

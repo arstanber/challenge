@@ -49,6 +49,22 @@ final class ActivityDetailViewModel {
         isLoading = false
     }
 
+    // MARK: - Activation funnel
+
+    /// The first photo verdict is the app's aha moment. Fired once per
+    /// install; hours_since_signup feeds the 24-hour activation metric.
+    /// The same flag hides the FirstWinCard on Home.
+    private func trackFirstReportIfNeeded(result: AIVerificationResult) {
+        let key = "hasSubmittedFirstReport"
+        guard !UserDefaults.standard.bool(forKey: key) else { return }
+        UserDefaults.standard.set(true, forKey: key)
+        var props: [String: Any] = ["result": result.rawValue]
+        if let signupDate = AuthService.shared.currentUser?.createdAt {
+            props["hours_since_signup"] = Int(Date().timeIntervalSince(signupDate) / 3600)
+        }
+        AnalyticsService.shared.track(.firstReportSubmitted, props)
+    }
+
     // MARK: - Photo report (challenge / assignment)
 
     func submitPhotoReport(image: UIImage, comment: String, isExcuse: Bool = false) async {
@@ -122,6 +138,8 @@ final class ActivityDetailViewModel {
 
                 lastAIResult      = resultEnum
                 lastAIExplanation = aiResponse.explanation
+
+                trackFirstReportIfNeeded(result: resultEnum)
 
                 switch resultEnum {
                 case .approved:
