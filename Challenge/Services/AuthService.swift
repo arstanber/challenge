@@ -12,6 +12,7 @@ import GoogleSignIn
 import os.log
 
 private let authLogger = Logger(subsystem: "com.challenge", category: "AuthService")
+private let welcomeIntroKey = "needsWelcomeIntro"
 
 enum AuthError: LocalizedError {
     case invalidCredentials
@@ -35,6 +36,12 @@ final class AuthService {
     var isAuthenticated = false
     /// True while the app is restoring the saved session on cold launch.
     var isRestoring = true
+    /// Set right after account creation; RootView shows WeekOnUsView once and
+    /// clears it. Persisted so a force-quit on the intro doesn't skip it.
+    /// Signing in to an existing account resets it (session restore does not).
+    var needsWelcomeIntro = UserDefaults.standard.bool(forKey: welcomeIntroKey) {
+        didSet { UserDefaults.standard.set(needsWelcomeIntro, forKey: welcomeIntroKey) }
+    }
 
     private init() {
         Task { await restoreSession() }
@@ -103,6 +110,7 @@ final class AuthService {
         do {
             let session = try await supabase.auth.signIn(email: email, password: password)
             try await loadUserProfile(id: session.user.id)
+            needsWelcomeIntro = false
             AnalyticsService.shared.track(.signedIn, ["method": "email"])
         } catch let error as AuthError {
             throw error
@@ -130,6 +138,7 @@ final class AuthService {
                 .execute()
                 .value
             currentUser = inserted
+            needsWelcomeIntro = true
             isAuthenticated = true
             syncTimezone(userId: inserted.id)
             AnalyticsService.shared.track(.signedUp, ["method": "email"])
@@ -152,6 +161,7 @@ final class AuthService {
             // Try to load existing profile, create if missing
             do {
                 try await loadUserProfile(id: session.user.id)
+                needsWelcomeIntro = false
                 AnalyticsService.shared.track(.signedIn, ["method": "apple"])
             } catch {
                 let email = credential.email ?? session.user.email ?? ""
@@ -169,6 +179,7 @@ final class AuthService {
                     .execute()
                     .value
                 currentUser = inserted
+                needsWelcomeIntro = true
                 isAuthenticated = true
                 syncTimezone(userId: inserted.id)
                 AnalyticsService.shared.track(.signedUp, ["method": "apple"])
@@ -190,6 +201,7 @@ final class AuthService {
             // Try to load existing profile, create if missing
             do {
                 try await loadUserProfile(id: session.user.id)
+                needsWelcomeIntro = false
                 AnalyticsService.shared.track(.signedIn, ["method": "google"])
             } catch {
                 let email = tokens.email.isEmpty ? (session.user.email ?? "") : tokens.email
@@ -207,6 +219,7 @@ final class AuthService {
                     .execute()
                     .value
                 currentUser = inserted
+                needsWelcomeIntro = true
                 isAuthenticated = true
                 syncTimezone(userId: inserted.id)
                 AnalyticsService.shared.track(.signedUp, ["method": "google"])

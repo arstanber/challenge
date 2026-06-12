@@ -42,12 +42,18 @@ struct RootView: View {
             if authService.isRestoring {
                 LoadingView()
             } else if authService.isAuthenticated {
-                MainTabView()
+                if authService.needsWelcomeIntro {
+                    // One-time "Week on us" trial intro right after registration.
+                    WeekOnUsView { authService.needsWelcomeIntro = false }
+                } else {
+                    MainTabView()
+                }
             } else {
                 OnboardingView()
             }
         }
         .animation(.easeInOut(duration: 0.35), value: authService.isRestoring)
+        .animation(.easeInOut(duration: 0.35), value: authService.needsWelcomeIntro)
         .preferredColorScheme(AppColorTheme(rawValue: appTheme)?.colorScheme)
         // 12/24h override for every DatePicker and .formatted() time in the app.
         // Reading `timeFormat` here makes the whole tree re-render on change.

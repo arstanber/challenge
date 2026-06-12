@@ -30,6 +30,7 @@ final class AnalyticsService {
         case signedUp = "signed_up"
         case signedOut = "signed_out"
         case onboardingCompleted = "onboarding_completed"
+        case welcomeTrialShown = "welcome_trial_shown"
         case activityCreated = "activity_created"
         case reportSubmitted = "report_submitted"
         case verificationSucceeded = "verification_succeeded"

@@ -43,7 +43,8 @@ struct AppUser: Codable, Identifiable {
     // Referral program (20260612c_referrals.sql)
     var referralCode: String?
     var referredBy: UUID?
-    /// Temporary PRO from referral rewards; premium while in the future.
+    /// Temporary PRO from the welcome trial (7 days on signup) and referral
+    /// rewards; premium while in the future.
     var proUntil: Date?
     /// Streak freezes claimed from referrals, added to the freeze wallet.
     var bonusFreezes: Int?
