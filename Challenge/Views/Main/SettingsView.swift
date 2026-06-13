@@ -183,16 +183,11 @@ struct SettingsView: View {
                         .padding(.top, 6)
                 }
                 Spacer(minLength: 8)
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(LinearGradient(colors: [Color(hex: "3A3A3C"), Color(hex: "1C1C1E")],
-                                         startPoint: .top, endPoint: .bottom))
+                Image("icon_preview_blue")
+                    .resizable()
+                    .scaledToFit()
                     .frame(width: 92, height: 92)
-                    .overlay(
-                        Image(systemName: "sunrise.fill")
-                            .font(.system(size: 40))
-                            .foregroundStyle(LinearGradient(colors: [Color(hex: "FFD479"), Color(hex: "FF9F43")],
-                                                            startPoint: .top, endPoint: .bottom))
-                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                     .offset(x: 6)
             }
             .padding(20)
@@ -357,9 +352,11 @@ struct SettingsView: View {
 
     private var footer: some View {
         VStack(spacing: 8) {
-            Image(systemName: "sunrise.fill")
-                .font(.system(size: 30))
-                .foregroundStyle(.secondary)
+            Image("icon_preview_blue")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 64, height: 64)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             Text("The Challenge")
                 .font(.system(size: 22, weight: .semibold))
                 .foregroundStyle(.secondary)
@@ -387,6 +384,12 @@ struct SettingsView: View {
                     .foregroundStyle(.tertiary)
             }
             .padding(.top, 6)
+
+            Image("star2")
+                .resizable()
+                .scaledToFit()
+                .frame(maxWidth: .infinity)
+                .padding(.top, 24)
         }
         .frame(maxWidth: .infinity)
         .padding(.top, 14)

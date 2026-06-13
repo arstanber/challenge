@@ -12,7 +12,7 @@ private enum AppColors {
 
 private enum AppSpacing {
     static let buttonSize: CGFloat = 68
-    static let wideButtonWidth: CGFloat = 200
+    static let wideButtonWidth: CGFloat = 135
 }
 
 // MARK: - Per-type accent + number formatting
@@ -288,7 +288,7 @@ struct HomeView: View {
 
                         if !upcomingTasks.isEmpty {
                             Text("Скоро")
-                                .font(.manrope(.semiBold, size: 13))
+                                .font(.system(size: 13, weight: .semibold))
                                 .foregroundStyle(.secondary)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(.horizontal, 4)
@@ -327,7 +327,7 @@ struct HomeView: View {
         // "The Challenge." tucked under the Dynamic Island
         .overlay(alignment: .top) {
             Text("The Challenge.")
-                .font(.manrope(.medium, size: 16))
+                .font(.system(size: 16, weight: .medium))
                 .foregroundStyle(.primary)
                 .padding(.top, 14)
                 .ignoresSafeArea(.container, edges: .top)
@@ -337,7 +337,6 @@ struct HomeView: View {
             BottomButtons(
                 onSettings: { Haptics.tap(); showSettings = true },
                 onReorder: { Haptics.tap(); showReorder = true },
-                onAI: { Haptics.tap(); showAIPlanner = true },
                 onPlus: { Haptics.tap(); showAddHabit = true }
             )
             .padding(.bottom, 6)
@@ -626,16 +625,16 @@ private struct HomeHeader: View {
         HStack(spacing: 8) {
             HStack(spacing: 6) {
                 Text("Сегодня,")
-                    .font(.manrope(.semiBold, size: 24))
+                    .font(.system(size: 24, weight: .semibold))
                     .foregroundStyle(.primary)
                 Text(dateLabel)
-                    .font(.manrope(.semiBold, size: 24))
+                    .font(.system(size: 24, weight: .semibold))
                     .foregroundStyle(.secondary)
             }
 
             if count > 0 {
                 Text("\(count)")
-                    .font(.manrope(.bold, size: 14))
+                    .font(.system(size: 14, weight: .bold))
                     .foregroundColor(.white)
                     .frame(minWidth: 26, minHeight: 26)
                     .padding(.horizontal, 4)
@@ -650,7 +649,7 @@ private struct HomeHeader: View {
                     .symbolEffect(.bounce, value: streak)
                     .scaleEffect(allDone && flamePulse ? 1.12 : 1.0)
                 Text("\(streak)")
-                    .font(.manrope(.bold, size: 19))
+                    .font(.system(size: 19, weight: .bold))
                     .contentTransition(.numericText())
             }
             .foregroundStyle(flameColor)
@@ -675,10 +674,10 @@ private struct EmptyTodayView: View {
         VStack(spacing: 12) {
             Text("✨").font(.system(size: 48))
             Text("На сегодня всё")
-                .font(.manrope(.semiBold, size: 18))
+                .font(.system(size: 18, weight: .semibold))
                 .foregroundStyle(.primary)
             Text("Добавьте задачу кнопками ниже")
-                .font(.manrope(.regular, size: 14))
+                .font(.system(size: 14))
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
@@ -696,17 +695,17 @@ private struct FreezeYesterdayBanner: View {
             Text("🧊").font(.system(size: 30))
             VStack(alignment: .leading, spacing: 3) {
                 Text("Серия прервалась?")
-                    .font(.manrope(.bold, size: 16))
+                    .font(.system(size: 16, weight: .bold))
                     .foregroundStyle(.primary)
                 Text("Заморозь вчерашний день -- осталось \(remaining)")
-                    .font(.manrope(.medium, size: 13))
+                    .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 8)
             Button(action: onFreeze) {
                 Text("Заморозить")
-                    .font(.manrope(.semiBold, size: 14))
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 16).padding(.vertical, 10)
                     .background(Capsule().fill(Color(hex: "4580FF")))
@@ -766,14 +765,14 @@ private struct TaskCardView: View {
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(task.title)
-                        .font(.manrope(.semiBold, size: 19))
+                        .font(.system(size: 19, weight: .semibold))
                         .foregroundStyle(.primary)
                         .strikethrough(isCompleting, color: .primary)
                         .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
                     if let subtitle {
                         Text(subtitle)
-                            .font(.manrope(.medium, size: 14))
+                            .font(.system(size: 14, weight: .medium))
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -855,14 +854,14 @@ private struct DoneTaskCard: View {
 
             HStack(spacing: 8) {
                 Text(task.title)
-                    .font(.manrope(.semiBold, size: 19))
+                    .font(.system(size: 19, weight: .semibold))
                     .foregroundStyle(.secondary)
                     .strikethrough(true, color: .secondary)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
                 if task.type.hasStreak && task.streakCurrent > 0 {
                     Text("🔥\(task.streakCurrent)")
-                        .font(.manrope(.medium, size: 14))
+                        .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
             }
@@ -951,7 +950,7 @@ private struct SubTaskRow: View {
     var body: some View {
         HStack(spacing: 14) {
             Text(subtask.title)
-                .font(.manrope(.medium, size: 16))
+                .font(.system(size: 16, weight: .medium))
                 .foregroundStyle(.primary)
                 .strikethrough(isCompleting, color: .primary)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -978,12 +977,11 @@ private struct SubTaskRow: View {
 private struct BottomButtons: View {
     let onSettings: () -> Void
     let onReorder: () -> Void
-    let onAI: () -> Void
     let onPlus: () -> Void
 
     var body: some View {
         HStack {
-            // Wide pill: settings | reorder | AI
+            // Wide pill: settings | reorder
             ZStack {
                 RoundedRectangle(cornerRadius: 1000)
                     .fill(AppColors.buttonBg)
@@ -1001,15 +999,6 @@ private struct BottomButtons: View {
                     Button(action: onReorder) {
                         Image(systemName: "arrow.up.arrow.down")
                             .font(.system(size: 20, weight: .semibold))
-                            .foregroundStyle(.primary)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    }
-                    Rectangle()
-                        .fill(AppColors.separatorLine)
-                        .frame(width: 1, height: AppSpacing.buttonSize * 0.75)
-                    Button(action: onAI) {
-                        Image(systemName: "sparkles")
-                            .font(.system(size: 22, weight: .heavy))
                             .foregroundStyle(.primary)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
