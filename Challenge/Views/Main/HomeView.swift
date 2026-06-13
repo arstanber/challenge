@@ -107,6 +107,13 @@ struct HomeView: View {
     // the today/upcoming buckets recompute without an app restart.
     @State private var today = Date()
 
+    // iPad (regular width) lays task cards out in two columns.
+    @Environment(\.horizontalSizeClass) private var hSize
+    private var isWide: Bool { hSize == .regular }
+    private var taskColumns: [GridItem] {
+        [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)]
+    }
+
     // MARK: Derived data
 
     private var activeTasks: [Activity] {
@@ -186,6 +193,42 @@ struct HomeView: View {
         groupCompleted ? doneTodayTasks : []
     }
 
+    // MARK: Card builders (shared by the stacked iPhone list and the iPad grid)
+
+    @ViewBuilder private var mainCards: some View {
+        ForEach(Array(mainRows.enumerated()), id: \.element.task.id) { idx, row in
+            if row.isDone {
+                DoneTaskCard(task: row.task) { detailActivity = row.task }
+                    .appearEffect(delay: 0.1 + Double(idx) * 0.05)
+            } else {
+                taskCard(row.task)
+                    .appearEffect(delay: 0.1 + Double(idx) * 0.05)
+            }
+        }
+    }
+
+    @ViewBuilder private var upcomingCards: some View {
+        ForEach(Array(upcomingTasks.enumerated()), id: \.element.id) { idx, task in
+            taskCard(task)
+                .appearEffect(delay: 0.16 + Double(idx) * 0.05)
+        }
+    }
+
+    @ViewBuilder private func taskCard(_ task: Activity) -> some View {
+        TaskCardView(
+            task: task,
+            subtasks: pendingSubtasks(of: task),
+            isDone: { vm.isDoneToday($0.id) },
+            onOpen: { detailActivity = task },
+            onToggle: completeTask,
+            onEdit: { editingActivity = $0 },
+            onDelete: { act in deletingActivity = act },
+            onTomorrow: { act in Task { await vm.moveToTomorrow(act); await vm.loadActivities() } },
+            onAddSubtask: { addSubtaskParent = $0 },
+            cancelledTaskId: cancelledTaskId
+        )
+    }
+
     /// True when every top-level task due today is done.
     private var allDone: Bool {
         let done = vm.todayDoneTopLevelCount
@@ -235,25 +278,12 @@ struct HomeView: View {
                         EmptyTodayView()
                             .padding(.top, 40)
                     } else {
-                        ForEach(Array(mainRows.enumerated()), id: \.element.task.id) { idx, row in
-                            if row.isDone {
-                                DoneTaskCard(task: row.task) { detailActivity = row.task }
-                                    .appearEffect(delay: 0.1 + Double(idx) * 0.05)
-                            } else {
-                                TaskCardView(
-                                    task: row.task,
-                                    subtasks: pendingSubtasks(of: row.task),
-                                    isDone: { vm.isDoneToday($0.id) },
-                                    onOpen: { detailActivity = row.task },
-                                    onToggle: completeTask,
-                                    onEdit: { editingActivity = $0 },
-                                    onDelete: { act in deletingActivity = act },
-                                    onTomorrow: { act in Task { await vm.moveToTomorrow(act); await vm.loadActivities() } },
-                                    onAddSubtask: { addSubtaskParent = $0 },
-                                    cancelledTaskId: cancelledTaskId
-                                )
-                                .appearEffect(delay: 0.1 + Double(idx) * 0.05)
+                        if isWide {
+                            LazyVGrid(columns: taskColumns, alignment: .leading, spacing: 14) {
+                                mainCards
                             }
+                        } else {
+                            mainCards
                         }
 
                         if !upcomingTasks.isEmpty {
@@ -264,20 +294,12 @@ struct HomeView: View {
                                 .padding(.horizontal, 4)
                                 .padding(.top, 6)
 
-                            ForEach(Array(upcomingTasks.enumerated()), id: \.element.id) { idx, task in
-                                TaskCardView(
-                                    task: task,
-                                    subtasks: pendingSubtasks(of: task),
-                                    isDone: { vm.isDoneToday($0.id) },
-                                    onOpen: { detailActivity = task },
-                                    onToggle: completeTask,
-                                    onEdit: { editingActivity = $0 },
-                                    onDelete: { act in deletingActivity = act },
-                                    onTomorrow: { act in Task { await vm.moveToTomorrow(act); await vm.loadActivities() } },
-                                    onAddSubtask: { addSubtaskParent = $0 },
-                                    cancelledTaskId: cancelledTaskId
-                                )
-                                .appearEffect(delay: 0.16 + Double(idx) * 0.05)
+                            if isWide {
+                                LazyVGrid(columns: taskColumns, alignment: .leading, spacing: 14) {
+                                    upcomingCards
+                                }
+                            } else {
+                                upcomingCards
                             }
                         }
 
@@ -291,7 +313,8 @@ struct HomeView: View {
                 .padding(.horizontal, 18)
                 .padding(.top, 84)
                 .padding(.bottom, 20)
-                .readableWidth()
+                // Wider column on iPad so the two-column grid has room to breathe.
+                .readableWidth(isWide ? 900 : 640)
             }
             .safeAreaInset(edge: .top, spacing: 0) {
                 HomeTopBar(dateLabel: todayLabel, count: todayTasks.count,
