@@ -347,12 +347,12 @@ private struct VerdictOverlay: View {
 
                 Text(headline)
                     .font(.manrope(.bold, size: 22))
-                    .foregroundColor(.black)
+                    .foregroundStyle(.primary)
 
                 if let explanation = info.explanation, !explanation.isEmpty {
                     Text(explanation)
                         .font(.manrope(.regular, size: 15))
-                        .foregroundColor(.black.opacity(0.6))
+                        .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -369,7 +369,7 @@ private struct VerdictOverlay: View {
                 .padding(.top, 4)
             }
             .padding(24)
-            .background(Color.white)
+            .background(Color(.secondarySystemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 28))
             .padding(.horizontal, 32)
             .frame(maxWidth: 480)

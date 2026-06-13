@@ -24,7 +24,7 @@ struct GamificationView: View {
             .padding(.vertical, 16)
             .readableWidth()
         }
-        .background(Color.white)
+        .background(Color(.systemBackground))
     }
 }
 
@@ -39,11 +39,11 @@ private struct DailyQuestsSection: View {
             HStack {
                 Text("Daily Quests")
                     .font(.manrope(.bold, size: 20))
-                    .foregroundColor(.black)
+                    .foregroundStyle(.primary)
                 Spacer()
                 Text("\(quests.completedCount)/\(quests.todaysQuests.count)")
                     .font(.manrope(.bold, size: 14))
-                    .foregroundColor(.black.opacity(0.4))
+                    .foregroundStyle(.secondary)
             }
             VStack(spacing: 10) {
                 ForEach(quests.todaysQuests) { quest in
@@ -76,7 +76,7 @@ private struct QuestRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(quest.title)
                     .font(.manrope(.bold, size: 15))
-                    .foregroundColor(.black)
+                    .foregroundStyle(.primary)
                     .strikethrough(claimed, color: .secondary)
                 if !claimed {
                     ProgressView(value: progress)
@@ -95,7 +95,7 @@ private struct QuestRow: View {
                 } else {
                     Text(valueText)
                         .font(.manrope(.medium, size: 12))
-                        .foregroundColor(.black.opacity(0.4))
+                        .foregroundStyle(.secondary)
                 }
                 Text("+\(quest.xp) XP")
                     .font(.manrope(.bold, size: 12))
@@ -105,7 +105,7 @@ private struct QuestRow: View {
         .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(claimed ? Color(hex: "2FB873").opacity(0.10) : Color.black.opacity(0.04))
+                .fill(claimed ? Color(hex: "2FB873").opacity(0.10) : Color(.secondarySystemBackground))
         )
     }
 }
@@ -131,7 +131,7 @@ private struct LevelCard: View {
                         .foregroundColor(accent.opacity(0.7))
                     Text("\(level.level)")
                         .font(.manrope(.extraBold, size: 44))
-                        .foregroundColor(.black)
+                        .foregroundStyle(.primary)
                         .shimmer(delay: 0.4)
                 }
             }
@@ -140,10 +140,10 @@ private struct LevelCard: View {
             VStack(spacing: 4) {
                 Text("\(level.xpIntoLevel) / \(level.xpForNextLevel) XP")
                     .font(.manrope(.bold, size: 15))
-                    .foregroundColor(.black)
+                    .foregroundStyle(.primary)
                 Text("\(level.xpForNextLevel - level.xpIntoLevel) XP to level \(level.level + 1)")
                     .font(.manrope(.medium, size: 13))
-                    .foregroundColor(.black.opacity(0.45))
+                    .foregroundStyle(.secondary)
             }
         }
         .frame(maxWidth: .infinity)
@@ -164,10 +164,10 @@ private struct FreezeWalletCard: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Streak Freezes")
                     .font(.manrope(.bold, size: 16))
-                    .foregroundColor(.black)
+                    .foregroundStyle(.primary)
                 Text("Protect your streak on a missed day")
                     .font(.manrope(.medium, size: 12))
-                    .foregroundColor(.black.opacity(0.45))
+                    .foregroundStyle(.secondary)
             }
             Spacer()
             Text("\(engine.freezeBalance)")
@@ -188,7 +188,7 @@ private struct ThemesSection: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Themes")
                 .font(.manrope(.bold, size: 20))
-                .foregroundColor(.black)
+                .foregroundStyle(.primary)
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
@@ -233,12 +233,12 @@ private struct ThemeChip: View {
                     }
                 }
                 .overlay(
-                    Circle().strokeBorder(isSelected ? Color.black : Color.clear, lineWidth: 2)
+                    Circle().strokeBorder(isSelected ? Color.primary : Color.clear, lineWidth: 2)
                         .padding(-3)
                 )
                 Text(isUnlocked ? theme.name : "Lvl \(theme.requiredLevel)")
                     .font(.manrope(.medium, size: 11))
-                    .foregroundColor(.black.opacity(0.6))
+                    .foregroundStyle(.secondary)
             }
             .frame(width: 64)
         }
@@ -258,11 +258,11 @@ private struct AchievementsSection: View {
             HStack {
                 Text("Achievements")
                     .font(.manrope(.bold, size: 20))
-                    .foregroundColor(.black)
+                    .foregroundStyle(.primary)
                 Spacer()
                 Text("\(engine.unlockedCount) / \(engine.totalAchievements)")
                     .font(.manrope(.bold, size: 14))
-                    .foregroundColor(.black.opacity(0.4))
+                    .foregroundStyle(.secondary)
             }
 
             LazyVGrid(columns: .adaptive(compact: 2, regular: 3, for: hSizeClass, spacing: 12), spacing: 12) {
@@ -291,10 +291,10 @@ private struct AchievementCard: View {
                 .opacity(isUnlocked ? 1 : 0.4)
             Text(achievement.title)
                 .font(.manrope(.bold, size: 14))
-                .foregroundColor(.black)
+                .foregroundStyle(.primary)
             Text(achievement.subtitle)
                 .font(.manrope(.medium, size: 11))
-                .foregroundColor(.black.opacity(0.45))
+                .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             if !isUnlocked {
                 ProgressView(value: progress)
@@ -306,7 +306,7 @@ private struct AchievementCard: View {
         .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(isUnlocked ? Color(hex: "FFB200").opacity(0.12) : Color.black.opacity(0.04))
+                .fill(isUnlocked ? Color(hex: "FFB200").opacity(0.12) : Color(.secondarySystemBackground))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16)

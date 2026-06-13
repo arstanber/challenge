@@ -9,18 +9,18 @@ struct CreationMenuPopup: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Divider().background(Color(red: 0.79, green: 0.79, blue: 0.79))
+            Divider().background(Color(.separator))
 
-            MenuRow(iconType: .aiSparkle, title: "AI step-by-step", action: onAIStepByStep)
-            Divider().background(Color(red: 0.79, green: 0.79, blue: 0.79))
+            MenuRow(iconType: .aiSparkle, title: "ИИ пошагово", action: onAIStepByStep)
+            Divider().background(Color(.separator))
 
-            MenuRow(iconType: .bySaying, title: "By saying", action: onBySaying)
-            Divider().background(Color(red: 0.79, green: 0.79, blue: 0.79))
+            MenuRow(iconType: .bySaying, title: "Голосом", action: onBySaying)
+            Divider().background(Color(.separator))
 
-            MenuRow(iconType: .byYourself, title: "By yourself", action: onByYourself)
-            Divider().background(Color(red: 0.79, green: 0.79, blue: 0.79))
+            MenuRow(iconType: .byYourself, title: "Вручную", action: onByYourself)
+            Divider().background(Color(.separator))
         }
-        .background(Color.white)
+        .background(Color(.secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .shadow(color: .black.opacity(0.12), radius: 20, x: 0, y: -4)
     }
@@ -47,7 +47,7 @@ private struct MenuRow: View {
 
                 Text(title)
                     .font(.system(size: 17, weight: .medium))
-                    .foregroundColor(.black)
+                    .foregroundStyle(.primary)
                     .lineLimit(1)
 
                 Spacer()
