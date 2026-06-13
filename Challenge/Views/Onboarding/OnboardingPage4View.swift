@@ -1,89 +1,94 @@
 import SwiftUI
 
 // MARK: - Page 4: Push notifications permission screen
+//
+// Full-bleed brand illustration with a white fade at the top so the headline
+// and a stack of "live" notification cards read clearly. Continue triggers the
+// system push-permission prompt, then advances regardless of the choice.
 
 struct PushNotificationsOnboardingView: View {
     let onContinue: () -> Void
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            P4Header()
-                .padding(.top, 60)
-                .padding(.horizontal, 19)
-
-            P4NotificationsList()
-                .padding(.top, 32)
-                .padding(.horizontal, 19)
-
-            Spacer()
-
-            LiquidGlassButton(title: "Continue", action: onContinue)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.bottom, OBStyle.ctaBottomPad)
-        }
-        .readableWidth(560)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        // Extend to the physical bottom edge so the CTA lines up with the
-        // full-bleed pages (which ignore the safe area) at OBStyle.ctaBottomPad.
-        .ignoresSafeArea(.container, edges: .bottom)
-        .background {
-            ZStack {
-                Color.white
-                Ellipse()
-                    .fill(Color(red: 0.0, green: 0.282, blue: 0.886).opacity(0.30))
-                    .frame(width: 534, height: 510)
-                    .offset(x: -52, y: 440)
-                    .blur(radius: 40)
-            }
-            .ignoresSafeArea()
-        }
-    }
-}
-
-// MARK: - Header
-
-private struct P4Header: View {
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("The\nChallenge.")
-                .font(.system(size: 17, weight: .medium))
-                .foregroundColor(.black)
-                .lineSpacing(2)
-                .appearEffect(delay: 0.05)
-
-            Text("You can't \nforget about it. Turn on \nthe Push‑notifications.")
-                .font(.system(size: 34, weight: .medium))
-                .foregroundColor(.black)
-                .lineSpacing(4)
-                .fixedSize(horizontal: false, vertical: true)
-                .appearEffect(delay: 0.2)
-        }
-    }
-}
-
-// MARK: - Notifications list
-
-private struct P4NotificationsList: View {
-    private let items: [P4NotificationItem] = [
-        .init(title: "Task Task Task!!!", time: "34m ago",
-              body: "Here's notification text. This is a spot for app notification text."),
-        .init(title: "Task Task Task!!!", time: "34m ago",
-              body: "Here's notification text. This is a spot for app notification text."),
-        .init(title: "Task Task Task!!!", time: "34m ago",
-              body: "Here's notification text. This is a spot for app notification text."),
-        .init(title: "Task Task Task!!!", time: "34m ago",
-              body: "Here's notification text. This is a spot for app notification text.")
+    private let notifications: [P4NotificationItem] = [
+        .init(title: "WE ARE SO BACK 🔥", time: "34 мин",
+              body: "67 дней подряд. Серия не останавливается."),
+        .init(title: "История пишется сейчас", time: "34 мин",
+              body: "Через год ты вспомнишь этот день. Что ты сделал?"),
+        .init(title: "Это не цитата. Это режим.", time: "34 мин",
+              body: "Дисциплина > мотивация. Всегда.")
     ]
 
     var body: some View {
-        VStack(spacing: 16) {
-            ForEach(items.indices, id: \.self) { i in
-                P4NotificationCard(item: items[i])
-                    .appearEffect(delay: 0.35 + Double(i) * 0.12, yOffset: 24)
+        ZStack(alignment: .topLeading) {
+            // Brand illustration, full-bleed.
+            GeometryReader { geo in
+                Image("cat_hero")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: geo.size.width, height: geo.size.height)
+                    .clipped()
+                    .allowsHitTesting(false)
             }
+            .ignoresSafeArea()
+
+            // White fade at the top for headline + card legibility.
+            LinearGradient(
+                colors: [Color.white, Color.white, Color.white.opacity(0)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(height: 520)
+            .ignoresSafeArea()
+
+            // Content
+            VStack(alignment: .leading, spacing: 0) {
+                Text("The\nChallenge.")
+                    .font(.system(size: 17, weight: .medium))
+                    .foregroundColor(.black)
+                    .lineSpacing(2)
+                    .padding(.top, 60)
+                    .appearEffect(delay: 0.05)
+
+                Text("You can't \nforget about it. Turn on \nthe Push-notifications.")
+                    .font(.system(size: 34, weight: .medium))
+                    .foregroundColor(.black)
+                    .lineSpacing(4)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 4)
+                    .appearEffect(delay: 0.2)
+
+                VStack(spacing: 8) {
+                    ForEach(notifications.indices, id: \.self) { i in
+                        P4NotificationCard(item: notifications[i])
+                            .appearEffect(delay: 0.35 + Double(i) * 0.12, yOffset: 24)
+                    }
+                }
+                .padding(.top, 22)
+
+                Spacer()
+
+                LiquidGlassButton(title: "Continue") {
+                    Task {
+                        await NotificationService.shared.requestPermission()
+                        onContinue()
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.bottom, OBStyle.ctaBottomPad)
+            }
+            .padding(.horizontal, 20)
+            .readableWidth(560)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.white)
+        // Extend to the physical bottom edge so the CTA aligns with the
+        // full-bleed pages (which ignore the safe area) at OBStyle.ctaBottomPad.
+        .ignoresSafeArea(.container, edges: .bottom)
     }
 }
+
+// MARK: - Notification card
 
 private struct P4NotificationItem {
     let title: String
@@ -96,32 +101,48 @@ private struct P4NotificationCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .top, spacing: 10) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
                 Text(item.title)
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(.black)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .lineLimit(1)
                 Text(item.time)
                     .font(.system(size: 13, weight: .regular))
-                    .foregroundColor(.black)
-                    .frame(width: 54, alignment: .trailing)
+                    .foregroundColor(.black.opacity(0.5))
+                    .lineLimit(1)
             }
-            .frame(height: 20)
 
             Text(item.body)
                 .font(.system(size: 13, weight: .regular))
-                .foregroundColor(.black)
+                .foregroundColor(.black.opacity(0.8))
                 .multilineTextAlignment(.leading)
-                .lineLimit(3)
+                .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 2)
         }
-        .padding(10)
+        .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color(red: 0.95, green: 0.95, blue: 0.95))
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(
+                            LinearGradient(
+                                colors: [
+                                    Color.white.opacity(0.6),
+                                    Color.white.opacity(0.2),
+                                    Color.gray.opacity(0.2)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 0.5
+                        )
+                )
         )
+        .shadow(color: Color.black.opacity(0.05), radius: 6, x: 0, y: 2)
     }
 }
 

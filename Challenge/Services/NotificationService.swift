@@ -42,6 +42,16 @@ final class NotificationService: NSObject {
         }
     }
 
+    /// Launch-time: refresh the APNs token for users who already granted, WITHOUT
+    /// showing the system prompt. The actual permission request happens at the
+    /// contextual moment (the push onboarding page), not on cold start.
+    func registerIfAuthorized() async {
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        let authorized = settings.authorizationStatus == .authorized
+        permissionGranted = authorized
+        if authorized { await registerForRemoteNotifications() }
+    }
+
     @MainActor
     private func registerForRemoteNotifications() async {
         #if !targetEnvironment(simulator)

@@ -21,7 +21,10 @@ struct ChallengeApp: App {
                 .environment(authService)
                 .task {
                     CloudSyncService.shared.start()
-                    await NotificationService.shared.requestPermission()
+                    // Refresh the APNs token for already-granted users; the
+                    // permission PROMPT is asked contextually on the push
+                    // onboarding page, not on cold start.
+                    await NotificationService.shared.registerIfAuthorized()
                 }
                 .onOpenURL { url in
                     #if canImport(GoogleSignIn)
