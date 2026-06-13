@@ -338,7 +338,7 @@ struct HomeView: View {
 
                         if !upcomingTasks.isEmpty {
                             Text("Скоро")
-                                .font(.sfProDisplay(13, weight: .medium))
+                                .font(.sfProDisplay(13, weight: .semibold))
                                 .foregroundStyle(.secondary)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(.horizontal, 4)
@@ -379,7 +379,7 @@ struct HomeView: View {
         // "The Challenge." tucked under the Dynamic Island
         .overlay(alignment: .top) {
             Text("The Challenge.")
-                .font(.sfProDisplay(16, weight: .medium))
+                .font(.sfProDisplay(16, weight: .semibold))
                 .foregroundStyle(.primary)
                 .padding(.top, 14)
                 .ignoresSafeArea(.container, edges: .top)
@@ -692,7 +692,7 @@ private struct HomeHeader: View {
 
             if count > 0 {
                 Text("\(count)")
-                    .font(.sfProDisplay(14, weight: .medium))
+                    .font(.sfProDisplay(14, weight: .bold))
                     .foregroundColor(.white)
                     .frame(minWidth: 26, minHeight: 26)
                     .padding(.horizontal, 4)
@@ -707,7 +707,7 @@ private struct HomeHeader: View {
                     .symbolEffect(.bounce, value: streak)
                     .scaleEffect(allDone && flamePulse ? 1.12 : 1.0)
                 Text("\(streak)")
-                    .font(.sfProDisplay(19, weight: .medium))
+                    .font(.sfProDisplay(19, weight: .bold))
                     .contentTransition(.numericText())
             }
             .foregroundStyle(flameColor)
@@ -732,10 +732,10 @@ private struct EmptyTodayView: View {
         VStack(spacing: 12) {
             Text("✨").font(.system(size: 48))
             Text("На сегодня всё")
-                .font(.sfProDisplay(18, weight: .medium))
+                .font(.sfProDisplay(18, weight: .semibold))
                 .foregroundStyle(.primary)
             Text("Добавьте задачу кнопками ниже")
-                .font(.sfProDisplay(14, weight: .medium))
+                .font(.sfProDisplay(14, weight: .semibold))
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
@@ -753,17 +753,17 @@ private struct FreezeYesterdayBanner: View {
             Text("🧊").font(.system(size: 30))
             VStack(alignment: .leading, spacing: 3) {
                 Text("Серия прервалась?")
-                    .font(.sfProDisplay(16, weight: .medium))
+                    .font(.sfProDisplay(16, weight: .semibold))
                     .foregroundStyle(.primary)
                 Text("Заморозь вчерашний день -- осталось \(remaining)")
-                    .font(.sfProDisplay(13, weight: .medium))
+                    .font(.sfProDisplay(13, weight: .semibold))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 8)
             Button(action: onFreeze) {
                 Text("Заморозить")
-                    .font(.sfProDisplay(14, weight: .medium))
+                    .font(.sfProDisplay(14, weight: .semibold))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 16).padding(.vertical, 10)
                     .background(Capsule().fill(Color(hex: "4580FF")))
@@ -825,14 +825,14 @@ private struct TaskCardView: View {
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(task.title)
-                        .font(.sfProDisplay(19, weight: .medium))
+                        .font(.sfProDisplay(19, weight: .semibold))
                         .foregroundStyle(.primary)
                         .strikethrough(isCompleting, color: .primary)
                         .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
                     if let subtitle {
                         Text(subtitle)
-                            .font(.sfProDisplay(14, weight: .medium))
+                            .font(.sfProDisplay(14, weight: .semibold))
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -874,15 +874,17 @@ private struct TaskCardView: View {
         .scaleEffect(isPressed ? 0.975 : 1.0)
         .rotationEffect(.degrees(reordering && wiggle ? -1.1 : 0))
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isPressed)
-        .onTapGesture { guard !reordering else { return }; Haptics.selection(); onOpen() }
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in if !reordering { isPressed = true } }
-                .onEnded { _ in isPressed = false }
-        )
-        // Context menu + swipe would fight the drag gesture, so only when idle.
+        // Tap / press / context menu / swipe all fight the drag gesture, so they
+        // are completely removed while reordering -- otherwise the lift never
+        // starts and the cards won't move.
         .if(!reordering) { view in
             view
+                .onTapGesture { Haptics.selection(); onOpen() }
+                .simultaneousGesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { _ in isPressed = true }
+                        .onEnded { _ in isPressed = false }
+                )
                 .contextMenu {
                     Button { onEdit(task) } label: { Label("Изменить", systemImage: "pencil") }
                     if isGoal, let onAddSubtask {
@@ -933,14 +935,14 @@ private struct DoneTaskCard: View {
 
             HStack(spacing: 8) {
                 Text(task.title)
-                    .font(.sfProDisplay(19, weight: .medium))
+                    .font(.sfProDisplay(19, weight: .semibold))
                     .foregroundStyle(.secondary)
                     .strikethrough(true, color: .secondary)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
                 if task.type.hasStreak && task.streakCurrent > 0 {
                     Text("🔥\(task.streakCurrent)")
-                        .font(.sfProDisplay(14, weight: .medium))
+                        .font(.sfProDisplay(14, weight: .semibold))
                         .foregroundStyle(.secondary)
                 }
             }
@@ -1029,7 +1031,7 @@ private struct SubTaskRow: View {
     var body: some View {
         HStack(spacing: 14) {
             Text(subtask.title)
-                .font(.sfProDisplay(16, weight: .medium))
+                .font(.sfProDisplay(16, weight: .semibold))
                 .foregroundStyle(.primary)
                 .strikethrough(isCompleting, color: .primary)
                 .frame(maxWidth: .infinity, alignment: .leading)

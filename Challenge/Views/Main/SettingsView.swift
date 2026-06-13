@@ -388,8 +388,9 @@ struct SettingsView: View {
             Image("star2")
                 .resizable()
                 .scaledToFit()
-                .frame(maxWidth: .infinity)
-                .padding(.top, 24)
+                .frame(width: 200)
+                .frame(maxWidth: .infinity)   // centre under the links
+                .padding(.top, 20)
         }
         .frame(maxWidth: .infinity)
         .padding(.top, 14)
