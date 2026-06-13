@@ -107,12 +107,16 @@ struct HomeView: View {
     // the today/upcoming buckets recompute without an app restart.
     @State private var today = Date()
 
-    // iPad (regular width) lays task cards out in two columns.
+    // iPad (regular width) lays task cards out in a width-adaptive grid:
+    // ~2 columns in portrait, ~3 in landscape, chosen from the available width.
     @Environment(\.horizontalSizeClass) private var hSize
     private var isWide: Bool { hSize == .regular }
     private var taskColumns: [GridItem] {
-        [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)]
+        [GridItem(.adaptive(minimum: 330, maximum: 540), spacing: 14)]
     }
+    // Wider reading column on iPad so landscape fills more of the screen while
+    // portrait still stays a comfortable two-up.
+    private var contentMaxWidth: CGFloat { isWide ? 1100 : 640 }
 
     // MARK: Derived data
 
@@ -214,6 +218,13 @@ struct HomeView: View {
         }
     }
 
+    @ViewBuilder private var doneCards: some View {
+        ForEach(Array(bottomDoneTasks.enumerated()), id: \.element.id) { idx, task in
+            DoneTaskCard(task: task) { detailActivity = task }
+                .appearEffect(delay: 0.2 + Double(idx) * 0.05)
+        }
+    }
+
     @ViewBuilder private func taskCard(_ task: Activity) -> some View {
         TaskCardView(
             task: task,
@@ -304,17 +315,19 @@ struct HomeView: View {
                         }
 
                         // Done today -- struck through at the bottom (grouped mode)
-                        ForEach(Array(bottomDoneTasks.enumerated()), id: \.element.id) { idx, task in
-                            DoneTaskCard(task: task) { detailActivity = task }
-                                .appearEffect(delay: 0.2 + Double(idx) * 0.05)
+                        if isWide {
+                            LazyVGrid(columns: taskColumns, alignment: .leading, spacing: 14) {
+                                doneCards
+                            }
+                        } else {
+                            doneCards
                         }
                     }
                 }
                 .padding(.horizontal, 18)
                 .padding(.top, 84)
                 .padding(.bottom, 20)
-                // Wider column on iPad so the two-column grid has room to breathe.
-                .readableWidth(isWide ? 900 : 640)
+                .readableWidth(contentMaxWidth)
             }
             .safeAreaInset(edge: .top, spacing: 0) {
                 HomeTopBar(dateLabel: todayLabel, count: todayTasks.count,
