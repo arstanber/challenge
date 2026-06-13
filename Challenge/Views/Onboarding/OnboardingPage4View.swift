@@ -46,7 +46,7 @@ struct PushNotificationsOnboardingView: View {
                     .font(.system(size: 17, weight: .medium))
                     .foregroundColor(.black)
                     .lineSpacing(2)
-                    .padding(.top, 60)
+                    .padding(.top, 16)
                     .appearEffect(delay: 0.05)
 
                 Text("You can't \nforget about it. Turn on \nthe Push-notifications.")
