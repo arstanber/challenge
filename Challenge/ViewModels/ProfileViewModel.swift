@@ -116,6 +116,51 @@ final class ProfileViewModel {
         isLoading = false
     }
 
+    /// A child leaves their family.
+    func leaveFamily() async {
+        guard let user = authService.currentUser else { return }
+        isLoading = true
+        do {
+            try await supabase.rpc("leave_family").execute()
+            authService.currentUser?.role = .individual
+            authService.currentUser?.familyId = nil
+            family = nil
+            children = []
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        isLoading = false
+        _ = user
+    }
+
+    /// A parent removes one child from the family.
+    func removeMember(_ member: FamilyMember) async {
+        isLoading = true
+        do {
+            try await supabase.rpc("remove_family_member",
+                                   params: ["p_child": member.childUserId.uuidString]).execute()
+            children.removeAll { $0.id == member.id }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        isLoading = false
+    }
+
+    /// A parent deletes the whole family.
+    func deleteFamily() async {
+        isLoading = true
+        do {
+            try await supabase.rpc("delete_family").execute()
+            authService.currentUser?.role = .individual
+            authService.currentUser?.familyId = nil
+            family = nil
+            children = []
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        isLoading = false
+    }
+
     func signOut() {
         authService.signOut()
     }
