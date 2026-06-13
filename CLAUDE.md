@@ -67,6 +67,7 @@ Gamification/               ← GamificationEngine, QuestEngine
 ### Task core (single source of truth)
 - "Done today" = report row in `reports` (`ai_result` approved/not_applicable/pending counts; rejected never counts; excused holds the streak without counting). `Services/TaskEngine.swift` owns this state in the app; UserDefaults is only an optimistic offline overlay.
 - Streaks are computed ONLY by the server engine (`compute_activity_streak` / `compute_user_streak`); a trigger on `reports` keeps `activities.streak_current/streak_best` fresh; the app reads via the `refresh_my_streaks` RPC. Do not add new client-side streak algorithms.
+- Streak freezes are server-applied (migration `20260613b_streak_freezes.sql`): a row in `streak_freezes(user_id, frozen_date)` makes that day qualify in `compute_user_streak` (Duolingo-style, counts toward the run). Wallet = `floor(best_streak/7) + users.bonus_freezes - rows used`; spend via `use_streak_freeze(p_date)` RPC. `refresh_my_streaks` returns `freezes_available` / `yesterday_freezable`. The client wallet is display-only; never re-derive the balance client-side.
 - `activities.schedule_days` smallint[] = ISO weekdays (1=Mon..7=Sun), NULL/empty = every day. Swift `Calendar.weekday` is Sun=1 -- convert via `Activity.isoWeekday(of:)`.
 - Server-side day bucketing uses `users.timezone` (synced from the device on login).
 
