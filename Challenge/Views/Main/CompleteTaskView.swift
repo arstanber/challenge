@@ -234,7 +234,12 @@ struct CompleteTaskView: View {
                 } label: {
                     Group {
                         if vm.isSubmittingReport {
-                            ProgressView().tint(.black)
+                            HStack(spacing: 8) {
+                                ProgressView().tint(.black)
+                                Text(vm.submissionStage == .uploading ? "Загружаем фото…" : "ИИ проверяет…")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundColor(.black)
+                            }
                         } else {
                             Text(requiresAI ? "Проверить" : "Отправить")
                                 .font(.system(size: 17, weight: .semibold))

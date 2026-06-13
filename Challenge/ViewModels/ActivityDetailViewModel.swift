@@ -14,6 +14,10 @@ final class ActivityDetailViewModel {
     var isSubmittingReport = false
     var errorMessage: String?
 
+    /// Drives the staged progress UI while a photo report is in flight.
+    enum SubmissionStage { case idle, uploading, verifying }
+    var submissionStage: SubmissionStage = .idle
+
     /// Set after photo submission — SubmitReportView uses this to show the verdict screen
     var lastAIResult: AIVerificationResult?
     var lastAIExplanation: String?
@@ -69,14 +73,15 @@ final class ActivityDetailViewModel {
 
     func submitPhotoReport(image: UIImage, comment: String, isExcuse: Bool = false) async {
         isSubmittingReport = true
+        submissionStage = .uploading
         errorMessage = nil
         lastAIResult = nil
         lastAIExplanation = nil
-        defer { isSubmittingReport = false }
+        defer { isSubmittingReport = false; submissionStage = .idle }
 
         do {
-            // 1. Upload photo
-            guard let jpeg = image.jpegData(compressionQuality: 0.8) else { return }
+            // 1. Upload photo (downscaled to ~1280px -- huge upload/latency win)
+            guard let jpeg = image.compressedForUpload() else { return }
             let path = "\(activity.id.uuidString)/\(UUID().uuidString).jpg"
             try await supabase.storage
                 .from(Constants.Storage.reportsBucket)
@@ -107,6 +112,7 @@ final class ActivityDetailViewModel {
             let condition = trimmedCondition.isEmpty ? activity.title : trimmedCondition
 
             do {
+                submissionStage = .verifying
                 let aiResponse = try await aiService.verify(
                     reportId:   report.id,
                     activityId: activity.id,
@@ -211,7 +217,7 @@ final class ActivityDetailViewModel {
         defer { isSubmittingReport = false }
         do {
             var photoURL: String?
-            if let image, let jpeg = image.jpegData(compressionQuality: 0.8) {
+            if let image, let jpeg = image.compressedForUpload() {
                 let path = "\(activity.id.uuidString)/\(UUID().uuidString).jpg"
                 try await supabase.storage
                     .from(Constants.Storage.reportsBucket)

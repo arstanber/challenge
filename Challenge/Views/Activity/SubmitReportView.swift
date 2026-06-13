@@ -19,7 +19,8 @@ struct SubmitReportView: View {
             Group {
                 if showResult {
                     AIVerificationResultScreen(
-                        result: vm.lastAIResult ?? .notApplicable,
+                        result: vm.lastAIResult,
+                        stage: vm.submissionStage,
                         explanation: vm.lastAIExplanation,
                         wasExcuse: submittedAsExcuse,
                         onDone: { dismiss(); onSubmit() },
@@ -34,12 +35,12 @@ struct SubmitReportView: View {
                     formContent
                 }
             }
-            .navigationTitle(showResult ? "" : "Submit report")
+            .navigationTitle(showResult ? "" : "Отчёт")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 if !showResult {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel") { Haptics.tap(); dismiss() }
+                        Button("Отмена") { Haptics.tap(); dismiss() }
                     }
                 }
             }
@@ -98,9 +99,9 @@ struct SubmitReportView: View {
                         Image(systemName: "camera.fill")
                             .font(.system(size: 44))
                             .foregroundStyle(Color(hex: "0048E2"))
-                        Text("Take a photo")
+                        Text("Сделать фото")
                             .font(.headline).foregroundStyle(Color(hex: "0048E2"))
-                        Text("Tap to open camera")
+                        Text("Нажмите, чтобы открыть камеру")
                             .font(.caption).foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity).frame(height: 200)
@@ -112,7 +113,7 @@ struct SubmitReportView: View {
             if let condition = activity.condition {
                 HStack(spacing: 8) {
                     Image(systemName: "brain").foregroundStyle(.purple)
-                    Text("AI will verify: \(condition)")
+                    Text("ИИ проверит: \(condition)")
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 .padding(10)
@@ -120,7 +121,7 @@ struct SubmitReportView: View {
                 .background(.purple.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
             }
 
-            TextField("Add a comment (optional)", text: $comment, axis: .vertical)
+            TextField("Комментарий (необязательно)", text: $comment, axis: .vertical)
                 .lineLimit(2...3)
                 .padding(12)
                 .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 12))
@@ -132,14 +133,14 @@ struct SubmitReportView: View {
     private var goalSection: some View {
         VStack(spacing: 14) {
             VStack(alignment: .leading, spacing: 6) {
-                Text("Log progress").font(.headline)
+                Text("Отметить прогресс").font(.headline)
                 if let target = activity.goalTarget {
-                    Text(String(format: "Current: %.0f / %.0f", activity.goalProgress, target))
+                    Text(String(format: "Сейчас: %.0f / %.0f", activity.goalProgress, target))
                         .font(.subheadline).foregroundStyle(.secondary)
                     ProgressView(value: activity.progressFraction).tint(Color(hex: "0048E2"))
                 }
             }
-            TextField("Add progress value (e.g. 5 for 5 km)", text: $progressValue)
+            TextField("Значение прогресса (например, 5 для 5 км)", text: $progressValue)
                 .keyboardType(.decimalPad)
                 .padding(14)
                 .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 12))
@@ -152,7 +153,7 @@ struct SubmitReportView: View {
         VStack(spacing: 12) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 60)).foregroundStyle(.green)
-            Text("Tap below to mark this \(activity.type == .habit ? "habit" : "task") as completed")
+            Text("Нажмите ниже, чтобы отметить \(activity.type == .habit ? "привычку" : "задачу") выполненной")
                 .font(.subheadline).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
@@ -172,7 +173,7 @@ struct SubmitReportView: View {
                     if vm.isSubmittingReport && !submittedAsExcuse {
                         HStack(spacing: 8) {
                             ProgressView().tint(.white)
-                            Text("Verifying with AI…")
+                            Text(loadingLabel)
                         }
                     } else {
                         Text(submitLabel).fontWeight(.semibold)
@@ -193,12 +194,12 @@ struct SubmitReportView: View {
                         if vm.isSubmittingReport && submittedAsExcuse {
                             HStack(spacing: 8) {
                                 ProgressView().tint(.purple)
-                                Text("Checking excuse…")
+                                Text("Проверяем оправдание…")
                             }
                         } else {
                             HStack(spacing: 6) {
                                 Image(systemName: "bandage")
-                                Text("Submit as excuse")
+                                Text("Отправить как оправдание")
                             }
                         }
                     }
@@ -211,7 +212,7 @@ struct SubmitReportView: View {
             }
 
             if activity.type.hasAIVerification {
-                Text("\"Submit as excuse\" if you had a valid reason (injury, illness, emergency)")
+                Text("Нажмите \"Отправить как оправдание\", если была веская причина (травма, болезнь, форс-мажор)")
                     .font(.caption2).foregroundStyle(.tertiary)
                     .multilineTextAlignment(.center)
             }
@@ -225,8 +226,12 @@ struct SubmitReportView: View {
         switch activity.type {
         case .challenge, .assignment:
             guard let image = capturedImage else { return }
+            // Show the scanning screen immediately so the animation overlaps
+            // the upload + verify round-trip instead of following it.
+            showResult = true
             await vm.submitPhotoReport(image: image, comment: comment, isExcuse: isExcuse)
-            if vm.errorMessage == nil { showResult = true }
+            // Hard failure (upload/insert) -- back out to the form with the error.
+            if vm.errorMessage != nil { showResult = false }
         case .goal:
             let value = Double(progressValue) ?? 0
             await vm.submitGoalProgress(value: value, image: nil)
@@ -239,10 +244,17 @@ struct SubmitReportView: View {
 
     private var submitLabel: String {
         switch activity.type {
-        case .challenge, .assignment: return "Submit photo"
-        case .goal:                   return "Log progress"
-        case .task:                   return "Mark as done"
-        case .habit:                  return "Check in"
+        case .challenge, .assignment: return "Отправить фото"
+        case .goal:                   return "Отметить"
+        case .task:                   return "Готово"
+        case .habit:                  return "Отметиться"
+        }
+    }
+
+    private var loadingLabel: String {
+        switch vm.submissionStage {
+        case .uploading: return "Загружаем фото…"
+        default:         return "ИИ проверяет…"
         }
     }
 
@@ -261,28 +273,26 @@ struct SubmitReportView: View {
 // MARK: - AI Result Screen
 
 private struct AIVerificationResultScreen: View {
-    let result: AIVerificationResult
+    /// nil while the report is still uploading / verifying.
+    let result: AIVerificationResult?
+    let stage: ActivityDetailViewModel.SubmissionStage
     let explanation: String?
     let wasExcuse: Bool
     let onDone: () -> Void
     let onRetry: () -> Void
 
-    // The verdict is the emotional payoff of the photo flow, so AI results
-    // hide behind a short scanning beat before snapping in with a spring.
+    // The verdict is the emotional payoff of the photo flow. The scanning beat
+    // now overlaps the network round-trip (we appear as soon as submit starts),
+    // with a short minimum floor so the reveal never feels like a glitch.
     @State private var revealed = false
+    @State private var floorElapsed = false
     @State private var scanPulse = false
     @State private var scanSpin = false
     @State private var confettiTrigger = 0
     @State private var bonusXP: Int?
 
-    /// Only real AI verdicts earn the suspense beat; plain check-ins and
-    /// still-pending results reveal immediately.
-    private var hasSuspense: Bool {
-        switch result {
-        case .approved, .rejected, .excused: return true
-        case .notApplicable, .pending:       return false
-        }
-    }
+    /// Resolved verdict once revealed; safe fallback while still scanning.
+    private var r: AIVerificationResult { result ?? .pending }
 
     var body: some View {
         ZStack {
@@ -309,7 +319,8 @@ private struct AIVerificationResultScreen: View {
                 .ignoresSafeArea()
                 .allowsHitTesting(false)
         }
-        .onAppear(perform: runReveal)
+        .onAppear(perform: startScanning)
+        .onChange(of: result) { _, _ in maybeReveal() }
     }
 
     // MARK: Scanning beat
@@ -330,10 +341,15 @@ private struct AIVerificationResultScreen: View {
                     .foregroundStyle(.purple)
                     .scaleEffect(scanPulse ? 1.1 : 0.92)
             }
-            Text(wasExcuse ? "AI is checking your excuse…" : "AI is checking your photo…")
+            Text(scanText)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
+    }
+
+    private var scanText: String {
+        if stage == .uploading { return "Загружаем фото…" }
+        return wasExcuse ? "ИИ проверяет оправдание…" : "ИИ проверяет фото…"
     }
 
     // MARK: Verdict
@@ -357,7 +373,7 @@ private struct AIVerificationResultScreen: View {
                 if let bonusXP {
                     HStack(spacing: 6) {
                         Text("🎁")
-                        Text("Lucky bonus: +\(bonusXP) XP")
+                        Text("Бонус удачи: +\(bonusXP) XP")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(.orange)
                     }
@@ -376,10 +392,10 @@ private struct AIVerificationResultScreen: View {
                 }
             }
 
-            if result == .rejected {
+            if r == .rejected {
                 HStack(spacing: 8) {
                     Image(systemName: "info.circle").foregroundStyle(Color(hex: "0048E2"))
-                    Text("If you had a valid reason, next time tap \"Submit as excuse\"")
+                    Text("Если была веская причина, в следующий раз нажмите \"Отправить как оправдание\"")
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 .padding(12)
@@ -392,16 +408,16 @@ private struct AIVerificationResultScreen: View {
     private var actionButtons: some View {
         VStack(spacing: 10) {
             Button { Haptics.tap(); onDone() } label: {
-                Text(result == .approved || result == .excused ? "Done 🎉" : "Close")
+                Text(r == .approved || r == .excused ? "Готово 🎉" : "Закрыть")
                     .fontWeight(.semibold)
                     .frame(maxWidth: .infinity).frame(height: 50)
             }
             .buttonStyle(.borderedProminent)
             .tint(bgColor)
 
-            if result == .rejected {
+            if r == .rejected {
                 Button { Haptics.tap(); onRetry() } label: {
-                    Text("Try again")
+                    Text("Ещё раз")
                         .frame(maxWidth: .infinity).frame(height: 44)
                 }
                 .buttonStyle(.bordered)
@@ -414,32 +430,36 @@ private struct AIVerificationResultScreen: View {
 
     // MARK: Reveal choreography
 
-    private func runReveal() {
-        guard hasSuspense else {
-            revealed = true
-            playVerdictFeedback()
-            return
-        }
+    /// Starts the looping scan animation and a minimum-floor timer. The reveal
+    /// then waits for both the verdict to arrive and the floor to elapse.
+    private func startScanning() {
         withAnimation(.easeInOut(duration: 0.7).repeatForever(autoreverses: true)) {
             scanPulse = true
         }
         withAnimation(.linear(duration: 0.9).repeatForever(autoreverses: false)) {
             scanSpin = true
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
-                revealed = true
-            }
-            playVerdictFeedback()
-            if result == .approved {
-                confettiTrigger += 1
-                maybeAwardBonus()
-            }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            floorElapsed = true
+            maybeReveal()
+        }
+        maybeReveal()   // result may already be present (e.g. notApplicable)
+    }
+
+    private func maybeReveal() {
+        guard !revealed, floorElapsed, result != nil else { return }
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
+            revealed = true
+        }
+        playVerdictFeedback()
+        if r == .approved {
+            confettiTrigger += 1
+            maybeAwardBonus()
         }
     }
 
     private func playVerdictFeedback() {
-        switch result {
+        switch r {
         case .approved, .excused, .notApplicable: Haptics.success()
         case .rejected:                            Haptics.error()
         case .pending:                             Haptics.warning()
@@ -461,7 +481,7 @@ private struct AIVerificationResultScreen: View {
     }
 
     private var bgColor: Color {
-        switch result {
+        switch r {
         case .approved:      return .green
         case .rejected:      return .red
         case .excused:       return .purple
@@ -471,7 +491,7 @@ private struct AIVerificationResultScreen: View {
     }
 
     private var iconName: String {
-        switch result {
+        switch r {
         case .approved:      return "checkmark.seal.fill"
         case .rejected:      return "xmark.seal.fill"
         case .excused:       return "bandage.fill"
@@ -481,12 +501,12 @@ private struct AIVerificationResultScreen: View {
     }
 
     private var title: String {
-        switch result {
-        case .approved:      return "Task completed! 🔥"
-        case .rejected:      return "Not approved"
-        case .excused:       return wasExcuse ? "Excuse accepted" : "Accepted"
-        case .notApplicable: return "Submitted!"
-        case .pending:       return "Checking…"
+        switch r {
+        case .approved:      return "Задача выполнена! 🔥"
+        case .rejected:      return "Не засчитано"
+        case .excused:       return wasExcuse ? "Оправдание принято" : "Принято"
+        case .notApplicable: return "Отправлено!"
+        case .pending:       return "Проверяем…"
         }
     }
 }
