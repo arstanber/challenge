@@ -10,6 +10,8 @@ private let logger = Logger(subsystem: "com.challenge", category: "StatisticsVie
 struct StatisticsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var dayCounts: [Date: Int] = [:]
+    /// Raw report timestamps (kept for the PRO analytics computations).
+    @State private var reportDates: [Date] = []
     @State private var dailyGoal = 1
     @State private var totalCheckins = 0
     @State private var totalCompleted = 0
@@ -19,26 +21,28 @@ struct StatisticsView: View {
     @State private var showProgression = false
     @State private var showWeeklyReport = false
     @State private var showYearInReview = false
+    @State private var showPaywall = false
     @State private var engine = GamificationEngine.shared
+    @State private var auth = AuthService.shared
 
     private let blue = Color(red: 0.0, green: 0.282, blue: 0.886)
     private let calendar = Calendar.current
 
     var body: some View {
         ZStack {
-            Color.white.ignoresSafeArea()
+            Color(.systemBackground).ignoresSafeArea()
 
             VStack(spacing: 0) {
                 // Nav bar
                 ZStack {
-                    Text("Statistics")
+                    Text("Статистика")
                         .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.black)
+                        .foregroundStyle(.primary)
                     HStack {
                         Button { Haptics.tap(); dismiss() } label: {
                             Image(systemName: "xmark")
                                 .font(.system(size: 16, weight: .medium))
-                                .foregroundColor(.black)
+                                .foregroundStyle(.primary)
                         }
                         Spacer()
                     }
@@ -75,16 +79,16 @@ struct StatisticsView: View {
                                 HStack(spacing: 12) {
                                     Image(systemName: "square.and.arrow.up")
                                         .font(.system(size: 16, weight: .semibold))
-                                    Text("Share my weekly report")
+                                    Text("Поделиться отчётом за неделю")
                                         .font(.manrope(.bold, size: 15))
                                     Spacer()
                                     Image(systemName: "chevron.right")
                                         .font(.system(size: 13, weight: .semibold))
-                                        .foregroundColor(.black.opacity(0.3))
+                                        .foregroundStyle(.secondary)
                                 }
-                                .foregroundColor(.black)
+                                .foregroundStyle(.primary)
                                 .padding(16)
-                                .background(RoundedRectangle(cornerRadius: 18).fill(Color.black.opacity(0.04)))
+                                .background(RoundedRectangle(cornerRadius: 18).fill(Color(.secondarySystemBackground)))
                             }
                             .buttonStyle(.haptic)
                             .appearEffect(delay: 0.21)
@@ -93,7 +97,7 @@ struct StatisticsView: View {
                             Button { showYearInReview = true } label: {
                                 HStack(spacing: 12) {
                                     Text("🎉").font(.system(size: 18))
-                                    Text("Your Year in Review")
+                                    Text("Итоги года")
                                         .font(.manrope(.bold, size: 15))
                                     Spacer()
                                     Image(systemName: "chevron.right")
@@ -113,24 +117,33 @@ struct StatisticsView: View {
 
                             // Stat cards
                             HStack(spacing: 12) {
-                                StatTile(value: "\(currentStreak)", label: "Current\nstreak", emoji: "🔥", tint: Color(hex: "FF7A00"))
-                                StatTile(value: "\(bestStreak)", label: "Best\nstreak", emoji: "🏆", tint: Color(hex: "FFB200"))
+                                StatTile(value: "\(currentStreak)", label: "Текущая\nсерия", emoji: "🔥", tint: Color(hex: "FF7A00"))
+                                StatTile(value: "\(bestStreak)", label: "Лучшая\nсерия", emoji: "🏆", tint: Color(hex: "FFB200"))
                             }
                             .appearEffect(delay: 0.37)
                             HStack(spacing: 12) {
-                                StatTile(value: "\(totalCompleted)", label: "Tasks\ndone", emoji: "✅", tint: blue)
-                                StatTile(value: "\(totalCheckins)", label: "Total\ncheck-ins", emoji: "📈", tint: Color(hex: "5AD8A6"))
+                                StatTile(value: "\(totalCompleted)", label: "Задач\nвыполнено", emoji: "✅", tint: blue)
+                                StatTile(value: "\(totalCheckins)", label: "Всего\nотметок", emoji: "📈", tint: Color(hex: "5AD8A6"))
                             }
                             .appearEffect(delay: 0.45)
 
                             // Heatmap
                             VStack(alignment: .leading, spacing: 12) {
-                                Text("Activity")
+                                Text("Активность")
                                     .font(.manrope(.bold, size: 20))
-                                    .foregroundColor(.black)
+                                    .foregroundStyle(.primary)
                                 ActivityHeatmap(dayCounts: dayCounts, tint: blue)
                             }
                             .appearEffect(delay: 0.53)
+
+                            // Advanced analytics (PRO / Max)
+                            ProStatisticsSections(
+                                stats: ProStats(reportDates: reportDates,
+                                                currentStreak: currentStreak),
+                                isPremium: auth.currentUser?.isPremium == true,
+                                onUnlock: { showPaywall = true }
+                            )
+                            .appearEffect(delay: 0.61)
                         }
                         .padding(.horizontal, 22)
                         .padding(.top, 8)
@@ -155,6 +168,9 @@ struct StatisticsView: View {
         }
         .fullScreenCover(isPresented: $showYearInReview) {
             YearInReviewView()
+        }
+        .sheet(isPresented: $showPaywall) {
+            NavigationStack { PremiumView() }
         }
     }
 
@@ -203,6 +219,7 @@ struct StatisticsView: View {
                 .value
 
             totalCheckins = reports.count
+            reportDates = reports.map { $0.createdAt }
             var counts: [Date: Int] = [:]
             for r in reports {
                 let day = calendar.startOfDay(for: r.createdAt)
@@ -288,23 +305,23 @@ private struct LevelBanner: View {
                     .rotationEffect(.degrees(-90))
                 VStack(spacing: -2) {
                     Text("LVL").font(.manrope(.bold, size: 9)).foregroundColor(accent.opacity(0.7))
-                    Text("\(level.level)").font(.manrope(.extraBold, size: 22)).foregroundColor(.black)
+                    Text("\(level.level)").font(.manrope(.extraBold, size: 22)).foregroundStyle(.primary)
                 }
             }
             .frame(width: 58, height: 58)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text("Your progress")
+                Text("Твой прогресс")
                     .font(.manrope(.bold, size: 16))
-                    .foregroundColor(.black)
+                    .foregroundStyle(.primary)
                 Text("\(level.xpIntoLevel)/\(level.xpForNextLevel) XP · 🧊 \(freezes) · 🏆 \(unlocked)/\(total)")
                     .font(.manrope(.medium, size: 12))
-                    .foregroundColor(.black.opacity(0.45))
+                    .foregroundStyle(.secondary)
             }
             Spacer()
             Image(systemName: "chevron.right")
                 .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(.black.opacity(0.3))
+                .foregroundStyle(.secondary)
         }
         .padding(16)
         .background(RoundedRectangle(cornerRadius: 18).fill(accent.opacity(0.10)))
@@ -324,10 +341,10 @@ private struct StatTile: View {
             Text(emoji).font(.system(size: 22))
             Text(value)
                 .font(.manrope(.extraBold, size: 30))
-                .foregroundColor(.black)
+                .foregroundStyle(.primary)
             Text(label)
                 .font(.manrope(.medium, size: 13))
-                .foregroundColor(.black.opacity(0.45))
+                .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -371,7 +388,7 @@ private struct ActivityHeatmap: View {
     private func color(for date: Date) -> Color {
         let c = dayCounts[date] ?? 0
         switch c {
-        case 0:     return Color.black.opacity(0.05)
+        case 0:     return Color.primary.opacity(0.07)
         case 1:     return tint.opacity(0.3)
         case 2:     return tint.opacity(0.55)
         case 3:     return tint.opacity(0.8)
