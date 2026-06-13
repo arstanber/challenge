@@ -25,11 +25,42 @@ struct LeaderboardEntry: Decodable, Identifiable {
     }
 }
 
+struct LeaderboardClaim: Decodable {
+    let alreadyClaimed: Bool
+    let rank: Int?
+    let reward: String?
+
+    enum CodingKeys: String, CodingKey {
+        case alreadyClaimed = "already_claimed"
+        case rank, reward
+    }
+
+    /// Human message for the result alert.
+    var message: String {
+        let rankText = rank.map { "#\($0)" } ?? "вне топа"
+        let prize: String
+        switch reward {
+        case "pro7d": prize = " -- тебе начислено 7 дней PRO!"
+        case "pro3d": prize = " -- тебе начислено 3 дня PRO!"
+        case "freeze": prize = " -- тебе начислена заморозка серии 🧊"
+        default:      prize = ". Топ-3 на этой неделе?"
+        }
+        if alreadyClaimed {
+            return reward == nil
+                ? "На прошлой неделе ты был \(rankText)."
+                : "Награда за прошлую неделю уже получена (\(rankText))."
+        }
+        return "На прошлой неделе ты был \(rankText)\(prize)"
+    }
+}
+
 @Observable
 final class LeaderboardViewModel {
     var entries: [LeaderboardEntry] = []
     var isLoading = false
     var errorMessage: String?
+    var claiming = false
+    var claimMessage: String?
 
     func load() async {
         guard let userId = AuthService.shared.currentUser?.id else { return }
@@ -46,6 +77,22 @@ final class LeaderboardViewModel {
         }
         isLoading = false
     }
+
+    func claimReward() async {
+        claiming = true
+        defer { claiming = false }
+        do {
+            let claim: LeaderboardClaim = try await supabase
+                .rpc("claim_leaderboard_reward")
+                .execute()
+                .value
+            claimMessage = claim.message
+            // A granted PRO/freeze changes entitlements -- refresh the session.
+            await AuthService.shared.refreshProfile()
+        } catch {
+            claimMessage = "Не получилось проверить награду. Попробуй позже."
+        }
+    }
 }
 
 struct LeaderboardView: View {
@@ -56,7 +103,7 @@ struct LeaderboardView: View {
 
     var body: some View {
         ZStack {
-            Color.white.ignoresSafeArea()
+            Color(.systemBackground).ignoresSafeArea()
             VStack(spacing: 0) {
                 // Header
                 HStack {
@@ -80,6 +127,8 @@ struct LeaderboardView: View {
                 } else {
                     ScrollView(showsIndicators: false) {
                         VStack(spacing: 10) {
+                            rewardBanner
+                                .appearEffect(delay: 0.03)
                             // Top 3 podium
                             if vm.entries.count >= 3 {
                                 PodiumRow(entries: Array(vm.entries.prefix(3)))
@@ -104,6 +153,45 @@ struct LeaderboardView: View {
         }
         .task { await vm.load() }
         .refreshable { await vm.load() }
+        .alert("Награды недели", isPresented: .init(
+            get: { vm.claimMessage != nil },
+            set: { if !$0 { vm.claimMessage = nil } }
+        )) {
+            Button("Класс") {}
+        } message: {
+            Text(vm.claimMessage ?? "")
+        }
+    }
+
+    private var rewardBanner: some View {
+        HStack(spacing: 12) {
+            Text("🏅").font(.system(size: 26))
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Награды недели")
+                    .font(.manrope(.bold, size: 15))
+                Text("Топ-3 среди всех пользователей получают PRO дни и заморозку")
+                    .font(.manrope(.medium, size: 12))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 6)
+            Button {
+                Haptics.tap()
+                Task { await vm.claimReward() }
+            } label: {
+                Group {
+                    if vm.claiming { ProgressView().controlSize(.small).tint(.white) }
+                    else { Text("Проверить").font(.manrope(.semiBold, size: 13)) }
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 14).padding(.vertical, 9)
+                .background(Capsule().fill(blue))
+            }
+            .buttonStyle(.plain)
+            .disabled(vm.claiming)
+        }
+        .padding(14)
+        .background(RoundedRectangle(cornerRadius: 18).fill(blue.opacity(0.10)))
     }
 
     private var emptyState: some View {
@@ -192,12 +280,12 @@ private struct LeaderboardRow: View {
 
             // Avatar
             Circle()
-                .fill(isMe ? Color(hex: "4580FF").gradient : Color.black.opacity(0.08).gradient)
+                .fill(isMe ? Color(hex: "4580FF").gradient : Color.primary.opacity(0.08).gradient)
                 .frame(width: 38, height: 38)
                 .overlay {
                     Text(String(entry.email.prefix(1)).uppercased())
                         .font(.manrope(.bold, size: 16))
-                        .foregroundStyle(isMe ? .white : .black.opacity(0.6))
+                        .foregroundStyle(isMe ? .white : .primary.opacity(0.6))
                 }
 
             VStack(alignment: .leading, spacing: 2) {
@@ -234,7 +322,7 @@ private struct LeaderboardRow: View {
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(isMe ? Color(hex: "4580FF").opacity(0.07) : Color.black.opacity(0.03))
+                .fill(isMe ? Color(hex: "4580FF").opacity(0.07) : Color.primary.opacity(0.04))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16)
