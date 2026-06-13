@@ -36,6 +36,15 @@ final class ActivitiesViewModel {
     var globalStreakCurrent: Int { engine.globalStreakCurrent }
     var globalStreakBest: Int { engine.globalStreakBest }
     var todayCount: Int { engine.todayCount }
+    var freezesAvailable: Int { engine.freezesAvailable }
+    var yesterdayFreezable: Bool { engine.yesterdayFreezable }
+
+    /// Spend a freeze on yesterday, then reload so the banner and streak update.
+    func freezeYesterday() async {
+        if await engine.useStreakFreeze() {
+            await loadActivities()
+        }
+    }
 
     private let authService = AuthService.shared
     private let calendar = Calendar.current

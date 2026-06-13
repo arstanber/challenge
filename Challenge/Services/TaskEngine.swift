@@ -36,6 +36,10 @@ final class TaskEngine {
     private(set) var globalStreakBest = 0
     /// Distinct activities completed today (server-computed when online).
     private(set) var serverTodayCount = 0
+    /// Spendable streak freezes (server is the single source of truth).
+    private(set) var freezesAvailable = 0
+    /// True when yesterday is missed, unfrozen, and the user has balance.
+    private(set) var yesterdayFreezable = false
     /// Per-activity streaks from the last `refresh_my_streaks` call.
     private(set) var activityStreaks: [UUID: (current: Int, best: Int)] = [:]
 
@@ -287,11 +291,15 @@ final class TaskEngine {
         let globalBest: Int
         let todayCount: Int
         let activities: [ActivityStreak]
+        let freezesAvailable: Int?
+        let yesterdayFreezable: Bool?
         enum CodingKeys: String, CodingKey {
             case globalCurrent = "global_current"
             case globalBest = "global_best"
             case todayCount = "today_count"
             case activities
+            case freezesAvailable = "freezes_available"
+            case yesterdayFreezable = "yesterday_freezable"
         }
     }
 
@@ -306,6 +314,8 @@ final class TaskEngine {
             globalStreakCurrent = payload.globalCurrent
             globalStreakBest = payload.globalBest
             serverTodayCount = payload.todayCount
+            freezesAvailable = payload.freezesAvailable ?? 0
+            yesterdayFreezable = payload.yesterdayFreezable ?? false
             activityStreaks = Dictionary(
                 uniqueKeysWithValues: payload.activities.map { ($0.id, (current: $0.streakCurrent, best: $0.streakBest)) }
             )
@@ -317,6 +327,20 @@ final class TaskEngine {
         } catch {
             logger.error("refresh_my_streaks failed, using offline fallback: \(error)")
             await computeStreaksFallback()
+        }
+    }
+
+    /// Spends a freeze on yesterday (default) and refreshes streaks. Returns
+    /// true on success. The server validates balance and day eligibility.
+    @discardableResult
+    func useStreakFreeze() async -> Bool {
+        do {
+            _ = try await supabase.rpc("use_streak_freeze").execute()
+            await refreshStreaks()
+            return true
+        } catch {
+            logger.error("use_streak_freeze failed: \(error)")
+            return false
         }
     }
 

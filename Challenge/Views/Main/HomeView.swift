@@ -217,6 +217,18 @@ struct HomeView: View {
                         .onAppear(perform: trackFirstWinShownOnce)
                     }
 
+                    if vm.yesterdayFreezable && vm.freezesAvailable > 0 {
+                        FreezeYesterdayBanner(remaining: vm.freezesAvailable) {
+                            Haptics.medium()
+                            Task {
+                                await vm.freezeYesterday()
+                                confettiTrigger += 1
+                                Haptics.success()
+                            }
+                        }
+                        .appearEffect(delay: 0.05)
+                    }
+
                     if vm.isLoading && activeTasks.isEmpty && doneTodayTasks.isEmpty {
                         ProgressView().padding(.top, 60)
                     } else if todayTasks.isEmpty && upcomingTasks.isEmpty && doneTodayTasks.isEmpty {
@@ -633,6 +645,42 @@ private struct EmptyTodayView: View {
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
+    }
+}
+
+// MARK: - Freeze yesterday banner
+
+private struct FreezeYesterdayBanner: View {
+    let remaining: Int
+    let onFreeze: () -> Void
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Text("🧊").font(.system(size: 30))
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Серия прервалась?")
+                    .font(.manrope(.bold, size: 16))
+                    .foregroundStyle(.primary)
+                Text("Заморозь вчерашний день -- осталось \(remaining)")
+                    .font(.manrope(.medium, size: 13))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 8)
+            Button(action: onFreeze) {
+                Text("Заморозить")
+                    .font(.manrope(.semiBold, size: 14))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 16).padding(.vertical, 10)
+                    .background(Capsule().fill(Color(hex: "4580FF")))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(Color(hex: "4580FF").opacity(0.12))
+        )
     }
 }
 

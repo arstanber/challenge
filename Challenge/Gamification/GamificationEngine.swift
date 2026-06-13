@@ -63,25 +63,19 @@ final class GamificationEngine {
 
     // MARK: - Freeze wallet (#2)
 
-    /// Freezes earned over the player's lifetime: one per 7 days of best streak,
-    /// plus one for every 3 achievements unlocked, plus freezes claimed from
-    /// referral rewards (server-side counter on the users row).
+    /// Lifetime offline estimate (best streak / 7 + referral bonus). Used only
+    /// as a fallback before the server wallet has loaded; the canonical balance
+    /// is `TaskEngine.freezesAvailable` (see migration 20260613b_streak_freezes).
     var earnedFreezes: Int {
-        stats.bestStreak / 7 + unlockedIds.count / 3
-            + (AuthService.shared.currentUser?.bonusFreezes ?? 0)
+        stats.bestStreak / 7 + (AuthService.shared.currentUser?.bonusFreezes ?? 0)
     }
 
-    /// Freezes currently available to spend.
-    var freezeBalance: Int { max(0, earnedFreezes - spentFreezes) }
-
-    /// Spend one freeze (e.g. to protect a streak after a missed day).
-    /// Returns true if a freeze was available and consumed.
-    @discardableResult
-    func useFreeze() -> Bool {
-        guard freezeBalance > 0 else { return false }
-        spentFreezes += 1
-        defaults.set(spentFreezes, forKey: Keys.spentFreezes)
-        return true
+    /// Freezes currently available to spend. Server is the single source of
+    /// truth (frozen days actually protect the streak); fall back to the local
+    /// estimate only when the server wallet has not loaded yet.
+    var freezeBalance: Int {
+        let server = TaskEngine.shared.freezesAvailable
+        return server > 0 ? server : earnedFreezes
     }
 
     // MARK: - Themes (#5)
