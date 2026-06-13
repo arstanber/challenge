@@ -614,6 +614,7 @@ private struct HomeHeader: View {
     let count: Int
     let allDone: Bool
     let streak: Int
+    @State private var flamePulse = false
 
     private var flameColor: Color {
         if allDone { return .red }
@@ -639,18 +640,31 @@ private struct HomeHeader: View {
                     .frame(minWidth: 26, minHeight: 26)
                     .padding(.horizontal, 4)
                     .background(Circle().fill(AppColors.challengeLabel))
+                    .contentTransition(.numericText())
+                    .transition(.scale.combined(with: .opacity))
             }
 
             HStack(spacing: 3) {
                 Image(systemName: streak > 0 ? "flame.fill" : "flame")
                     .font(.system(size: 19, weight: .semibold))
+                    .symbolEffect(.bounce, value: streak)
+                    .scaleEffect(allDone && flamePulse ? 1.12 : 1.0)
                 Text("\(streak)")
                     .font(.manrope(.bold, size: 19))
+                    .contentTransition(.numericText())
             }
             .foregroundStyle(flameColor)
+            .onChange(of: allDone) { _, done in
+                guard done else { flamePulse = false; return }
+                withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
+                    flamePulse = true
+                }
+            }
         }
         .padding(.top, 16)
         .padding(.bottom, 18)
+        .animation(.spring(response: 0.4, dampingFraction: 0.7), value: count)
+        .animation(.spring(response: 0.4, dampingFraction: 0.7), value: streak)
     }
 }
 
@@ -722,6 +736,7 @@ private struct TaskCardView: View {
     var cancelledTaskId: UUID? = nil
 
     @State private var isCompleting = false
+    @State private var isPressed = false
 
     private var accent: Color { typeAccent(task.type) }
     private var isGoal: Bool { task.goalTarget != nil && task.goalTarget! > 0 }
@@ -790,7 +805,14 @@ private struct TaskCardView: View {
                 .fill(AppColors.cardBg)
         )
         .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .scaleEffect(isPressed ? 0.975 : 1.0)
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isPressed)
         .onTapGesture { Haptics.selection(); onOpen() }
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in isPressed = true }
+                .onEnded { _ in isPressed = false }
+        )
         .contextMenu {
             Button { onEdit(task) } label: { Label("Изменить", systemImage: "pencil") }
             if isGoal, let onAddSubtask {
@@ -906,11 +928,14 @@ private struct TaskRing: View {
                     Image(systemName: "checkmark")
                         .font(.system(size: 18, weight: .bold))
                         .foregroundStyle(isChecked ? .white : Color.secondary.opacity(0.5))
+                        .scaleEffect(isChecked ? 1.0 : 0.6)
                 }
                 .frame(width: 48, height: 48)
+                // Brief overshoot when the task gets checked off.
+                .scaleEffect(isChecked ? 1.08 : 1.0)
             }
             .buttonStyle(.plain)
-            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isChecked)
+            .animation(.spring(response: 0.34, dampingFraction: 0.55), value: isChecked)
         }
     }
 }
