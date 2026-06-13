@@ -91,6 +91,7 @@ struct HomeView: View {
     @State private var editingActivity: Activity?
     @State private var detailActivity: Activity?
     @State private var deletingActivity: Activity?
+    @State private var addSubtaskParent: Activity?
     // Celebration
     @State private var confettiTrigger = 0
     @State private var showPerfectDay = false
@@ -236,6 +237,7 @@ struct HomeView: View {
                                     onEdit: { editingActivity = $0 },
                                     onDelete: { act in deletingActivity = act },
                                     onTomorrow: { act in Task { await vm.moveToTomorrow(act); await vm.loadActivities() } },
+                                    onAddSubtask: { addSubtaskParent = $0 },
                                     cancelledTaskId: cancelledTaskId
                                 )
                                 .appearEffect(delay: 0.1 + Double(idx) * 0.05)
@@ -260,6 +262,7 @@ struct HomeView: View {
                                     onEdit: { editingActivity = $0 },
                                     onDelete: { act in deletingActivity = act },
                                     onTomorrow: { act in Task { await vm.moveToTomorrow(act); await vm.loadActivities() } },
+                                    onAddSubtask: { addSubtaskParent = $0 },
                                     cancelledTaskId: cancelledTaskId
                                 )
                                 .appearEffect(delay: 0.16 + Double(idx) * 0.05)
@@ -389,6 +392,9 @@ struct HomeView: View {
         .sheet(isPresented: $showBySaying, onDismiss: reload) { BySayingView() }
         .sheet(isPresented: $showSettings) { SettingsView() }
         .sheet(isPresented: $showReorder, onDismiss: reload) { ReorderSheet(vm: vm) }
+        .sheet(item: $addSubtaskParent) { parent in
+            AddSubtaskSheet(parent: parent, vm: vm, onCreated: reload)
+        }
         .alert(
             "Строгий режим",
             isPresented: .init(get: { strictBlock != nil }, set: { if !$0 { strictBlock = nil } }),
@@ -641,6 +647,7 @@ private struct TaskCardView: View {
     let onEdit: (Activity) -> Void
     let onDelete: (Activity) -> Void
     let onTomorrow: (Activity) -> Void
+    var onAddSubtask: ((Activity) -> Void)? = nil
     var cancelledTaskId: UUID? = nil
 
     @State private var isCompleting = false
@@ -715,6 +722,9 @@ private struct TaskCardView: View {
         .onTapGesture { Haptics.selection(); onOpen() }
         .contextMenu {
             Button { onEdit(task) } label: { Label("Изменить", systemImage: "pencil") }
+            if isGoal, let onAddSubtask {
+                Button { onAddSubtask(task) } label: { Label("Добавить подзадачу", systemImage: "plus.circle") }
+            }
             Button { onTomorrow(task) } label: { Label("На завтра", systemImage: "calendar") }
             Button(role: .destructive) { onDelete(task) } label: { Label("Удалить", systemImage: "trash") }
         }

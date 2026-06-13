@@ -440,6 +440,40 @@ final class ActivitiesViewModel {
         }
     }
 
+    /// Creates a single one-off subtask under a parent goal. Mirrors
+    /// ActivityDetailViewModel.createSubtasks for the manual "add subtask" flow.
+    func createSubtask(parent: Activity, title: String, deadline: Date?) async {
+        guard let user = authService.currentUser else { return }
+        let req = CreateActivityRequest(
+            userId: user.id,
+            assignedBy: nil,
+            title: title,
+            description: "",
+            type: .task,
+            condition: nil,
+            frequency: .once,
+            deadline: deadline,
+            reminderTime: nil,
+            goalTarget: nil,
+            planId: nil,
+            planTitle: nil,
+            workspaceId: parent.workspaceId,
+            parentId: parent.id
+        )
+        do {
+            let created: Activity = try await supabase
+                .from("activities")
+                .insert(req)
+                .select()
+                .single()
+                .execute()
+                .value
+            myActivities.append(created)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
     // MARK: - Edit
 
     func updateActivity(
