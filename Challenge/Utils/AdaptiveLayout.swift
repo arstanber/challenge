@@ -29,6 +29,14 @@ extension View {
     func readableWidth(_ maxWidth: CGFloat = 640, alignment: Alignment = .center) -> some View {
         modifier(ReadableWidthModifier(maxWidth: maxWidth, alignment: alignment))
     }
+
+    /// Conditionally apply a modifier chain. Toggling `condition` rebuilds the
+    /// view, so use only for mode switches (e.g. entering drag-reorder), never
+    /// for per-frame state.
+    @ViewBuilder
+    func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
+        if condition { transform(self) } else { self }
+    }
 }
 
 extension Array where Element == GridItem {

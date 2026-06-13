@@ -1,4 +1,29 @@
 import SwiftUI
+import UniformTypeIdentifiers
+
+// MARK: - Inline reorder drop delegate
+// Live-reorders myActivities as a dragged card passes over a target, then
+// persists sort_order when the drop completes.
+private struct TaskReorderDropDelegate: DropDelegate {
+    let item: Activity
+    let vm: ActivitiesViewModel
+    @Binding var dragging: Activity?
+
+    func dropEntered(info: DropInfo) {
+        guard let dragging, dragging.id != item.id else { return }
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+            vm.moveActivity(dragging, before: item)
+        }
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? { DropProposal(operation: .move) }
+
+    func performDrop(info: DropInfo) -> Bool {
+        dragging = nil
+        Task { await vm.persistOrder() }
+        return true
+    }
+}
 
 // MARK: - Design tokens
 private enum AppColors {
@@ -83,7 +108,9 @@ struct HomeView: View {
     @State private var newHabitDraft: HabitDraft?
     // Navigation
     @State private var showSettings = false
-    @State private var showReorder = false
+    // Inline drag-to-reorder happens right on the home list (no separate page).
+    @State private var reorderMode = false
+    @State private var draggingTask: Activity?
     // Task interaction
     @State private var taskToComplete: Activity?
     @State private var lastPhotoTask: Activity?
@@ -236,8 +263,20 @@ struct HomeView: View {
             onDelete: { act in deletingActivity = act },
             onTomorrow: { act in Task { await vm.moveToTomorrow(act); await vm.loadActivities() } },
             onAddSubtask: { addSubtaskParent = $0 },
+            reordering: reorderMode,
             cancelledTaskId: cancelledTaskId
         )
+        .opacity(reorderMode && draggingTask?.id == task.id ? 0.5 : 1)
+        // Inline drag-to-reorder: only armed while in reorder mode.
+        .if(reorderMode) { view in
+            view
+                .onDrag {
+                    draggingTask = task
+                    return NSItemProvider(object: task.id.uuidString as NSString)
+                }
+                .onDrop(of: [.text], delegate: TaskReorderDropDelegate(
+                    item: task, vm: vm, dragging: $draggingTask))
+        }
     }
 
     /// True when every top-level task due today is done.
@@ -299,7 +338,7 @@ struct HomeView: View {
 
                         if !upcomingTasks.isEmpty {
                             Text("Скоро")
-                                .font(.sfProDisplay(13, weight: .semibold))
+                                .font(.sfProDisplay(13, weight: .medium))
                                 .foregroundStyle(.secondary)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(.horizontal, 4)
@@ -349,7 +388,14 @@ struct HomeView: View {
         .safeAreaInset(edge: .bottom) {
             BottomButtons(
                 onSettings: { Haptics.tap(); showSettings = true },
-                onReorder: { Haptics.tap(); showReorder = true },
+                onReorder: {
+                    Haptics.medium()
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                        reorderMode.toggle()
+                    }
+                    if !reorderMode { Task { await vm.persistOrder() } }
+                },
+                reordering: reorderMode,
                 onPlus: { Haptics.tap(); showAddHabit = true }
             )
             .padding(.bottom, 6)
@@ -438,7 +484,6 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showBySaying, onDismiss: reload) { BySayingView() }
         .sheet(isPresented: $showSettings) { SettingsView() }
-        .sheet(isPresented: $showReorder, onDismiss: reload) { ReorderSheet(vm: vm) }
         .sheet(item: $addSubtaskParent) { parent in
             AddSubtaskSheet(parent: parent, vm: vm, onCreated: reload)
         }
@@ -647,7 +692,7 @@ private struct HomeHeader: View {
 
             if count > 0 {
                 Text("\(count)")
-                    .font(.sfProDisplay(14, weight: .bold))
+                    .font(.sfProDisplay(14, weight: .medium))
                     .foregroundColor(.white)
                     .frame(minWidth: 26, minHeight: 26)
                     .padding(.horizontal, 4)
@@ -662,7 +707,7 @@ private struct HomeHeader: View {
                     .symbolEffect(.bounce, value: streak)
                     .scaleEffect(allDone && flamePulse ? 1.12 : 1.0)
                 Text("\(streak)")
-                    .font(.sfProDisplay(19, weight: .bold))
+                    .font(.sfProDisplay(19, weight: .medium))
                     .contentTransition(.numericText())
             }
             .foregroundStyle(flameColor)
@@ -687,10 +732,10 @@ private struct EmptyTodayView: View {
         VStack(spacing: 12) {
             Text("✨").font(.system(size: 48))
             Text("На сегодня всё")
-                .font(.sfProDisplay(18, weight: .semibold))
+                .font(.sfProDisplay(18, weight: .medium))
                 .foregroundStyle(.primary)
             Text("Добавьте задачу кнопками ниже")
-                .font(.sfProDisplay(14))
+                .font(.sfProDisplay(14, weight: .medium))
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
@@ -708,7 +753,7 @@ private struct FreezeYesterdayBanner: View {
             Text("🧊").font(.system(size: 30))
             VStack(alignment: .leading, spacing: 3) {
                 Text("Серия прервалась?")
-                    .font(.sfProDisplay(16, weight: .bold))
+                    .font(.sfProDisplay(16, weight: .medium))
                     .foregroundStyle(.primary)
                 Text("Заморозь вчерашний день -- осталось \(remaining)")
                     .font(.sfProDisplay(13, weight: .medium))
@@ -718,7 +763,7 @@ private struct FreezeYesterdayBanner: View {
             Spacer(minLength: 8)
             Button(action: onFreeze) {
                 Text("Заморозить")
-                    .font(.sfProDisplay(14, weight: .semibold))
+                    .font(.sfProDisplay(14, weight: .medium))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 16).padding(.vertical, 10)
                     .background(Capsule().fill(Color(hex: "4580FF")))
@@ -745,10 +790,12 @@ private struct TaskCardView: View {
     let onDelete: (Activity) -> Void
     let onTomorrow: (Activity) -> Void
     var onAddSubtask: ((Activity) -> Void)? = nil
+    var reordering: Bool = false
     var cancelledTaskId: UUID? = nil
 
     @State private var isCompleting = false
     @State private var isPressed = false
+    @State private var wiggle = false
 
     private var accent: Color { typeAccent(task.type) }
     private var isGoal: Bool { task.goalTarget != nil && task.goalTarget! > 0 }
@@ -778,7 +825,7 @@ private struct TaskCardView: View {
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(task.title)
-                        .font(.sfProDisplay(19, weight: .semibold))
+                        .font(.sfProDisplay(19, weight: .medium))
                         .foregroundStyle(.primary)
                         .strikethrough(isCompleting, color: .primary)
                         .multilineTextAlignment(.leading)
@@ -792,14 +839,21 @@ private struct TaskCardView: View {
 
                 Spacer(minLength: 8)
 
-                TaskRing(
-                    accent: accent,
-                    icon: task.type.icon,
-                    isGoal: isGoal,
-                    progress: task.progressFraction,
-                    isChecked: isCompleting,
-                    onToggle: ringToggle
-                )
+                if reordering {
+                    Image(systemName: "line.3.horizontal")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 48, height: 48)
+                } else {
+                    TaskRing(
+                        accent: accent,
+                        icon: task.type.icon,
+                        isGoal: isGoal,
+                        progress: task.progressFraction,
+                        isChecked: isCompleting,
+                        onToggle: ringToggle
+                    )
+                }
             }
 
             if !subtasks.isEmpty {
@@ -818,30 +872,42 @@ private struct TaskCardView: View {
         )
         .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .scaleEffect(isPressed ? 0.975 : 1.0)
+        .rotationEffect(.degrees(reordering && wiggle ? -1.1 : 0))
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isPressed)
-        .onTapGesture { Haptics.selection(); onOpen() }
+        .onTapGesture { guard !reordering else { return }; Haptics.selection(); onOpen() }
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)
-                .onChanged { _ in isPressed = true }
+                .onChanged { _ in if !reordering { isPressed = true } }
                 .onEnded { _ in isPressed = false }
         )
-        .contextMenu {
-            Button { onEdit(task) } label: { Label("Изменить", systemImage: "pencil") }
-            if isGoal, let onAddSubtask {
-                Button { onAddSubtask(task) } label: { Label("Добавить подзадачу", systemImage: "plus.circle") }
-            }
-            Button { onTomorrow(task) } label: { Label("На завтра", systemImage: "calendar") }
-            Button(role: .destructive) { onDelete(task) } label: { Label("Удалить", systemImage: "trash") }
+        // Context menu + swipe would fight the drag gesture, so only when idle.
+        .if(!reordering) { view in
+            view
+                .contextMenu {
+                    Button { onEdit(task) } label: { Label("Изменить", systemImage: "pencil") }
+                    if isGoal, let onAddSubtask {
+                        Button { onAddSubtask(task) } label: { Label("Добавить подзадачу", systemImage: "plus.circle") }
+                    }
+                    Button { onTomorrow(task) } label: { Label("На завтра", systemImage: "calendar") }
+                    Button(role: .destructive) { onDelete(task) } label: { Label("Удалить", systemImage: "trash") }
+                }
+                .swipeCardActions(
+                    onComplete: isGoal ? nil : { handleToggle() },
+                    onDelete: { onDelete(task) }
+                )
         }
         .onChange(of: cancelledTaskId) { _, id in
             if id == task.id, isCompleting {
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { isCompleting = false }
             }
         }
-        .swipeCardActions(
-            onComplete: isGoal ? nil : { handleToggle() },
-            onDelete: { onDelete(task) }
-        )
+        .onChange(of: reordering) { _, on in
+            if on {
+                withAnimation(.easeInOut(duration: 0.16).repeatForever(autoreverses: true)) { wiggle = true }
+            } else {
+                wiggle = false
+            }
+        }
     }
 
     private func handleToggle() {
@@ -867,7 +933,7 @@ private struct DoneTaskCard: View {
 
             HStack(spacing: 8) {
                 Text(task.title)
-                    .font(.sfProDisplay(19, weight: .semibold))
+                    .font(.sfProDisplay(19, weight: .medium))
                     .foregroundStyle(.secondary)
                     .strikethrough(true, color: .secondary)
                     .multilineTextAlignment(.leading)
@@ -990,6 +1056,7 @@ private struct SubTaskRow: View {
 private struct BottomButtons: View {
     let onSettings: () -> Void
     let onReorder: () -> Void
+    var reordering: Bool = false
     let onPlus: () -> Void
 
     var body: some View {
@@ -1010,14 +1077,20 @@ private struct BottomButtons: View {
                         .fill(AppColors.separatorLine)
                         .frame(width: 1, height: AppSpacing.buttonSize * 0.75)
                     Button(action: onReorder) {
-                        Image(systemName: "arrow.up.arrow.down")
+                        Image(systemName: reordering ? "checkmark" : "arrow.up.arrow.down")
                             .font(.system(size: 20, weight: .semibold))
-                            .foregroundStyle(.primary)
+                            .foregroundStyle(reordering ? Color(hex: "4580FF") : .primary)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background(
+                                reordering
+                                ? Color(hex: "4580FF").opacity(0.14)
+                                : Color.clear
+                            )
                     }
                 }
             }
             .frame(width: AppSpacing.wideButtonWidth, height: AppSpacing.buttonSize)
+            .clipShape(RoundedRectangle(cornerRadius: 1000))
 
             Spacer()
 

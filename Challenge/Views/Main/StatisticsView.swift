@@ -127,6 +127,11 @@ struct StatisticsView: View {
                             }
                             .appearEffect(delay: 0.45)
 
+                            // Month progress dot grid (same data feeds the
+                            // home-screen month widget)
+                            TasksProgressCard(monthDays: monthDays)
+                                .appearEffect(delay: 0.53)
+
                             // Heatmap
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("Активность")
@@ -134,7 +139,7 @@ struct StatisticsView: View {
                                     .foregroundStyle(.primary)
                                 ActivityHeatmap(dayCounts: dayCounts, tint: blue)
                             }
-                            .appearEffect(delay: 0.53)
+                            .appearEffect(delay: 0.61)
 
                             // Advanced analytics (PRO / Max)
                             ProStatisticsSections(
@@ -143,7 +148,7 @@ struct StatisticsView: View {
                                 isPremium: auth.currentUser?.isPremium == true,
                                 onUnlock: { showPaywall = true }
                             )
-                            .appearEffect(delay: 0.61)
+                            .appearEffect(delay: 0.69)
                         }
                         .padding(.horizontal, 22)
                         .padding(.top, 8)
@@ -171,6 +176,22 @@ struct StatisticsView: View {
         }
         .sheet(isPresented: $showPaywall) {
             NavigationStack { PremiumView() }
+        }
+    }
+
+    /// Per-day goal-met flags for the current month (index i = day i+1), built
+    /// from the loaded check-in counts. A day is "met" when its check-ins reach
+    /// the daily goal; future days stay empty.
+    private var monthDays: [Bool] {
+        let now = Date()
+        guard let interval = calendar.dateInterval(of: .month, for: now) else { return [] }
+        let daysInMonth = calendar.range(of: .day, in: .month, for: now)?.count ?? 30
+        let todayDay = calendar.component(.day, from: now)
+        return (1...daysInMonth).map { day in
+            guard day <= todayDay,
+                  let date = calendar.date(byAdding: .day, value: day - 1, to: interval.start)
+            else { return false }
+            return (dayCounts[calendar.startOfDay(for: date)] ?? 0) >= dailyGoal
         }
     }
 

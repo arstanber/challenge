@@ -18,6 +18,10 @@ struct WidgetSnapshot: Codable {
     var activeCount: Int
     var tasks: [WidgetTask]
     var updatedAt: Date
+    /// Per-day goal-met flags for the CURRENT month: index i = day (i+1).
+    /// Days after today are `false` (the future hasn't happened yet).
+    /// Optional so snapshots written by older app builds still decode.
+    var monthDays: [Bool]?
 
     static let placeholder = WidgetSnapshot(
         streakCurrent: 7,
@@ -30,7 +34,10 @@ struct WidgetSnapshot: Codable {
             WidgetTask(id: UUID(), title: "Read 20 pages", typeIcon: "checkmark.circle.fill", typeColorName: "orange", deadline: nil, isDone: false, requiresPhoto: false),
             WidgetTask(id: UUID(), title: "Drink water", typeIcon: "repeat.circle.fill", typeColorName: "purple", deadline: nil, isDone: false, requiresPhoto: false)
         ],
-        updatedAt: Date()
+        updatedAt: Date(),
+        monthDays: [true, true, false, true, true, true, true, false, true, true,
+                    true, false, true, true, true, true, true, false, true, true,
+                    true, true, false, true, false, false, false, false, false, false]
     )
 }
 

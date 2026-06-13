@@ -27,6 +27,12 @@ final class ActivitiesViewModel {
     var isLoading = false
     var errorMessage: String?
 
+    /// Per-day goal-met flags for the current month (index i = day i+1), used by
+    /// the "Прогресс за месяц" card and the month-progress home-screen widget.
+    /// This is a display heatmap -- the server engine remains the streak source
+    /// of truth; here a day is "met" when its check-ins reach the daily goal.
+    private(set) var monthDays: [Bool] = []
+
     // Done-today state and streaks live in TaskEngine (reports table is the
     // source of truth); these are thin pass-throughs so view code stays small.
     private let engine = TaskEngine.shared
@@ -111,6 +117,7 @@ final class ActivitiesViewModel {
             await replayWidgetCheckins()
             await engine.refreshStreaks()
             applyEngineStreaks()
+            await recomputeMonthDays()
             publishWidgetSnapshot()
         } catch {
             errorMessage = error.localizedDescription
@@ -190,6 +197,51 @@ final class ActivitiesViewModel {
         publishWidgetSnapshot()
     }
 
+    // MARK: - Month progress (heatmap dots)
+
+    /// Recompute per-day goal-met flags for the current month from the reports
+    /// table. A day counts as met when its check-ins reach the daily goal --
+    /// the same denominator the rest of the app shows. Network-backed, so it is
+    /// refreshed on load (not on every optimistic tick); `publishWidgetSnapshot`
+    /// patches today's dot locally in between.
+    func recomputeMonthDays() async {
+        let now = Date()
+        guard let interval = calendar.dateInterval(of: .month, for: now) else { return }
+        let daysInMonth = calendar.range(of: .day, in: .month, for: now)?.count ?? 30
+        let todayDay = calendar.component(.day, from: now)
+        let ids = (myActivities + parentActivities).map(\.id)
+        guard !ids.isEmpty else {
+            monthDays = Array(repeating: false, count: daysInMonth)
+            return
+        }
+        let goal = max(1, dailyStreakGoal)
+        do {
+            struct Row: Decodable {
+                let createdAt: Date
+                enum CodingKeys: String, CodingKey { case createdAt = "created_at" }
+            }
+            let rows: [Row] = try await supabase
+                .from("reports")
+                .select("created_at")
+                .in("activity_id", values: ids.map(\.uuidString))
+                .gte("created_at", value: ISO8601DateFormatter().string(from: interval.start))
+                .execute()
+                .value
+            var counts: [Int: Int] = [:]
+            for r in rows {
+                counts[calendar.component(.day, from: r.createdAt), default: 0] += 1
+            }
+            monthDays = (1...daysInMonth).map { day in
+                day <= todayDay && (counts[day] ?? 0) >= goal
+            }
+        } catch {
+            logger.error("recomputeMonthDays failed: \(error)")
+            if monthDays.count != daysInMonth {
+                monthDays = Array(repeating: false, count: daysInMonth)
+            }
+        }
+    }
+
     // MARK: - Widget snapshot
 
     /// Builds a lightweight snapshot of the current state and writes it to the
@@ -210,6 +262,14 @@ final class ActivitiesViewModel {
                 )
             }
 
+        // Patch today's dot from the live count so the widget reflects a
+        // just-completed task without waiting for the next month recompute.
+        var days = monthDays
+        let todayIdx = calendar.component(.day, from: Date()) - 1
+        if days.indices.contains(todayIdx) {
+            days[todayIdx] = todayDoneTopLevelCount >= dailyStreakGoal
+        }
+
         let snapshot = WidgetSnapshot(
             streakCurrent: globalStreakCurrent,
             streakBest: globalStreakBest,
@@ -217,7 +277,8 @@ final class ActivitiesViewModel {
             dailyGoal: dailyStreakGoal,
             activeCount: activeCount,
             tasks: tasks,
-            updatedAt: Date()
+            updatedAt: Date(),
+            monthDays: days.isEmpty ? nil : days
         )
         WidgetDataStore.save(snapshot)
 

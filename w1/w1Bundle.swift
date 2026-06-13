@@ -7,6 +7,7 @@ struct w1Bundle: WidgetBundle {
         StreakWidget()
         TodayProgressWidget()
         TasksWidget()
+        MonthProgressWidget()
         w1LiveActivity()
     }
 }

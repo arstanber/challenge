@@ -12,6 +12,15 @@ struct WidgetSnapshot: Codable {
     var activeCount: Int
     var tasks: [WidgetTask]
     var updatedAt: Date
+    /// Per-day goal-met flags for the CURRENT month: index i = day (i+1).
+    /// Days after today are `false`. Optional for back-compat with old writers.
+    var monthDays: [Bool]?
+
+    /// 1-based index of today within the month, clamped to the array bounds.
+    var todayDayIndex: Int { Calendar.current.component(.day, from: Date()) }
+
+    /// Days in the month that met the goal so far.
+    var monthDaysMet: Int { (monthDays ?? []).filter { $0 }.count }
 
     var todayProgress: Double {
         guard dailyGoal > 0 else { return 0 }
@@ -41,7 +50,10 @@ struct WidgetSnapshot: Codable {
             WidgetTask(id: UUID(), title: "Read 20 pages", typeIcon: "checkmark.circle.fill", typeColorName: "orange", deadline: nil, isDone: false, requiresPhoto: false),
             WidgetTask(id: UUID(), title: "Drink water", typeIcon: "repeat.circle.fill", typeColorName: "purple", deadline: nil, isDone: false, requiresPhoto: false)
         ],
-        updatedAt: Date()
+        updatedAt: Date(),
+        monthDays: [true, true, false, true, true, true, true, false, true, true,
+                    true, false, true, true, true, true, true, false, true, true,
+                    true, true, false, true, false, false, false, false, false, false]
     )
 
     static let empty = WidgetSnapshot(
@@ -51,7 +63,8 @@ struct WidgetSnapshot: Codable {
         dailyGoal: 3,
         activeCount: 0,
         tasks: [],
-        updatedAt: Date()
+        updatedAt: Date(),
+        monthDays: nil
     )
 }
 
