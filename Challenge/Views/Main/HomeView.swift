@@ -299,7 +299,7 @@ struct HomeView: View {
 
                         if !upcomingTasks.isEmpty {
                             Text("Скоро")
-                                .font(.system(size: 13, weight: .semibold))
+                                .font(.sfProDisplay(13, weight: .semibold))
                                 .foregroundStyle(.secondary)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(.horizontal, 4)
@@ -340,7 +340,7 @@ struct HomeView: View {
         // "The Challenge." tucked under the Dynamic Island
         .overlay(alignment: .top) {
             Text("The Challenge.")
-                .font(.system(size: 16, weight: .medium))
+                .font(.sfProDisplay(16, weight: .medium))
                 .foregroundStyle(.primary)
                 .padding(.top, 14)
                 .ignoresSafeArea(.container, edges: .top)
@@ -638,16 +638,16 @@ private struct HomeHeader: View {
         HStack(spacing: 8) {
             HStack(spacing: 6) {
                 Text("Сегодня,")
-                    .font(.system(size: 24, weight: .semibold))
+                    .font(.sfProDisplay(24, weight: .semibold))
                     .foregroundStyle(.primary)
                 Text(dateLabel)
-                    .font(.system(size: 24, weight: .semibold))
+                    .font(.sfProDisplay(24, weight: .semibold))
                     .foregroundStyle(.secondary)
             }
 
             if count > 0 {
                 Text("\(count)")
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.sfProDisplay(14, weight: .bold))
                     .foregroundColor(.white)
                     .frame(minWidth: 26, minHeight: 26)
                     .padding(.horizontal, 4)
@@ -662,7 +662,7 @@ private struct HomeHeader: View {
                     .symbolEffect(.bounce, value: streak)
                     .scaleEffect(allDone && flamePulse ? 1.12 : 1.0)
                 Text("\(streak)")
-                    .font(.system(size: 19, weight: .bold))
+                    .font(.sfProDisplay(19, weight: .bold))
                     .contentTransition(.numericText())
             }
             .foregroundStyle(flameColor)
@@ -687,10 +687,10 @@ private struct EmptyTodayView: View {
         VStack(spacing: 12) {
             Text("✨").font(.system(size: 48))
             Text("На сегодня всё")
-                .font(.system(size: 18, weight: .semibold))
+                .font(.sfProDisplay(18, weight: .semibold))
                 .foregroundStyle(.primary)
             Text("Добавьте задачу кнопками ниже")
-                .font(.system(size: 14))
+                .font(.sfProDisplay(14))
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
@@ -708,17 +708,17 @@ private struct FreezeYesterdayBanner: View {
             Text("🧊").font(.system(size: 30))
             VStack(alignment: .leading, spacing: 3) {
                 Text("Серия прервалась?")
-                    .font(.system(size: 16, weight: .bold))
+                    .font(.sfProDisplay(16, weight: .bold))
                     .foregroundStyle(.primary)
                 Text("Заморозь вчерашний день -- осталось \(remaining)")
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.sfProDisplay(13, weight: .medium))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 8)
             Button(action: onFreeze) {
                 Text("Заморозить")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.sfProDisplay(14, weight: .semibold))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 16).padding(.vertical, 10)
                     .background(Capsule().fill(Color(hex: "4580FF")))
@@ -778,14 +778,14 @@ private struct TaskCardView: View {
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(task.title)
-                        .font(.system(size: 19, weight: .semibold))
+                        .font(.sfProDisplay(19, weight: .semibold))
                         .foregroundStyle(.primary)
                         .strikethrough(isCompleting, color: .primary)
                         .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
                     if let subtitle {
                         Text(subtitle)
-                            .font(.system(size: 14, weight: .medium))
+                            .font(.sfProDisplay(14, weight: .medium))
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -867,14 +867,14 @@ private struct DoneTaskCard: View {
 
             HStack(spacing: 8) {
                 Text(task.title)
-                    .font(.system(size: 19, weight: .semibold))
+                    .font(.sfProDisplay(19, weight: .semibold))
                     .foregroundStyle(.secondary)
                     .strikethrough(true, color: .secondary)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
                 if task.type.hasStreak && task.streakCurrent > 0 {
                     Text("🔥\(task.streakCurrent)")
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.sfProDisplay(14, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
             }
@@ -963,7 +963,7 @@ private struct SubTaskRow: View {
     var body: some View {
         HStack(spacing: 14) {
             Text(subtask.title)
-                .font(.system(size: 16, weight: .medium))
+                .font(.sfProDisplay(16, weight: .medium))
                 .foregroundStyle(.primary)
                 .strikethrough(isCompleting, color: .primary)
                 .frame(maxWidth: .infinity, alignment: .leading)
