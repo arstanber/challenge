@@ -22,7 +22,7 @@ struct PushNotificationsOnboardingView: View {
         ZStack(alignment: .topLeading) {
             // Brand illustration, full-bleed.
             GeometryReader { geo in
-                Image("cat_hero")
+                Image("pushes")
                     .resizable()
                     .scaledToFill()
                     .frame(width: geo.size.width, height: geo.size.height)
