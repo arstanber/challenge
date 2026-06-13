@@ -36,9 +36,32 @@ struct AIVerificationResponse: Decodable {
     enum CodingKeys: CodingKey { case approved, excused, explanation, remaining }
 }
 
+private struct SuggestConditionRequest: Encodable {
+    let title: String
+    let description: String
+}
+
+private struct SuggestConditionResponse: Decodable {
+    let condition: String
+}
+
 final class AIVerificationService {
     static let shared = AIVerificationService()
     private init() {}
+
+    /// Asks the AI what photo proves a task from its title/description.
+    /// Returns nil if the server is unavailable or quota is exhausted.
+    func suggestCondition(title: String, description: String = "") async -> String? {
+        let body = SuggestConditionRequest(title: title, description: description)
+        do {
+            let resp: SuggestConditionResponse = try await supabase.functions
+                .invoke("suggest-condition", options: FunctionInvokeOptions(body: body))
+            let trimmed = resp.condition.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmed.isEmpty ? nil : trimmed
+        } catch {
+            return nil
+        }
+    }
 
     func verify(
         reportId: UUID,

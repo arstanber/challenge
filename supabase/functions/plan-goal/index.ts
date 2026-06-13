@@ -1,4 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 interface QuestionsRequest {
   goal_description: string;
@@ -26,6 +27,24 @@ Deno.serve(async (req: Request) => {
       headers: { "Content-Type": "application/json" },
     });
   }
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+
+  // Authenticate the caller and enforce the monthly quota -- this is an
+  // Anthropic-key-backed endpoint and must never be open.
+  const authHeader = req.headers.get("Authorization") ?? "";
+  const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+    global: { headers: { Authorization: authHeader } },
+  });
+  const { data: { user }, error: authError } = await anonClient.auth.getUser();
+  if (authError || !user) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  const adminClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
   let body: unknown;
   try {
@@ -56,6 +75,25 @@ Deno.serve(async (req: Request) => {
       console.log("Claude response (first 150):", text.slice(0, 150));
       return jsonResponse(JSON.parse(cleanJson(text)));
     } else {
+      // Phase 2 (the actual plan) is the metered unit -- one per goal.
+      const month = new Date().toISOString().slice(0, 7);
+      const { data: quota, error: quotaError } = await adminClient.rpc("check_and_increment_usage", {
+        p_user_id: user.id,
+        p_feature: "plan-goal",
+        p_month: month,
+      });
+      if (quotaError) {
+        console.error("rate limit rpc error:", quotaError);
+        return new Response(JSON.stringify({ error: "Internal error" }), {
+          status: 500, headers: { "Content-Type": "application/json" },
+        });
+      }
+      if (!quota.allowed) {
+        return new Response(JSON.stringify({ error: "rate_limit_exceeded", remaining: 0, limit: quota.limit }), {
+          status: 429, headers: { "Content-Type": "application/json" },
+        });
+      }
+
       const { goal_description, answers } = body as PlanRequest;
       console.log("Phase 2, model:", MODEL, "answers:", answers.length);
 

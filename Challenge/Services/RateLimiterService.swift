@@ -5,17 +5,19 @@ import os.log
 private let logger = Logger(subsystem: "com.challenge", category: "RateLimiterService")
 
 enum AIFeature: String {
-    case verifyReport = "verify-report"
-    case parseTasks   = "parse-tasks"
-    case morningBrief = "morning-brief"
-    case planGoal     = "plan-goal"
+    case verifyReport     = "verify-report"
+    case parseTasks       = "parse-tasks"
+    case morningBrief     = "morning-brief"
+    case planGoal         = "plan-goal"
+    case suggestCondition = "suggest-condition"
 
     var usageKey: String {
         switch self {
-        case .verifyReport: return "verify-report"
-        case .parseTasks:   return "parse-tasks-group"
-        case .morningBrief: return "coach-group"
-        case .planGoal:     return "plan-goal"
+        case .verifyReport:     return "verify-report"
+        case .parseTasks:       return "parse-tasks-group"
+        case .morningBrief:     return "coach-group"
+        case .planGoal:         return "plan-goal"
+        case .suggestCondition: return "suggest-condition"
         }
     }
 
@@ -31,6 +33,8 @@ enum AIFeature: String {
             switch plan { case .free: return 1;  case .premium: return 10; case .family: return 10; case .max: return 30 }
         case .planGoal:
             switch plan { case .free: return 3;  case .premium: return 15; case .family: return 15; case .max: return 50 }
+        case .suggestCondition:
+            switch plan { case .free: return 10; case .premium: return 50; case .family: return 50; case .max: return 150 }
         }
     }
 }

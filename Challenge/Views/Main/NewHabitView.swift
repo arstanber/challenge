@@ -34,6 +34,7 @@ struct NewHabitView: View {
     @State private var photoDesc: String
     @State private var showPalette = false
     @State private var creating = false
+    @State private var suggestingCondition = false
 
     init(draft: HabitDraft, vm: ActivitiesViewModel, onCreated: @escaping () -> Void = {}) {
         self.vm = vm
@@ -274,6 +275,23 @@ struct NewHabitView: View {
                     Image(systemName: "camera.fill").font(.system(size: 18)).foregroundStyle(tint)
                     Text("Фото-подтверждение").font(.system(size: 19, weight: .medium)).foregroundStyle(.primary)
                     Spacer()
+                    Button {
+                        Task { await suggestCondition() }
+                    } label: {
+                        HStack(spacing: 5) {
+                            if suggestingCondition {
+                                ProgressView().controlSize(.small).tint(tint)
+                            } else {
+                                Image(systemName: "sparkles").font(.system(size: 13, weight: .bold))
+                            }
+                            Text("Подобрать").font(.manrope(.semiBold, size: 13))
+                        }
+                        .foregroundStyle(tint)
+                        .padding(.horizontal, 12).padding(.vertical, 7)
+                        .background(Capsule().fill(tint.opacity(0.12)))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(suggestingCondition || title.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
                 Rectangle().fill(Color.primary.opacity(0.1)).frame(height: 1)
                 TextField("", text: $photoDesc,
@@ -354,6 +372,22 @@ struct NewHabitView: View {
             Image(systemName: "chevron.up.chevron.down")
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(.tertiary)
+        }
+    }
+
+    private func suggestCondition() async {
+        let name = title.trimmingCharacters(in: .whitespaces)
+        guard !name.isEmpty, !suggestingCondition else { return }
+        Haptics.tap()
+        suggestingCondition = true
+        defer { suggestingCondition = false }
+        if let suggestion = await AIVerificationService.shared.suggestCondition(title: name) {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                photoDesc = suggestion
+            }
+            Haptics.success()
+        } else {
+            Haptics.warning()
         }
     }
 
