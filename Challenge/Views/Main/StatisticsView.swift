@@ -24,6 +24,8 @@ struct StatisticsView: View {
     @State private var showPaywall = false
     @State private var engine = GamificationEngine.shared
     @State private var auth = AuthService.shared
+    /// Loaded for the "today's tasks" glance card (titles + done state).
+    @State private var widgetSnapshot: WidgetSnapshot?
 
     private let blue = Color(red: 0.0, green: 0.282, blue: 0.886)
     private let calendar = Calendar.current
@@ -127,10 +129,24 @@ struct StatisticsView: View {
                             }
                             .appearEffect(delay: 0.45)
 
+                            // Glance cards: today's progress + today's tasks
+                            HStack(spacing: 12) {
+                                ProgressTodayCard(percentText: todayPercentText, motivation: motivationText)
+                                TodayTasksCard(subtitle: "На сегодня", titles: pendingTitles)
+                            }
+                            .frame(height: 184)
+                            .appearEffect(delay: 0.5)
+
                             // Month progress dot grid (same data feeds the
                             // home-screen month widget)
                             TasksProgressCard(monthDays: monthDays)
                                 .appearEffect(delay: 0.53)
+
+                            // Performance: weekly completion bars + 30-day growth
+                            PerformanceCard(rates: weekRates,
+                                            headline: performanceHeadline,
+                                            subtitle: performanceSubtitle)
+                                .appearEffect(delay: 0.57)
 
                             // Heatmap
                             VStack(alignment: .leading, spacing: 12) {
@@ -195,9 +211,65 @@ struct StatisticsView: View {
         }
     }
 
+    // MARK: - Glance card values
+
+    private var todayCheckins: Int { dayCounts[calendar.startOfDay(for: Date())] ?? 0 }
+
+    private var todayPercentText: String {
+        let v = Double(todayCheckins) / Double(max(1, dailyGoal)) * 100
+        let rounded = (v * 10).rounded() / 10
+        if rounded == rounded.rounded() { return "\(Int(rounded))%" }
+        return String(format: "%.1f", rounded).replacingOccurrences(of: ".", with: ",") + "%"
+    }
+
+    private var motivationText: String {
+        if todayCheckins == 0 { return "Начни день 💪" }
+        if todayCheckins >= dailyGoal { return "Цель достигнута ✅" }
+        return "Так держать 🔥"
+    }
+
+    private var pendingTitles: [String] {
+        (widgetSnapshot?.tasks ?? []).filter { !$0.isDone }.map(\.title)
+    }
+
+    /// Completion rate per week for the last 6 weeks (index 0 = oldest), each =
+    /// that week's check-ins / (dailyGoal * 7).
+    private var weekRates: [Double] {
+        let today = calendar.startOfDay(for: Date())
+        let goal = max(1, dailyGoal)
+        var counts = Array(repeating: 0, count: 6)
+        for d in reportDates {
+            let offset = calendar.dateComponents([.day], from: calendar.startOfDay(for: d), to: today).day ?? -1
+            if offset >= 0 && offset < 42 { counts[5 - offset / 7] += 1 }
+        }
+        return counts.map { Double($0) / Double(goal * 7) }
+    }
+
+    private var checkins30: (last: Int, prev: Int) {
+        let today = calendar.startOfDay(for: Date())
+        var last = 0, prev = 0
+        for d in reportDates {
+            let offset = calendar.dateComponents([.day], from: calendar.startOfDay(for: d), to: today).day ?? -1
+            if offset >= 0 && offset < 30 { last += 1 } else if offset >= 30 && offset < 60 { prev += 1 }
+        }
+        return (last, prev)
+    }
+
+    private var performanceHeadline: String {
+        let c = checkins30
+        guard c.prev > 0 else { return "\(c.last)" }
+        let pct = Int(((Double(c.last) - Double(c.prev)) / Double(c.prev) * 100).rounded())
+        return (pct >= 0 ? "+" : "") + "\(pct)%"
+    }
+
+    private var performanceSubtitle: String {
+        checkins30.prev > 0 ? "За последние 30 дней" : "Отметок за 30 дней"
+    }
+
     // MARK: - Data
 
     private func load() async {
+        widgetSnapshot = WidgetDataStore.load()
         guard let user = AuthService.shared.currentUser else { isLoading = false; return }
         do {
             // 1. User's activity ids + completed count

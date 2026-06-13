@@ -33,6 +33,13 @@ final class ActivitiesViewModel {
     /// of truth; here a day is "met" when its check-ins reach the daily goal.
     private(set) var monthDays: [Bool] = []
 
+    /// Weekly completion rates (last 6 weeks, index 0 = oldest) and 30-day
+    /// check-in counts feeding the performance card / widget. Display metrics --
+    /// the server stays authoritative for streaks.
+    private(set) var weekRates: [Double] = []
+    private(set) var last30Checkins = 0
+    private(set) var prev30Checkins = 0
+
     // Done-today state and streaks live in TaskEngine (reports table is the
     // source of truth); these are thin pass-throughs so view code stays small.
     private let engine = TaskEngine.shared
@@ -118,6 +125,7 @@ final class ActivitiesViewModel {
             await engine.refreshStreaks()
             applyEngineStreaks()
             await recomputeMonthDays()
+            await recomputePerformance()
             publishWidgetSnapshot()
         } catch {
             errorMessage = error.localizedDescription
@@ -242,6 +250,49 @@ final class ActivitiesViewModel {
         }
     }
 
+    // MARK: - Performance (weekly bars + 30-day growth)
+
+    /// Recompute weekly completion rates for the last 6 weeks plus the trailing
+    /// 30-day vs prior-30-day check-in counts, from the reports table.
+    func recomputePerformance() async {
+        let cal = calendar
+        let today = cal.startOfDay(for: Date())
+        let ids = (myActivities + parentActivities).map(\.id)
+        guard !ids.isEmpty, let windowStart = cal.date(byAdding: .day, value: -59, to: today) else {
+            weekRates = []; last30Checkins = 0; prev30Checkins = 0
+            return
+        }
+        let goal = max(1, dailyStreakGoal)
+        do {
+            struct Row: Decodable {
+                let createdAt: Date
+                enum CodingKeys: String, CodingKey { case createdAt = "created_at" }
+            }
+            let rows: [Row] = try await supabase
+                .from("reports")
+                .select("created_at")
+                .in("activity_id", values: ids.map(\.uuidString))
+                .gte("created_at", value: ISO8601DateFormatter().string(from: windowStart))
+                .execute()
+                .value
+
+            var weekCounts = Array(repeating: 0, count: 6)
+            var last30 = 0, prev30 = 0
+            for r in rows {
+                let day = cal.startOfDay(for: r.createdAt)
+                let offset = cal.dateComponents([.day], from: day, to: today).day ?? 0
+                guard offset >= 0 else { continue }
+                if offset < 30 { last30 += 1 } else if offset < 60 { prev30 += 1 }
+                if offset < 42 { weekCounts[5 - offset / 7] += 1 }
+            }
+            weekRates = weekCounts.map { Double($0) / Double(goal * 7) }
+            last30Checkins = last30
+            prev30Checkins = prev30
+        } catch {
+            logger.error("recomputePerformance failed: \(error)")
+        }
+    }
+
     // MARK: - Widget snapshot
 
     /// Builds a lightweight snapshot of the current state and writes it to the
@@ -278,7 +329,10 @@ final class ActivitiesViewModel {
             activeCount: activeCount,
             tasks: tasks,
             updatedAt: Date(),
-            monthDays: days.isEmpty ? nil : days
+            monthDays: days.isEmpty ? nil : days,
+            weekRates: weekRates.isEmpty ? nil : weekRates,
+            last30Checkins: last30Checkins,
+            prev30Checkins: prev30Checkins
         )
         WidgetDataStore.save(snapshot)
 

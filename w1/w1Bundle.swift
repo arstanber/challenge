@@ -8,6 +8,9 @@ struct w1Bundle: WidgetBundle {
         TodayProgressWidget()
         TasksWidget()
         MonthProgressWidget()
+        ProgressTodayWidget()
+        TodayTasksWidget()
+        PerformanceWidget()
         w1LiveActivity()
     }
 }

@@ -22,6 +22,13 @@ struct WidgetSnapshot: Codable {
     /// Days after today are `false` (the future hasn't happened yet).
     /// Optional so snapshots written by older app builds still decode.
     var monthDays: [Bool]?
+    /// Weekly completion rates for the last 6 weeks (index 0 = oldest), each =
+    /// week's check-ins / (dailyGoal * 7); can exceed 1.0 on big weeks.
+    var weekRates: [Double]?
+    /// Check-in counts for the trailing 30 days and the 30 days before that --
+    /// the performance card derives an honest growth %.
+    var last30Checkins: Int?
+    var prev30Checkins: Int?
 
     static let placeholder = WidgetSnapshot(
         streakCurrent: 7,
@@ -37,7 +44,10 @@ struct WidgetSnapshot: Codable {
         updatedAt: Date(),
         monthDays: [true, true, false, true, true, true, true, false, true, true,
                     true, false, true, true, true, true, true, false, true, true,
-                    true, true, false, true, false, false, false, false, false, false]
+                    true, true, false, true, false, false, false, false, false, false],
+        weekRates: [0.12, 0.78, 0.62, 0.70, 0.75, 1.05],
+        last30Checkins: 76,
+        prev30Checkins: 20
     )
 }
 
