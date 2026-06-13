@@ -96,7 +96,9 @@ serve(async (req) => {
     const apnsPayload = {
       aps: {
         alert: { title, body: body ?? "" },
-        sound: "default",
+        // Branded chime bundled in the app; old clients without the file fall
+        // back to the system default automatically.
+        sound: "chime.caf",
         badge: 1,
       },
       ...(data ?? {}),
