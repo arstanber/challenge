@@ -385,16 +385,15 @@ struct SettingsView: View {
             }
             .padding(.top, 6)
 
-            // star2 ships as a near-white shape (invisible on the light footer),
-            // so render it as a template tinted to an adaptive, softly-visible
-            // grey that reads on both light and dark backgrounds.
+            // star2 is a white shape -- invisible on the light footer on its own.
+            // A soft even shadow haloes its edges so the white star reads on
+            // light backgrounds while staying white (and stays fine on dark).
             Image("star2")
-                .renderingMode(.template)
                 .resizable()
                 .scaledToFit()
                 .frame(width: 200)
-                .foregroundStyle(Color.primary.opacity(0.10))
                 .frame(maxWidth: .infinity)   // centre under the links
+                .shadow(color: .black.opacity(0.22), radius: 7)
                 .padding(.top, 20)
         }
         .frame(maxWidth: .infinity)
