@@ -4,7 +4,7 @@ import PostgREST
 import Observation
 import os.log
 
-private let logger = Logger(subsystem: "com.challenge", category: "TaskEngine")
+private let logger = Logger(subsystem: "com.reinspire", category: "TaskEngine")
 
 /// Single owner of "done today" state and streaks.
 ///

@@ -4,7 +4,7 @@ import PostgREST
 import Observation
 import os.log
 
-private let logger = Logger(subsystem: "com.challenge", category: "ReferralService")
+private let logger = Logger(subsystem: "com.reinspire", category: "ReferralService")
 
 /// Referral program client. The server owns all accounting
 /// (20260612c_referrals.sql): codes, one-shot redemption, reward claims,

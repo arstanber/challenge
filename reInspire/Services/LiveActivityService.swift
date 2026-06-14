@@ -2,7 +2,7 @@ import ActivityKit
 import Foundation
 import os.log
 
-private let logger = Logger(subsystem: "com.challenge", category: "LiveActivityService")
+private let logger = Logger(subsystem: "com.reinspire", category: "LiveActivityService")
 
 // MARK: - LiveActivityService (#20)
 // Note: We use ActivityKit.Activity<T> explicitly because the app already

@@ -2,7 +2,7 @@ import Foundation
 import Observation
 import os.log
 
-private let logger = Logger(subsystem: "com.challenge", category: "FocusBlockService")
+private let logger = Logger(subsystem: "com.reinspire", category: "FocusBlockService")
 
 #if canImport(FamilyControls)
 import FamilyControls

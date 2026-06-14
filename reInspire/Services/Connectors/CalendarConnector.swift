@@ -2,7 +2,7 @@ import Foundation
 import EventKit
 import os.log
 
-private let logger = Logger(subsystem: "com.challenge", category: "CalendarConnector")
+private let logger = Logger(subsystem: "com.reinspire", category: "CalendarConnector")
 
 /// Reads today's events from the user's Apple calendars via EventKit.
 /// Read-only. Requires `NSCalendarsFullAccessUsageDescription`.

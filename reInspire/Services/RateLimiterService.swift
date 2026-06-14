@@ -2,7 +2,7 @@ import Foundation
 import Supabase
 import os.log
 
-private let logger = Logger(subsystem: "com.challenge", category: "RateLimiterService")
+private let logger = Logger(subsystem: "com.reinspire", category: "RateLimiterService")
 
 enum AIFeature: String {
     case verifyReport     = "verify-report"

@@ -8,7 +8,7 @@ struct AppIconPickerView: View {
     @State private var current = UIApplication.shared.alternateIconName
     @State private var errorMessage: String?
 
-    private let logger = Logger(subsystem: "com.challenge", category: "AppIconPickerView")
+    private let logger = Logger(subsystem: "com.reinspire", category: "AppIconPickerView")
 
     /// nil iconName = the primary icon.
     private let options: [(iconName: String?, preview: String, title: String)] = [

@@ -5,7 +5,7 @@ import PostgREST
 import Observation
 import os.log
 
-private let logger = Logger(subsystem: "com.challenge", category: "GoalPlannerViewModel")
+private let logger = Logger(subsystem: "com.reinspire", category: "GoalPlannerViewModel")
 
 @Observable
 final class GoalPlannerViewModel {

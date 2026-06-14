@@ -11,7 +11,7 @@ import GoogleSignIn
 #endif
 import os.log
 
-private let authLogger = Logger(subsystem: "com.challenge", category: "AuthService")
+private let authLogger = Logger(subsystem: "com.reinspire", category: "AuthService")
 private let welcomeIntroKey = "needsWelcomeIntro"
 
 enum AuthError: LocalizedError {

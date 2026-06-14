@@ -30,7 +30,7 @@ final class CloudSyncService {
 
     private let store = NSUbiquitousKeyValueStore.default
     private let defaults = UserDefaults.standard
-    private let logger = Logger(subsystem: "com.challenge", category: "CloudSyncService")
+    private let logger = Logger(subsystem: "com.reinspire", category: "CloudSyncService")
     private var isApplyingRemote = false
     private var started = false
 

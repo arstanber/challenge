@@ -2,7 +2,7 @@ import Foundation
 import WidgetKit
 import os.log
 
-private let widgetLogger = Logger(subsystem: "com.challenge", category: "WidgetDataStore")
+private let widgetLogger = Logger(subsystem: "com.reinspire", category: "WidgetDataStore")
 
 // MARK: - Shared snapshot model
 // NOTE: This struct is intentionally duplicated in the widget extension

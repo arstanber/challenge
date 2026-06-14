@@ -6,7 +6,7 @@ import PostgREST
 import Observation
 import os.log
 
-private let notifLogger = Logger(subsystem: "com.challenge", category: "NotificationService")
+private let notifLogger = Logger(subsystem: "com.reinspire", category: "NotificationService")
 
 @Observable
 final class NotificationService: NSObject {

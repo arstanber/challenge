@@ -3,7 +3,7 @@ import Supabase
 import PostgREST
 import os.log
 
-private let logger = Logger(subsystem: "com.challenge", category: "DoneTasksView")
+private let logger = Logger(subsystem: "com.reinspire", category: "DoneTasksView")
 
 // MARK: - Main View
 

@@ -4,7 +4,7 @@ import PostgREST
 import Observation
 import os.log
 
-private let logger = Logger(subsystem: "com.challenge", category: "DuelService")
+private let logger = Logger(subsystem: "com.reinspire", category: "DuelService")
 
 /// Friend duels client. All mutations go through SECURITY DEFINER RPCs
 /// (create_duel / join_duel / cancel_duel / finish_duel_if_due); the list

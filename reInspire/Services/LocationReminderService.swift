@@ -3,7 +3,7 @@ import CoreLocation
 import UserNotifications
 import os.log
 
-private let logger = Logger(subsystem: "com.challenge", category: "LocationReminderService")
+private let logger = Logger(subsystem: "com.reinspire", category: "LocationReminderService")
 
 // MARK: - Location Reminder Service (#10)
 // Schedules geofence-triggered local notifications ("remind me when I arrive").

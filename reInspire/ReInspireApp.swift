@@ -88,7 +88,7 @@ struct RootView: View {
 }
 
 final class AppDelegate: NSObject, UIApplicationDelegate {
-    private let logger = Logger(subsystem: "com.challenge", category: "AppDelegate")
+    private let logger = Logger(subsystem: "com.reinspire", category: "AppDelegate")
     func application(
         _ application: UIApplication,
         didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data

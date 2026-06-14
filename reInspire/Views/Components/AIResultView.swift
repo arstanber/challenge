@@ -39,7 +39,7 @@ struct AIResultView: View {
 #Preview {
     VStack {
         AIResultView(result: .approved, explanation: "The photo clearly shows you at a gym performing exercises.")
-        AIResultView(result: .rejected, explanation: "The photo does not match the challenge condition.")
+        AIResultView(result: .rejected, explanation: "The photo does not match the task condition.")
         AIResultView(result: .pending, explanation: nil)
     }
     .padding()

@@ -2,7 +2,7 @@ import Foundation
 import UserNotifications
 import os.log
 
-private let logger = Logger(subsystem: "com.challenge", category: "ClockConnector")
+private let logger = Logger(subsystem: "com.reinspire", category: "ClockConnector")
 
 /// "Smart morning reminder" -- a daily local notification at 08:00 that nudges the
 /// user to start today's first task. Connecting requests notification permission

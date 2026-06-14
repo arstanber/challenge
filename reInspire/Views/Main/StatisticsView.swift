@@ -3,7 +3,7 @@ import Supabase
 import PostgREST
 import os.log
 
-private let logger = Logger(subsystem: "com.challenge", category: "StatisticsView")
+private let logger = Logger(subsystem: "com.reinspire", category: "StatisticsView")
 
 // MARK: - Statistics screen
 

@@ -4,7 +4,7 @@ import Observation
 import UIKit
 import os.log
 
-private let mcLogger = Logger(subsystem: "com.challenge", category: "FamilyConnect")
+private let mcLogger = Logger(subsystem: "com.reinspire", category: "FamilyConnect")
 
 /// Shake-to-connect family pairing over MultipeerConnectivity.
 ///

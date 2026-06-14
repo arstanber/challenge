@@ -5,7 +5,7 @@ import Supabase
 import PostgREST
 import os.log
 
-private let storeLogger = Logger(subsystem: "com.challenge", category: "StoreService")
+private let storeLogger = Logger(subsystem: "com.reinspire", category: "StoreService")
 
 @Observable
 final class StoreService {

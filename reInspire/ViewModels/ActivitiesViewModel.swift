@@ -4,7 +4,7 @@ import PostgREST
 import Observation
 import os.log
 
-private let logger = Logger(subsystem: "com.challenge", category: "ActivitiesViewModel")
+private let logger = Logger(subsystem: "com.reinspire", category: "ActivitiesViewModel")
 
 // MARK: - Plan Group model
 
