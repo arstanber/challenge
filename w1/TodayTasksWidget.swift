@@ -34,12 +34,15 @@ struct TodayTasksWidgetView: View {
                     .font(.system(size: 18, weight: .bold, design: .rounded))
                     .foregroundStyle(.primary)
             } else {
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 5) {
                     ForEach(Array(pending.prefix(3).enumerated()), id: \.offset) { _, title in
                         Text(title)
-                            .font(.system(size: 18, weight: .semibold, design: .rounded))
+                            .font(.system(size: 16, weight: .semibold, design: .rounded))
                             .foregroundStyle(.primary)
-                            .lineLimit(1)
+                            // Long titles wrap onto a second line instead of
+                            // truncating with an ellipsis.
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
                 if pending.count > 3 {

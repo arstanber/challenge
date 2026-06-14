@@ -151,6 +151,50 @@ struct PerformanceCard: View {
     }
 }
 
+/// Premium-gated placeholder shown to free users in place of PerformanceCard.
+struct PerformanceLockedCard: View {
+    private let accent = Color(hex: "1A5AE5")
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("PERFORMANCE")
+                .font(.manrope(.semiBold, size: 12))
+                .foregroundStyle(Color(.systemBackground))
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(Capsule().fill(Color.primary))
+
+            Image(systemName: "lock.fill")
+                .font(.system(size: 30, weight: .semibold))
+                .foregroundStyle(accent)
+                .padding(.top, 18)
+
+            Text("Аналитика Pro")
+                .font(.manrope(.bold, size: 22))
+                .foregroundStyle(.primary)
+                .padding(.top, 10)
+
+            Text("Тренд за 6 недель и рост за 30 дней -- на Pro и Max.")
+                .font(.manrope(.medium, size: 14))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 4)
+
+            HStack(spacing: 6) {
+                Text("Разблокировать")
+                    .font(.manrope(.semiBold, size: 13))
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 11, weight: .semibold))
+            }
+            .foregroundStyle(accent)
+            .padding(.top, 14)
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glanceCardBackground(cornerRadius: 28)
+    }
+}
+
 private struct BarChart: View {
     let rates: [Double]
     let barColor: Color

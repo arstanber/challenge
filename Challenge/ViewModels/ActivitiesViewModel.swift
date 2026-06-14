@@ -332,7 +332,8 @@ final class ActivitiesViewModel {
             monthDays: days.isEmpty ? nil : days,
             weekRates: weekRates.isEmpty ? nil : weekRates,
             last30Checkins: last30Checkins,
-            prev30Checkins: prev30Checkins
+            prev30Checkins: prev30Checkins,
+            isPremium: authService.currentUser?.isPremium ?? false
         )
         WidgetDataStore.save(snapshot)
 

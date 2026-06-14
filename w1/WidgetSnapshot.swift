@@ -21,6 +21,8 @@ struct WidgetSnapshot: Codable {
     /// Check-in counts for the trailing 30 days and the 30 before that.
     var last30Checkins: Int?
     var prev30Checkins: Int?
+    /// Gates the premium-only Performance widget. Optional for back-compat.
+    var isPremium: Bool?
 
     /// 1-based index of today within the month, clamped to the array bounds.
     var todayDayIndex: Int { Calendar.current.component(.day, from: Date()) }
@@ -69,7 +71,8 @@ struct WidgetSnapshot: Codable {
                     true, true, false, true, false, false, false, false, false, false],
         weekRates: [0.12, 0.78, 0.62, 0.70, 0.75, 1.05],
         last30Checkins: 76,
-        prev30Checkins: 20
+        prev30Checkins: 20,
+        isPremium: true
     )
 
     static let empty = WidgetSnapshot(
@@ -83,7 +86,8 @@ struct WidgetSnapshot: Codable {
         monthDays: nil,
         weekRates: nil,
         last30Checkins: nil,
-        prev30Checkins: nil
+        prev30Checkins: nil,
+        isPremium: nil
     )
 }
 

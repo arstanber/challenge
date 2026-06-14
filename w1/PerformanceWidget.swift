@@ -22,6 +22,7 @@ struct PerformanceWidgetView: View {
     private let accent = Color(red: 0.102, green: 0.353, blue: 0.898) // #1A5AE5
 
     private var rates: [Double] { snapshot.weekRates ?? [] }
+    private var isLocked: Bool { !(snapshot.isPremium ?? false) }
 
     private var headline: String {
         if let pct = snapshot.performanceGrowthPercent {
@@ -35,6 +36,43 @@ struct PerformanceWidgetView: View {
     }
 
     var body: some View {
+        if isLocked { locked } else { unlocked }
+    }
+
+    private var locked: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("PERFORMANCE")
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .foregroundStyle(Color(.systemBackground))
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(Capsule().fill(Color.primary))
+
+            Spacer()
+            VStack(alignment: .leading, spacing: 10) {
+                Image(systemName: "lock.fill")
+                    .font(.system(size: 30, weight: .semibold))
+                    .foregroundStyle(accent)
+                Text("A Pro feature")
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .foregroundStyle(.primary)
+                Text("Unlock your 6-week trend and 30-day growth with Pro or Max.")
+                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer()
+
+            HStack {
+                Spacer()
+                Text("The Challenge")
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.primary)
+            }
+        }
+    }
+
+    private var unlocked: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("PERFORMANCE")
                 .font(.system(size: 12, weight: .semibold, design: .rounded))

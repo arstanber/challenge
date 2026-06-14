@@ -11,7 +11,9 @@ struct MonthProgressWidget: Widget {
         }
         .configurationDisplayName("Month Progress")
         .description("A dot for every day this month -- filled when you hit the goal.")
-        .supportedFamilies([.systemMedium, .systemLarge])
+        // Medium only: the dot grid is a wide 10-column layout (June = 3x10);
+        // stretched into a tall systemLarge it leaves a big empty gap.
+        .supportedFamilies([.systemMedium])
     }
 }
 
@@ -27,13 +29,13 @@ struct MonthProgressWidgetView: View {
         ZStack(alignment: .topLeading) {
             Image("star2")
                 .resizable()
-                .scaledToFill()
-                .frame(width: 260, height: 260)
-                .opacity(0.05)
-                .offset(x: 120, y: -50)
+                .scaledToFit()
+                .frame(width: 150, height: 150)
+                .opacity(0.04)
+                .offset(x: 150, y: -10)
                 .allowsHitTesting(false)
 
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .firstTextBaseline) {
                     Text("Tasks Progress in Month")
                         .font(.system(size: 15, weight: .semibold, design: .rounded))

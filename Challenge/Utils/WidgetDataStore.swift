@@ -29,6 +29,8 @@ struct WidgetSnapshot: Codable {
     /// the performance card derives an honest growth %.
     var last30Checkins: Int?
     var prev30Checkins: Int?
+    /// Gates the premium-only Performance widget. Optional for back-compat.
+    var isPremium: Bool?
 
     static let placeholder = WidgetSnapshot(
         streakCurrent: 7,
@@ -47,7 +49,8 @@ struct WidgetSnapshot: Codable {
                     true, true, false, true, false, false, false, false, false, false],
         weekRates: [0.12, 0.78, 0.62, 0.70, 0.75, 1.05],
         last30Checkins: 76,
-        prev30Checkins: 20
+        prev30Checkins: 20,
+        isPremium: true
     )
 }
 

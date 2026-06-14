@@ -143,10 +143,19 @@ struct StatisticsView: View {
                                 .appearEffect(delay: 0.53)
 
                             // Performance: weekly completion bars + 30-day growth
-                            PerformanceCard(rates: weekRates,
-                                            headline: performanceHeadline,
-                                            subtitle: performanceSubtitle)
+                            // (Pro / Max only)
+                            if auth.currentUser?.isPremium == true {
+                                PerformanceCard(rates: weekRates,
+                                                headline: performanceHeadline,
+                                                subtitle: performanceSubtitle)
+                                    .appearEffect(delay: 0.57)
+                            } else {
+                                Button { Haptics.tap(); showPaywall = true } label: {
+                                    PerformanceLockedCard()
+                                }
+                                .buttonStyle(.haptic)
                                 .appearEffect(delay: 0.57)
+                            }
 
                             // Heatmap
                             VStack(alignment: .leading, spacing: 12) {
