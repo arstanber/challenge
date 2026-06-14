@@ -385,10 +385,15 @@ struct SettingsView: View {
             }
             .padding(.top, 6)
 
+            // star2 ships as a near-white shape (invisible on the light footer),
+            // so render it as a template tinted to an adaptive, softly-visible
+            // grey that reads on both light and dark backgrounds.
             Image("star2")
+                .renderingMode(.template)
                 .resizable()
                 .scaledToFit()
                 .frame(width: 200)
+                .foregroundStyle(Color.primary.opacity(0.10))
                 .frame(maxWidth: .infinity)   // centre under the links
                 .padding(.top, 20)
         }
