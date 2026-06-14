@@ -103,10 +103,44 @@ final class ActivitiesViewModel {
         myActivities.filter { $0.planId == nil }
     }
 
+    // MARK: - Disk cache (instant cold-start)
+
+    /// On-disk snapshot of the lists so a cold launch paints the last-known
+    /// tasks immediately, before the network round-trip. The server stays the
+    /// source of truth -- this is only an optimistic head-start.
+    private struct CachedLists: Codable {
+        var mine: [Activity]
+        var parents: [Activity]
+    }
+
+    private var cacheKey: String? {
+        authService.currentUser.map { "activities_\($0.id.uuidString)" }
+    }
+
+    /// Populate the lists from disk when we have nothing yet, so the loading
+    /// skeleton is skipped on a warm cache. Returns true on a cache hit.
+    @discardableResult
+    private func hydrateFromCache() -> Bool {
+        guard myActivities.isEmpty, parentActivities.isEmpty,
+              let key = cacheKey,
+              let cached = DiskCache.load(CachedLists.self, key: key)
+        else { return false }
+        myActivities = cached.mine
+        parentActivities = cached.parents
+        return true
+    }
+
+    private func persistCache() {
+        guard let key = cacheKey else { return }
+        DiskCache.save(CachedLists(mine: myActivities, parents: parentActivities), key: key)
+    }
+
     // MARK: - Load
 
     func loadActivities() async {
         guard let user = authService.currentUser else { return }
+        // Paint cached tasks instantly; the network refresh below replaces them.
+        hydrateFromCache()
         isLoading = true
         errorMessage = nil
         do {
@@ -127,6 +161,7 @@ final class ActivitiesViewModel {
             await recomputeMonthDays()
             await recomputePerformance()
             publishWidgetSnapshot()
+            persistCache()
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -349,6 +384,10 @@ final class ActivitiesViewModel {
             nextTaskTitle: nextTask,
             goalReached: goalReached
         )
+
+        // Keep the cold-start cache in step with optimistic mutations so a
+        // relaunch shows the just-changed list, not the last network snapshot.
+        persistCache()
     }
 
     private func widgetColorName(for type: ActivityType) -> String {

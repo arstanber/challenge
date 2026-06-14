@@ -323,7 +323,8 @@ struct HomeView: View {
                     }
 
                     if vm.isLoading && activeTasks.isEmpty && doneTodayTasks.isEmpty {
-                        ProgressView().padding(.top, 60)
+                        SkeletonTaskList(rows: 4)
+                            .padding(.top, 8)
                     } else if todayTasks.isEmpty && upcomingTasks.isEmpty && doneTodayTasks.isEmpty {
                         EmptyTodayView()
                             .padding(.top, 40)

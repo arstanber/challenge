@@ -29,8 +29,9 @@ struct ActivitiesView: View {
                 let plans = selectedTab == 0 ? vm.planGroups : []
 
                 if vm.isLoading && activities.isEmpty {
-                    ProgressView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    SkeletonTaskList()
+                        .padding(.top, 8)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 } else if activities.isEmpty {
                     EmptyActivitiesView(isParentTab: selectedTab == 1)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
