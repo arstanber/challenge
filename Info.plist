@@ -45,6 +45,13 @@
 	<string>Challenge needs camera access to take photos for your activity reports.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Challenge reads steps, energy, exercise minutes and distance from Apple Health to automatically track your goals.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Challenge соединяет два телефона рядом, чтобы добавить ребёнка в семью, когда вы трясёте устройства.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_chlg-fam._tcp</string>
+		<string>_chlg-fam._udp</string>
+	</array>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Challenge uses your location in the background to remind you about activities when you arrive at a place, like the gym.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

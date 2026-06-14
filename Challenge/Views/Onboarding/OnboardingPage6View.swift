@@ -158,6 +158,7 @@ struct GetStartedScreen: View {
     @Environment(AuthService.self) private var authService
     @State private var vm = AuthViewModel()
     @State private var showEmailForm = false
+    @State private var showChildSignIn = false
     @StateObject private var physics = P6PhysicsEngine()
 
     private let images = ["poster1", "poster2", "poster3", "poster4"]
@@ -213,6 +214,7 @@ struct GetStartedScreen: View {
                             onEmail: { withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) { showEmailForm = true } },
                             onApple: { Task { await vm.signInWithApple() } },
                             onGoogle: { Task { await vm.handleGoogleSignIn() } },
+                            onChild: { Haptics.tap(); showChildSignIn = true },
                             errorMessage: vm.errorMessage
                         )
                         .ignoresSafeArea(edges: .bottom)
@@ -242,6 +244,9 @@ struct GetStartedScreen: View {
         .onChange(of: vm.errorMessage) { _, newError in
             if newError != nil { Haptics.error() }
         }
+        .sheet(isPresented: $showChildSignIn) {
+            ChildSignInView().environment(authService)
+        }
     }
 }
 
@@ -267,6 +272,7 @@ private struct P6Card: View {
     let onEmail: () -> Void
     let onApple: () -> Void
     let onGoogle: () -> Void
+    let onChild: () -> Void
     let errorMessage: String?
 
     var body: some View {
@@ -344,10 +350,22 @@ private struct P6Card: View {
             .padding(.top, 12)
             .appearEffect(delay: 0.45)
 
+            // Child sign-in entry
+            Button(action: onChild) {
+                Text("Войти как ребёнок")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(Color(hex: "7c4df0"))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 10)
+            .appearEffect(delay: 0.5)
+
             // Terms
             P6Terms()
                 .padding(.horizontal, 20)
-                .padding(.top, 16)
+                .padding(.top, 6)
                 .padding(.bottom, 90)
                 .appearEffect(delay: 0.55)
         }

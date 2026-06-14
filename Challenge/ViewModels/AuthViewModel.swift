@@ -11,7 +11,28 @@ final class AuthViewModel {
     var isLoading = false
     var errorMessage: String?
 
+    // Child sign-in (login code + PIN)
+    var childLoginCode = ""
+    var childPin = ""
+
     private let authService = AuthService.shared
+
+    var isChildValid: Bool {
+        childLoginCode.trimmingCharacters(in: .whitespaces).count >= 4
+            && (4...6).contains(childPin.trimmingCharacters(in: .whitespaces).count)
+    }
+
+    func signInChild() async {
+        guard isChildValid else { return }
+        isLoading = true
+        errorMessage = nil
+        do {
+            try await authService.signInChild(loginCode: childLoginCode, pin: childPin)
+        } catch {
+            errorMessage = "Неверный код или PIN"
+        }
+        isLoading = false
+    }
 
     var isValid: Bool {
         if isSignUp {

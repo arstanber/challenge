@@ -4,9 +4,20 @@ struct CreateActivityView: View {
     @State private var vm = CreateActivityViewModel()
     @Environment(\.dismiss) private var dismiss
 
+    /// When set, this activity is assigned to the given child (parent flow).
+    var presetChildId: UUID?
+    var presetChildName: String?
+
     var body: some View {
         NavigationStack {
             Form {
+                if let name = presetChildName {
+                    Section {
+                        Label("Задание для \(name)", systemImage: "person.crop.circle.badge.checkmark")
+                            .font(.subheadline.bold())
+                            .foregroundStyle(.purple)
+                    }
+                }
                 Section("Activity") {
                     Picker("Type", selection: $vm.type) {
                         ForEach(ActivityType.allCases) { type in
@@ -86,8 +97,9 @@ struct CreateActivityView: View {
             .hapticFeedback(.selection, trigger: vm.frequency)
             .hapticFeedback(.selection, trigger: vm.hasDeadline)
             .hapticFeedback(.selection, trigger: vm.reminderEnabled)
-            .navigationTitle("New activity")
+            .navigationTitle(presetChildName == nil ? "New activity" : "Новое задание")
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear { if let id = presetChildId { vm.assignToChildId = id } }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { Haptics.tap(); dismiss() }

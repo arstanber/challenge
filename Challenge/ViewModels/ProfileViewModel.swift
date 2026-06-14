@@ -12,9 +12,28 @@ final class ProfileViewModel {
     var totalCompleted: Int = 0
     var totalFailed: Int = 0
 
+    /// Set right after creating a child account so the UI can show the parent
+    /// the login code + PIN to hand over (cleared when dismissed).
+    var lastCreatedChild: CreatedChild?
+
     private let authService = AuthService.shared
 
     var user: AppUser? { authService.currentUser }
+
+    /// Shareable invite text containing both the code and a deep link.
+    var inviteShareText: String? {
+        guard let code = family?.inviteCode else { return nil }
+        return """
+        Присоединяйся к моей семье в The Challenge!
+        Код: \(code)
+        https://thechallenges.app/join?code=\(code)
+        """
+    }
+
+    // Members grouped by family role for the mom/dad/children layout.
+    var moms: [FamilyMember] { children.filter { $0.childUser?.familyRole == .mom } }
+    var dads: [FamilyMember] { children.filter { $0.childUser?.familyRole == .dad } }
+    var kids: [FamilyMember] { children.filter { ($0.childUser?.familyRole ?? .child) == .child } }
 
     func loadProfile() async {
         guard let user = authService.currentUser else { return }
@@ -40,7 +59,7 @@ final class ProfileViewModel {
 
                 children = try await supabase
                     .from("family_members")
-                    .select()
+                    .select("id, family_id, child_user_id, joined_at, users:child_user_id(*)")
                     .eq("family_id", value: familyId.uuidString)
                     .execute()
                     .value
@@ -159,6 +178,90 @@ final class ProfileViewModel {
             errorMessage = error.localizedDescription
         }
         isLoading = false
+    }
+
+    // MARK: - Child accounts
+
+    struct CreatedChild: Decodable, Identifiable {
+        let loginCode: String
+        let userId: UUID
+        var name: String = ""
+        var pin: String = ""
+
+        var id: UUID { userId }
+
+        enum CodingKeys: String, CodingKey {
+            case loginCode = "login_code"
+            case userId = "user_id"
+        }
+    }
+
+    /// Parent provisions a child account (name + PIN) via the edge function.
+    @discardableResult
+    func createChild(name: String, pin: String) async -> Bool {
+        struct Req: Encodable { let name: String; let pin: String }
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+        do {
+            var created: CreatedChild = try await supabase.functions
+                .invoke("create-child", options: FunctionInvokeOptions(
+                    body: Req(name: name.trimmingCharacters(in: .whitespaces), pin: pin)
+                ))
+            created.name = name.trimmingCharacters(in: .whitespaces)
+            created.pin = pin
+            lastCreatedChild = created
+            AnalyticsService.shared.track(.activityCreated, ["type": "child_account"])
+            await loadProfile()
+            return true
+        } catch {
+            errorMessage = "Не удалось создать аккаунт ребёнка"
+            return false
+        }
+    }
+
+    // MARK: - Family roles
+
+    /// Assign a member to the mom / dad / child bucket (parent-only RPC).
+    func setFamilyRole(_ member: FamilyMember, to role: FamilyRole) async {
+        do {
+            try await supabase.rpc("set_family_role", params: [
+                "p_member": member.childUserId.uuidString,
+                "p_role": role.rawValue,
+            ]).execute()
+            await loadProfile()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    /// The parent picks their own mom / dad label.
+    func setMyFamilyRole(_ role: FamilyRole) async {
+        guard let uid = authService.currentUser?.id else { return }
+        do {
+            try await supabase.rpc("set_family_role", params: [
+                "p_member": uid.uuidString,
+                "p_role": role.rawValue,
+            ]).execute()
+            authService.currentUser?.familyRole = role
+            await loadProfile()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    // MARK: - Pending invite (deep link / shake while signed out or before join)
+
+    /// If a family code was captured from a deep link or shake, join now.
+    func consumePendingInvite() async {
+        guard let code = authService.pendingFamilyCode, !code.isEmpty else { return }
+        // Already in a family -- nothing to do, just clear it.
+        guard authService.currentUser?.familyId == nil else {
+            authService.pendingFamilyCode = nil
+            return
+        }
+        await joinFamily(code: code)
+        authService.pendingFamilyCode = nil
     }
 
     func signOut() {

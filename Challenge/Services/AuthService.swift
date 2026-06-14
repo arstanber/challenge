@@ -36,6 +36,11 @@ final class AuthService {
     var isAuthenticated = false
     /// True while the app is restoring the saved session on cold launch.
     var isRestoring = true
+    /// Family invite code captured from a deep link (challenge://join?code=...)
+    /// or a shake pairing while signed out -- consumed once the user is signed in.
+    var pendingFamilyCode: String? {
+        didSet { UserDefaults.standard.set(pendingFamilyCode, forKey: "pendingFamilyCode") }
+    }
     /// Set right after account creation; RootView shows WeekOnUsView once and
     /// clears it. Persisted so a force-quit on the intro doesn't skip it.
     /// Signing in to an existing account resets it (session restore does not).
@@ -44,7 +49,32 @@ final class AuthService {
     }
 
     private init() {
+        pendingFamilyCode = UserDefaults.standard.string(forKey: "pendingFamilyCode")
         Task { await restoreSession() }
+    }
+
+    // MARK: - Child accounts (parent-provisioned name + PIN)
+
+    /// Synthetic auth credentials for a parent-created child account. Must match
+    /// the derivation in the `create-child` edge function exactly.
+    static func kidCredentials(loginCode: String, pin: String) -> (email: String, password: String) {
+        let code = loginCode.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        let email = "kid.\(code.lowercased())@kids.thechallenges.app"
+        let password = "\(code):\(pin.trimmingCharacters(in: .whitespacesAndNewlines))"
+        return (email, password)
+    }
+
+    /// Sign a child in with the login code their parent gave them + the PIN.
+    func signInChild(loginCode: String, pin: String) async throws {
+        let creds = Self.kidCredentials(loginCode: loginCode, pin: pin)
+        do {
+            let session = try await supabase.auth.signIn(email: creds.email, password: creds.password)
+            try await loadUserProfile(id: session.user.id)
+            needsWelcomeIntro = false
+            AnalyticsService.shared.track(.signedIn, ["method": "child"])
+        } catch {
+            throw AuthError.invalidCredentials
+        }
     }
 
     // MARK: - Session Restore

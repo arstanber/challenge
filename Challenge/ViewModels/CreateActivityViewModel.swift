@@ -77,6 +77,16 @@ final class CreateActivityViewModel {
             if reminderEnabled {
                 notifications.scheduleLocalReminder(for: created)
             }
+            // Parent assigned this to a child -- push them so it lands instantly.
+            if let childId = assignToChildId {
+                await notifications.sendPush(
+                    toUserId: childId,
+                    title: "Новое задание 🎯",
+                    body: "Родитель добавил: «\(created.title)»",
+                    data: ["activity_id": created.id.uuidString]
+                )
+                AnalyticsService.shared.track(.activityCreated, ["type": "assigned_to_child"])
+            }
             AnalyticsService.shared.track(.activityCreated, [
                 "type": type.rawValue,
                 "frequency": frequency.rawValue

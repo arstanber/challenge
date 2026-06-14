@@ -32,6 +32,30 @@ enum UserRole: String, Codable {
     case parent, child, individual
 }
 
+/// Display/grouping bucket inside a family. Mom and dad both map to the
+/// `parent` permission role; child maps to `child` (see set_family_role RPC).
+enum FamilyRole: String, Codable, CaseIterable, Identifiable {
+    case mom, dad, child
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .mom: return "Мама"
+        case .dad: return "Папа"
+        case .child: return "Ребёнок"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .mom: return "figure.dress"
+        case .dad: return "figure"
+        case .child: return "figure.child"
+        }
+    }
+}
+
 struct AppUser: Codable, Identifiable {
     let id: UUID
     var email: String
@@ -40,6 +64,15 @@ struct AppUser: Codable, Identifiable {
     var role: UserRole
     var familyId: UUID?
     var createdAt: Date
+    /// Friendly name (set for parent-provisioned child accounts; may be nil for
+    /// self-registered users who only have an email).
+    var displayName: String?
+    /// mom / dad / child grouping inside the family.
+    var familyRole: FamilyRole?
+    /// True for accounts a parent created with a name + PIN.
+    var isChildAccount: Bool?
+    /// Short code a child account signs in with (only readable by the parent).
+    var childLoginCode: String?
     // Referral program (20260612c_referrals.sql)
     var referralCode: String?
     var referredBy: UUID?
@@ -59,9 +92,19 @@ struct AppUser: Codable, Identifiable {
         case referredBy = "referred_by"
         case proUntil = "pro_until"
         case bonusFreezes = "bonus_freezes"
+        case displayName = "display_name"
+        case familyRole = "family_role"
+        case isChildAccount = "is_child_account"
+        case childLoginCode = "child_login_code"
     }
 
     var isParent: Bool { role == .parent }
+
+    /// Best human-readable label: explicit name, else the local part of the email.
+    var displayLabel: String {
+        if let displayName, !displayName.isEmpty { return displayName }
+        return email.split(separator: "@").first.map(String.init) ?? email
+    }
 
     /// True while referral-granted PRO time is still running.
     var hasReferralPro: Bool {

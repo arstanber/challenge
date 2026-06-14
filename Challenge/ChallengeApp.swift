@@ -15,6 +15,22 @@ struct ChallengeApp: App {
         AnalyticsService.shared.track(.appLaunched)
     }
 
+    /// Parse a family invite deep link and stash the code for the join prompt.
+    /// Handles challenge://join?code=XXX and https://thechallenges.app/join?code=XXX
+    /// (and the /join/XXX path form).
+    static func handleInviteLink(_ url: URL) {
+        let comps = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        let isJoin = (url.host == "join") || url.path.contains("join")
+        guard isJoin else { return }
+        var code = comps?.queryItems?.first(where: { $0.name == "code" })?.value
+        if code == nil {
+            let last = url.lastPathComponent
+            if !last.isEmpty, last != "join", last != "/" { code = last }
+        }
+        guard let code, !code.isEmpty else { return }
+        AuthService.shared.pendingFamilyCode = code.uppercased()
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()
@@ -28,8 +44,9 @@ struct ChallengeApp: App {
                 }
                 .onOpenURL { url in
                     #if canImport(GoogleSignIn)
-                    GIDSignIn.sharedInstance.handle(url)
+                    if GIDSignIn.sharedInstance.handle(url) { return }
                     #endif
+                    Self.handleInviteLink(url)
                 }
         }
     }
