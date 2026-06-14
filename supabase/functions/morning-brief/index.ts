@@ -17,7 +17,7 @@ serve(async (req) => {
     const taskList = (todayTasks as string[]).slice(0, 5).join(", ") || "no tasks set yet";
     const streakText = streakCurrent > 0 ? `They're on a ${streakCurrent}-day streak.` : "They don't have a streak yet.";
 
-    const prompt = `You are an enthusiastic productivity coach for a habit-tracking app called "Challenge".
+    const prompt = `You are an enthusiastic productivity coach for a habit-tracking app called "reInspire".
 Write a short morning brief for a user. ${streakText}
 Today's activities: ${taskList}
 

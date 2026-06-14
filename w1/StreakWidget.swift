@@ -109,5 +109,5 @@ struct StreakWidgetView: View {
 #Preview(as: .systemSmall) {
     StreakWidget()
 } timeline: {
-    ChallengeEntry(date: .now, snapshot: .placeholder)
+    ReInspireEntry(date: .now, snapshot: .placeholder)
 }

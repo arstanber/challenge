@@ -54,7 +54,7 @@ struct TodayTasksWidgetView: View {
 
             Spacer(minLength: 0)
 
-            Text("The Challenge")
+            Text("reInspire")
                 .font(.system(size: 13, weight: .semibold, design: .rounded))
                 .foregroundStyle(.primary)
                 .frame(maxWidth: .infinity, alignment: .trailing)
@@ -65,5 +65,5 @@ struct TodayTasksWidgetView: View {
 #Preview(as: .systemSmall) {
     TodayTasksWidget()
 } timeline: {
-    ChallengeEntry(date: .now, snapshot: .placeholder)
+    ReInspireEntry(date: .now, snapshot: .placeholder)
 }

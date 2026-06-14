@@ -57,7 +57,7 @@ struct MonthProgressWidgetView: View {
                                  todayDay: snapshot.todayDayIndex,
                                  active: Self.active)
                     Spacer(minLength: 0)
-                    Text("The Challenge")
+                    Text("reInspire")
                         .font(.system(size: 12, weight: .semibold, design: .rounded))
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .trailing)
@@ -118,5 +118,5 @@ private struct Dot: View {
 #Preview(as: .systemMedium) {
     MonthProgressWidget()
 } timeline: {
-    ChallengeEntry(date: .now, snapshot: .placeholder)
+    ReInspireEntry(date: .now, snapshot: .placeholder)
 }

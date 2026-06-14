@@ -1,0 +1,673 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		F526FAE42FD1E0EB00C25F19 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = F526FAE32FD1E0EB00C25F19 /* GoogleSignIn */; };
+		F526FAE62FD1E0EB00C25F19 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = F526FAE52FD1E0EB00C25F19 /* GoogleSignInSwift */; };
+		F55319E72FD2159F00698B66 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F55319E62FD2159E00698B66 /* WidgetKit.framework */; };
+		F55319E92FD2159F00698B66 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F55319E82FD2159F00698B66 /* SwiftUI.framework */; };
+		F55319FA2FD215A000698B66 /* w1Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F55319E42FD2159E00698B66 /* w1Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		F5531A022FD215F600698B66 /* Aptabase in Frameworks */ = {isa = PBXBuildFile; productRef = F5531A012FD215F600698B66 /* Aptabase */; };
+		F5531C332FD2C8A800698B66 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F5531C322FD2C8A800698B66 /* StoreKit.framework */; };
+		F5D1B6732FC85CD100C764F3 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = F5D1B6722FC85CD100C764F3 /* Auth */; };
+		F5D1B6752FC85CD100C764F3 /* Functions in Frameworks */ = {isa = PBXBuildFile; productRef = F5D1B6742FC85CD100C764F3 /* Functions */; };
+		F5D1B6772FC85CD100C764F3 /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = F5D1B6762FC85CD100C764F3 /* PostgREST */; };
+		F5D1B6792FC85CD100C764F3 /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = F5D1B6782FC85CD100C764F3 /* Realtime */; };
+		F5D1B67B2FC85CD100C764F3 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = F5D1B67A2FC85CD100C764F3 /* Storage */; };
+		F5D1B67D2FC85CD100C764F3 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = F5D1B67C2FC85CD100C764F3 /* Supabase */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		F55319F82FD215A000698B66 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F5D1B5932FC8554600C764F3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F55319E32FD2159E00698B66;
+			remoteInfo = w1Extension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		F55319FF2FD215A000698B66 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				F55319FA2FD215A000698B66 /* w1Extension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		F55319E42FD2159E00698B66 /* w1Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = w1Extension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		F55319E62FD2159E00698B66 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		F55319E82FD2159F00698B66 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		F5531C322FD2C8A800698B66 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
+		F5D1B59B2FC8554600C764F3 /* reInspire.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = reInspire.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		F55319FB2FD215A000698B66 /* Exceptions for "w1" folder in "w1Extension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = F55319E32FD2159E00698B66 /* w1Extension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		F55319EA2FD2159F00698B66 /* w1 */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				F55319FB2FD215A000698B66 /* Exceptions for "w1" folder in "w1Extension" target */,
+			);
+			path = w1;
+			sourceTree = "<group>";
+		};
+		F5D1B59D2FC8554600C764F3 /* reInspire */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = reInspire;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		F55319E12FD2159E00698B66 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F55319E92FD2159F00698B66 /* SwiftUI.framework in Frameworks */,
+				F55319E72FD2159F00698B66 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F5D1B5982FC8554600C764F3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F5D1B6772FC85CD100C764F3 /* PostgREST in Frameworks */,
+				F5D1B6752FC85CD100C764F3 /* Functions in Frameworks */,
+				F5D1B67D2FC85CD100C764F3 /* Supabase in Frameworks */,
+				F526FAE62FD1E0EB00C25F19 /* GoogleSignInSwift in Frameworks */,
+				F5D1B6732FC85CD100C764F3 /* Auth in Frameworks */,
+				F5531A022FD215F600698B66 /* Aptabase in Frameworks */,
+				F5D1B67B2FC85CD100C764F3 /* Storage in Frameworks */,
+				F5531C332FD2C8A800698B66 /* StoreKit.framework in Frameworks */,
+				F5D1B6792FC85CD100C764F3 /* Realtime in Frameworks */,
+				F526FAE42FD1E0EB00C25F19 /* GoogleSignIn in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		F55319E52FD2159E00698B66 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				F5531C322FD2C8A800698B66 /* StoreKit.framework */,
+				F55319E62FD2159E00698B66 /* WidgetKit.framework */,
+				F55319E82FD2159F00698B66 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		F5D1B5922FC8554600C764F3 = {
+			isa = PBXGroup;
+			children = (
+				F5D1B59D2FC8554600C764F3 /* reInspire */,
+				F55319EA2FD2159F00698B66 /* w1 */,
+				F55319E52FD2159E00698B66 /* Frameworks */,
+				F5D1B59C2FC8554600C764F3 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		F5D1B59C2FC8554600C764F3 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F5D1B59B2FC8554600C764F3 /* reInspire.app */,
+				F55319E42FD2159E00698B66 /* w1Extension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		F55319E32FD2159E00698B66 /* w1Extension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F55319FC2FD215A000698B66 /* Build configuration list for PBXNativeTarget "w1Extension" */;
+			buildPhases = (
+				F55319E02FD2159E00698B66 /* Sources */,
+				F55319E12FD2159E00698B66 /* Frameworks */,
+				F55319E22FD2159E00698B66 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				F55319EA2FD2159F00698B66 /* w1 */,
+			);
+			name = w1Extension;
+			packageProductDependencies = (
+			);
+			productName = w1Extension;
+			productReference = F55319E42FD2159E00698B66 /* w1Extension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		F5D1B59A2FC8554600C764F3 /* reInspire */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F5D1B5A62FC8554700C764F3 /* Build configuration list for PBXNativeTarget "reInspire" */;
+			buildPhases = (
+				F5D1B5972FC8554600C764F3 /* Sources */,
+				F5D1B5982FC8554600C764F3 /* Frameworks */,
+				F5D1B5992FC8554600C764F3 /* Resources */,
+				F55319FF2FD215A000698B66 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F55319F92FD215A000698B66 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				F5D1B59D2FC8554600C764F3 /* reInspire */,
+			);
+			name = reInspire;
+			packageProductDependencies = (
+				F5D1B6722FC85CD100C764F3 /* Auth */,
+				F5D1B6742FC85CD100C764F3 /* Functions */,
+				F5D1B6762FC85CD100C764F3 /* PostgREST */,
+				F5D1B6782FC85CD100C764F3 /* Realtime */,
+				F5D1B67A2FC85CD100C764F3 /* Storage */,
+				F5D1B67C2FC85CD100C764F3 /* Supabase */,
+				F526FAE32FD1E0EB00C25F19 /* GoogleSignIn */,
+				F526FAE52FD1E0EB00C25F19 /* GoogleSignInSwift */,
+				F5531A012FD215F600698B66 /* Aptabase */,
+			);
+			productName = reInspire;
+			productReference = F5D1B59B2FC8554600C764F3 /* reInspire.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F5D1B5932FC8554600C764F3 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2630;
+				LastUpgradeCheck = 2630;
+				TargetAttributes = {
+					F55319E32FD2159E00698B66 = {
+						CreatedOnToolsVersion = 26.3;
+					};
+					F5D1B59A2FC8554600C764F3 = {
+						CreatedOnToolsVersion = 26.3;
+					};
+				};
+			};
+			buildConfigurationList = F5D1B5962FC8554600C764F3 /* Build configuration list for PBXProject "reInspire" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = F5D1B5922FC8554600C764F3;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				F5D1B6712FC85CD100C764F3 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				F526FAE22FD1E0EB00C25F19 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+				F5531A002FD215F600698B66 /* XCRemoteSwiftPackageReference "aptabase-swift" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = F5D1B59C2FC8554600C764F3 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				F5D1B59A2FC8554600C764F3 /* reInspire */,
+				F55319E32FD2159E00698B66 /* w1Extension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		F55319E22FD2159E00698B66 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F5D1B5992FC8554600C764F3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		F55319E02FD2159E00698B66 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F5D1B5972FC8554600C764F3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		F55319F92FD215A000698B66 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F55319E32FD2159E00698B66 /* w1Extension */;
+			targetProxy = F55319F82FD215A000698B66 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		F55319FD2FD215A000698B66 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = w1/w1.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = KQ2R483N7W;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = w1/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = w1;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = qazaqpyn.reInspire.w1;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		F55319FE2FD215A000698B66 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = w1/w1.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = KQ2R483N7W;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = w1/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = w1;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = qazaqpyn.reInspire.w1;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		F5D1B5A42FC8554700C764F3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = KQ2R483N7W;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		F5D1B5A52FC8554700C764F3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = KQ2R483N7W;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		F5D1B5A72FC8554700C764F3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIconDark AppIconViolet AppIconOrange AppIconGreen";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = reInspire/reInspire.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = KQ2R483N7W;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "reInspire needs camera access to take photos for your activity reports.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "reInspire uses the microphone so you can add tasks by speaking.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "reInspire needs permission to save photos.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "reInspire needs photo library access to select photos for your activity reports.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "reInspire transcribes your voice to turn what you say into tasks.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = qazaqpyn.reInspire;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		F5D1B5A82FC8554700C764F3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIconDark AppIconViolet AppIconOrange AppIconGreen";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = reInspire/reInspire.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = KQ2R483N7W;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "reInspire needs camera access to take photos for your activity reports.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "reInspire uses the microphone so you can add tasks by speaking.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "reInspire needs permission to save photos.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "reInspire needs photo library access to select photos for your activity reports.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "reInspire transcribes your voice to turn what you say into tasks.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = qazaqpyn.reInspire;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		F55319FC2FD215A000698B66 /* Build configuration list for PBXNativeTarget "w1Extension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F55319FD2FD215A000698B66 /* Debug */,
+				F55319FE2FD215A000698B66 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F5D1B5962FC8554600C764F3 /* Build configuration list for PBXProject "reInspire" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F5D1B5A42FC8554700C764F3 /* Debug */,
+				F5D1B5A52FC8554700C764F3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F5D1B5A62FC8554700C764F3 /* Build configuration list for PBXNativeTarget "reInspire" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F5D1B5A72FC8554700C764F3 /* Debug */,
+				F5D1B5A82FC8554700C764F3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		F526FAE22FD1E0EB00C25F19 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.1.0;
+			};
+		};
+		F5531A002FD215F600698B66 /* XCRemoteSwiftPackageReference "aptabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/aptabase/aptabase-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.3.11;
+			};
+		};
+		F5D1B6712FC85CD100C764F3 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase-community/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		F526FAE32FD1E0EB00C25F19 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F526FAE22FD1E0EB00C25F19 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		F526FAE52FD1E0EB00C25F19 /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F526FAE22FD1E0EB00C25F19 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
+		};
+		F5531A012FD215F600698B66 /* Aptabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F5531A002FD215F600698B66 /* XCRemoteSwiftPackageReference "aptabase-swift" */;
+			productName = Aptabase;
+		};
+		F5D1B6722FC85CD100C764F3 /* Auth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F5D1B6712FC85CD100C764F3 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Auth;
+		};
+		F5D1B6742FC85CD100C764F3 /* Functions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F5D1B6712FC85CD100C764F3 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Functions;
+		};
+		F5D1B6762FC85CD100C764F3 /* PostgREST */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F5D1B6712FC85CD100C764F3 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = PostgREST;
+		};
+		F5D1B6782FC85CD100C764F3 /* Realtime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F5D1B6712FC85CD100C764F3 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Realtime;
+		};
+		F5D1B67A2FC85CD100C764F3 /* Storage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F5D1B6712FC85CD100C764F3 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Storage;
+		};
+		F5D1B67C2FC85CD100C764F3 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F5D1B6712FC85CD100C764F3 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = F5D1B5932FC8554600C764F3 /* Project object */;
+}

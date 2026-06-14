@@ -63,7 +63,7 @@ struct ProgressTodayWidgetView: View {
 
             Spacer(minLength: 0)
 
-            Text("The Challenge")
+            Text("reInspire")
                 .font(.system(size: 13, weight: .semibold, design: .rounded))
                 .foregroundStyle(.primary)
                 .frame(maxWidth: .infinity, alignment: .trailing)
@@ -74,5 +74,5 @@ struct ProgressTodayWidgetView: View {
 #Preview(as: .systemSmall) {
     ProgressTodayWidget()
 } timeline: {
-    ChallengeEntry(date: .now, snapshot: .placeholder)
+    ReInspireEntry(date: .now, snapshot: .placeholder)
 }

@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>The Challenge</string>
+	<string>reInspire</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -28,10 +28,10 @@
 		</dict>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>qazaqpyn.Challenge.oauth</string>
+			<string>qazaqpyn.reInspire.oauth</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>challenge</string>
+				<string>reinspire</string>
 			</array>
 		</dict>
 	</array>
@@ -40,32 +40,32 @@
 	<key>GIDClientID</key>
 	<string>403964246968-l9ibioo4q4hr42t83b44rt247hslbnsn.apps.googleusercontent.com</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
-	<string>Challenge читает календарь, чтобы показывать события дня рядом с задачами.</string>
+	<string>reInspire читает календарь, чтобы показывать события дня рядом с задачами.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Challenge needs camera access to take photos for your activity reports.</string>
+	<string>reInspire needs camera access to take photos for your activity reports.</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>Challenge reads steps, energy, exercise minutes and distance from Apple Health to automatically track your goals.</string>
+	<string>reInspire reads steps, energy, exercise minutes and distance from Apple Health to automatically track your goals.</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Challenge соединяет два телефона рядом, чтобы добавить ребёнка в семью, когда вы трясёте устройства.</string>
+	<string>reInspire соединяет два телефона рядом, чтобы добавить ребёнка в семью, когда вы трясёте устройства.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_chlg-fam._tcp</string>
 		<string>_chlg-fam._udp</string>
 	</array>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Challenge uses your location in the background to remind you about activities when you arrive at a place, like the gym.</string>
+	<string>reInspire uses your location in the background to remind you about activities when you arrive at a place, like the gym.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Challenge uses your location to remind you about activities when you arrive at a place, like the gym.</string>
+	<string>reInspire uses your location to remind you about activities when you arrive at a place, like the gym.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Challenge uses the microphone so you can add tasks by speaking.</string>
+	<string>reInspire uses the microphone so you can add tasks by speaking.</string>
 	<key>NSMotionUsageDescription</key>
-	<string>Challenge uses motion sensors for interactive photo physics.</string>
+	<string>reInspire uses motion sensors for interactive photo physics.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Challenge needs permission to save photos.</string>
+	<string>reInspire needs permission to save photos.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Challenge needs photo library access to select photos for your activity reports.</string>
+	<string>reInspire needs photo library access to select photos for your activity reports.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Challenge transcribes your voice to turn what you say into tasks.</string>
+	<string>reInspire transcribes your voice to turn what you say into tasks.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>NSSupportsLiveActivitiesFrequentUpdates</key>

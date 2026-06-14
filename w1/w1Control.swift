@@ -10,7 +10,7 @@ import SwiftUI
 import WidgetKit
 
 struct w1Control: ControlWidget {
-    static let kind: String = "qazaqpyn.Challenge.w1"
+    static let kind: String = "qazaqpyn.reInspire.w1"
 
     var body: some ControlWidgetConfiguration {
         AppIntentControlConfiguration(

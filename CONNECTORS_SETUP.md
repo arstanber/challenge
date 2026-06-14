@@ -13,7 +13,7 @@ This app can auto-track a task's progress from external fitness data sources.
 | **Garmin** | OAuth (partner-gated) | needs approved Garmin Health program |
 
 The connector UI lives in `HabitCalendarView` (the task detail screen). All logic is in
-`Challenge/Services/Connectors/`. Backend token-exchange is the `connector-oauth` Edge Function.
+`reInspire/Services/Connectors/`. Backend token-exchange is the `connector-oauth` Edge Function.
 
 ---
 
@@ -21,9 +21,9 @@ The connector UI lives in `HabitCalendarView` (the task detail screen). All logi
 
 Already wired in code. You only need to enable the capability in Xcode:
 
-1. Open the project → target **Challenge** → **Signing & Capabilities**.
+1. Open the project → target **reInspire** → **Signing & Capabilities**.
 2. Click **+ Capability** → add **HealthKit**.
-   - This is already declared in `Challenge/Challenge.entitlements`
+   - This is already declared in `reInspire/reInspire.entitlements`
      (`com.apple.developer.healthkit`) and `Info.plist`
      (`NSHealthShareUsageDescription`). Adding the capability links the framework and
      flips it on for your App ID in the developer portal.
@@ -74,7 +74,7 @@ Where to register + scopes used in code:
 
 ### 2c. Put the public client IDs in the app
 
-`Challenge/Services/Connectors/OAuthConnector.swift` → `enum OAuthSecrets`:
+`reInspire/Services/Connectors/OAuthConnector.swift` → `enum OAuthSecrets`:
 
 ```swift
 enum OAuthSecrets {

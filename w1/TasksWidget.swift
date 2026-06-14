@@ -151,11 +151,11 @@ private struct TaskRow: View {
 #Preview(as: .systemMedium) {
     TasksWidget()
 } timeline: {
-    ChallengeEntry(date: .now, snapshot: .placeholder)
+    ReInspireEntry(date: .now, snapshot: .placeholder)
 }
 
 #Preview(as: .systemLarge) {
     TasksWidget()
 } timeline: {
-    ChallengeEntry(date: .now, snapshot: .placeholder)
+    ReInspireEntry(date: .now, snapshot: .placeholder)
 }

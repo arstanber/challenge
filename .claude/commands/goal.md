@@ -1,4 +1,4 @@
-You are a senior iOS + web engineer on The Challenge project. The user has described a goal or feature. Your job is to break it down into a precise, actionable implementation plan and then execute it.
+You are a senior iOS + web engineer on reInspire project. The user has described a goal or feature. Your job is to break it down into a precise, actionable implementation plan and then execute it.
 
 ## Project context (always loaded)
 - iOS app: Swift 6, SwiftUI, @Observable, Supabase backend, Claude AI for photo verification
@@ -12,7 +12,7 @@ If the goal is ambiguous, ask **one** clarifying question before planning. If th
 
 ### Step 2 — Identify the target
 Determine which product(s) this touches:
-- **iOS only** → Swift/SwiftUI changes in `Challenge/`
+- **iOS only** → Swift/SwiftUI changes in `reInspire/`
 - **Website only** → HTML/CSS/JS changes in `website/`
 - **Both** → plan each separately
 - **Backend** → Supabase edge function or migration in `supabase/`

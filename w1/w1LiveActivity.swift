@@ -21,9 +21,9 @@ private extension Color {
     }
 }
 
-// MARK: - Attributes (mirror of Challenge/Models/ChallengeActivityAttributes.swift)
+// MARK: - Attributes (mirror of reInspire/Models/ReInspireActivityAttributes.swift)
 
-struct ChallengeActivityAttributes: ActivityAttributes {
+struct ReInspireActivityAttributes: ActivityAttributes {
     var dailyGoal: Int
     struct ContentState: Codable, Hashable {
         var todayDone: Int
@@ -37,7 +37,7 @@ struct ChallengeActivityAttributes: ActivityAttributes {
 
 struct w1LiveActivity: Widget {
     var body: some WidgetConfiguration {
-        ActivityConfiguration(for: ChallengeActivityAttributes.self) { context in
+        ActivityConfiguration(for: ReInspireActivityAttributes.self) { context in
             LockScreenBanner(attrs: context.attributes, state: context.state)
                 .activityBackgroundTint(Color(hex: "4580FF").opacity(0.12))
                 .activitySystemActionForegroundColor(Color(hex: "4580FF"))
@@ -88,7 +88,7 @@ struct w1LiveActivity: Widget {
                     .foregroundStyle(context.state.goalReached ? .green : .orange)
                     .font(.system(size: 13, weight: .bold))
             }
-            .widgetURL(URL(string: "challenge://open"))
+            .widgetURL(URL(string: "reinspire://open"))
             .keylineTint(Color(hex: "4580FF"))
         }
     }
@@ -97,8 +97,8 @@ struct w1LiveActivity: Widget {
 // MARK: - Lock Screen Banner
 
 private struct LockScreenBanner: View {
-    let attrs: ChallengeActivityAttributes
-    let state: ChallengeActivityAttributes.ContentState
+    let attrs: ReInspireActivityAttributes
+    let state: ReInspireActivityAttributes.ContentState
 
     var body: some View {
         HStack(spacing: 16) {
@@ -151,10 +151,10 @@ private struct LockScreenBanner: View {
 
 // MARK: - Previews
 
-extension ChallengeActivityAttributes {
+extension ReInspireActivityAttributes {
     static var preview: Self { .init(dailyGoal: 3) }
 }
-extension ChallengeActivityAttributes.ContentState {
+extension ReInspireActivityAttributes.ContentState {
     static var inProgress: Self {
         .init(todayDone: 1, streakCurrent: 7, nextTaskTitle: "Morning workout", goalReached: false)
     }
@@ -163,16 +163,16 @@ extension ChallengeActivityAttributes.ContentState {
     }
 }
 
-#Preview("Lock Screen", as: .content, using: ChallengeActivityAttributes.preview) {
+#Preview("Lock Screen", as: .content, using: ReInspireActivityAttributes.preview) {
     w1LiveActivity()
 } contentStates: {
-    ChallengeActivityAttributes.ContentState.inProgress
-    ChallengeActivityAttributes.ContentState.reached
+    ReInspireActivityAttributes.ContentState.inProgress
+    ReInspireActivityAttributes.ContentState.reached
 }
 
-#Preview("Dynamic Island Expanded", as: .dynamicIsland(.expanded), using: ChallengeActivityAttributes.preview) {
+#Preview("Dynamic Island Expanded", as: .dynamicIsland(.expanded), using: ReInspireActivityAttributes.preview) {
     w1LiveActivity()
 } contentStates: {
-    ChallengeActivityAttributes.ContentState.inProgress
-    ChallengeActivityAttributes.ContentState.reached
+    ReInspireActivityAttributes.ContentState.inProgress
+    ReInspireActivityAttributes.ContentState.reached
 }

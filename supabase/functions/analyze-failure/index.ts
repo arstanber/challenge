@@ -17,7 +17,7 @@ serve(async (req) => {
     const userNote = userReason ? `The user says: "${userReason}"` : "The user didn't provide a reason.";
     const streakNote = streakBefore > 0 ? `This broke their ${streakBefore}-day streak.` : "";
 
-    const prompt = `You are a supportive productivity coach for a habit-tracking app called "Challenge".
+    const prompt = `You are a supportive productivity coach for a habit-tracking app called "reInspire".
 A user failed their ${activityType} activity: "${activityTitle}". ${streakNote}
 ${userNote}
 

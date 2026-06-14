@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 
 // MARK: - Shared snapshot model
-// NOTE: Mirror of Challenge/Utils/WidgetDataStore.swift. Keep both in sync.
+// NOTE: Mirror of reInspire/Utils/WidgetDataStore.swift. Keep both in sync.
 
 struct WidgetSnapshot: Codable {
     var streakCurrent: Int
@@ -121,7 +121,7 @@ struct WidgetTask: Codable, Identifiable {
 // MARK: - App Group read
 
 enum WidgetDataStore {
-    static let appGroup = "group.qazaqpyn.Challenge"
+    static let appGroup = "group.qazaqpyn.reInspire"
     static let snapshotKey = "widget_snapshot"
     static let checkinQueueKey = "widget_checkin_queue"
 

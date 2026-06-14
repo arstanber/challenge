@@ -1,14 +1,14 @@
-# The Challenge — Project Guide
+# reInspire — Project Guide
 
 ## What This Is
 
-**The Challenge** is a Russian-language iOS habit-tracking app with AI photo verification. Users create goals, submit photo proof of completion, and Claude checks the photo against the task description. No cheating.
+**reInspire** is a Russian-language iOS habit-tracking app with AI photo verification. Users create goals, submit photo proof of completion, and Claude checks the photo against the task description. No cheating.
 
 Two products live in this repo:
 
 | Product | Path | Stack |
 |---|---|---|
-| iOS app | `Challenge/` | Swift 6, SwiftUI, @Observable, Supabase |
+| iOS app | `reInspire/` | Swift 6, SwiftUI, @Observable, Supabase |
 | Landing site | `website/` | Pure HTML/CSS/JS, self-hosted fonts, GitHub Pages |
 
 ---
@@ -29,7 +29,7 @@ Two products live in this repo:
 ### Architecture
 
 ```
-ChallengeApp.swift          ← @main, injects AuthService into environment
+ReInspireApp.swift          ← @main, injects AuthService into environment
 ContentView / RootView      ← Auth gate: OnboardingView | MainTabView
 Models/                     ← Pure data structs (Activity, Workspace, Family, User…)
 ViewModels/                 ← @Observable, own their state + async logic
@@ -62,7 +62,7 @@ Gamification/               ← GamificationEngine, QuestEngine
 - Free tier: 3 activities max, 10 AI verifications/month
 - Streak milestones: 7, 14, 30, 100 days
 - Streak day rule: >= 75% of the recurring tasks scheduled that day (min 1) -- `streakDailyCompletionRatio` / `dailyStreakGoal(scheduledToday:)` MUST match the server engine (`compute_user_streak`, migration `20260612_streak_75_percent.sql`); change them together. The `p_min` parameter is legacy and ignored.
-- IAP product IDs: `com.challenge.premium.monthly`, `com.challenge.premium.family`
+- IAP product IDs: `com.reinspire.premium.monthly`, `com.reinspire.premium.family`
 
 ### Task core (single source of truth)
 - "Done today" = report row in `reports` (`ai_result` approved/not_applicable/pending counts; rejected never counts; excused holds the streak without counting). `Services/TaskEngine.swift` owns this state in the app; UserDefaults is only an optimistic offline overlay.
@@ -87,7 +87,7 @@ Migrations are date-prefixed SQL files. Always create a new migration file — n
 - Em-dashes banned in UI strings — use two hyphens (`--`) or rewrite
 
 ### Build
-Open `Challenge.xcodeproj` in Xcode. Requires iOS 17+. Run on simulator or device.
+Open `reInspire.xcodeproj` in Xcode. Requires iOS 17+. Run on simulator or device.
 
 ---
 
@@ -155,7 +155,7 @@ git push origin main
 ## Repo Layout
 
 ```
-Challenge/              ← iOS app source
+reInspire/              ← iOS app source
   Models/
   Services/
   ViewModels/
@@ -163,7 +163,7 @@ Challenge/              ← iOS app source
   Analytics/
   Gamification/
   Utils/
-Challenge.xcodeproj/
+reInspire.xcodeproj/
 supabase/
   functions/            ← Edge functions (Deno/TypeScript)
   migrations/           ← SQL migration files

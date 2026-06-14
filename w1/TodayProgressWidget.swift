@@ -115,5 +115,5 @@ struct TodayProgressWidgetView: View {
 #Preview(as: .systemSmall) {
     TodayProgressWidget()
 } timeline: {
-    ChallengeEntry(date: .now, snapshot: .placeholder)
+    ReInspireEntry(date: .now, snapshot: .placeholder)
 }

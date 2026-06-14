@@ -1,4 +1,4 @@
--- Challenge App — Database Schema
+-- reInspire App — Database Schema
 -- Run this in Supabase Dashboard → SQL Editor
 
 -- Enable UUID extension (already enabled by default)

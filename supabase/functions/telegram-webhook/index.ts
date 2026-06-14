@@ -1,5 +1,5 @@
 // Edge Function: telegram-webhook
-// Receives updates from the Challenge Telegram bot and lets users:
+// Receives updates from the reInspire Telegram bot and lets users:
 //   - link their Telegram account to their app account ("/start <code>")
 //   - create new tasks by sending a text message
 //   - submit photo proof for a challenge/assignment (runs the same AI
@@ -143,7 +143,7 @@ async function handleStart(chatId: number, username: string | undefined, code: s
   if (!code) {
     await sendMessage(
       chatId,
-      "👋 Welcome to <b>Challenge</b>!\n\n" +
+      "👋 Welcome to <b>reInspire</b>!\n\n" +
         "To link this chat to your account, open the app → Profile → Telegram bot, " +
         "tap <i>Generate code</i>, then send it here as:\n<code>/start YOUR_CODE</code>",
     );
@@ -676,7 +676,7 @@ serve(async (req) => {
       .maybeSingle();
 
     if (!link) {
-      await sendMessage(chatId, "This chat isn't linked to a Challenge account yet. Open the app → Profile → Telegram bot to get a linking code, then send <code>/start YOUR_CODE</code>.");
+      await sendMessage(chatId, "This chat isn't linked to a reInspire account yet. Open the app → Profile → Telegram bot to get a linking code, then send <code>/start YOUR_CODE</code>.");
       return ok();
     }
 

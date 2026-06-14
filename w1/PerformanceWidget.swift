@@ -65,7 +65,7 @@ struct PerformanceWidgetView: View {
 
             HStack {
                 Spacer()
-                Text("The Challenge")
+                Text("reInspire")
                     .font(.system(size: 14, weight: .semibold, design: .rounded))
                     .foregroundStyle(.primary)
             }
@@ -113,7 +113,7 @@ struct PerformanceWidgetView: View {
                         .foregroundStyle(accent)
                 }
                 Spacer()
-                Text("The Challenge")
+                Text("reInspire")
                     .font(.system(size: 14, weight: .semibold, design: .rounded))
                     .foregroundStyle(.primary)
             }
@@ -162,5 +162,5 @@ private struct BarChart: View {
 #Preview(as: .systemLarge) {
     PerformanceWidget()
 } timeline: {
-    ChallengeEntry(date: .now, snapshot: .placeholder)
+    ReInspireEntry(date: .now, snapshot: .placeholder)
 }
