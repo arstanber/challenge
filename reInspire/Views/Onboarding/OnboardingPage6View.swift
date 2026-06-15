@@ -159,6 +159,7 @@ struct GetStartedScreen: View {
     @State private var vm = AuthViewModel()
     @State private var showEmailForm = false
     @State private var showChildSignIn = false
+    @State private var keyboardHeight: CGFloat = 0
     @StateObject private var physics = P6PhysicsEngine()
 
     private let images = ["poster1", "poster2", "poster3", "poster4"]
@@ -207,6 +208,10 @@ struct GetStartedScreen: View {
                             onBack: { withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) { showEmailForm = false } }
                         )
                         .ignoresSafeArea(edges: .bottom)
+                        // Lift the form above the keyboard so the password field
+                        // stays visible while typing. The card extends past the
+                        // safe area, so only the overlap beyond it needs lifting.
+                        .offset(y: -max(0, keyboardHeight - geo.safeAreaInsets.bottom))
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                     } else {
                         P6Card(
@@ -227,11 +232,18 @@ struct GetStartedScreen: View {
                 physics.configure(
                     screenWidth: geo.size.width,
                     topInset: geo.safeAreaInsets.top,
-                    cardTop: geo.size.height * 0.52
+                    cardTop: geo.size.height * 0.44
                 )
             }
             .onDisappear {
                 physics.stop()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { notif in
+                guard let frame = notif.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
+                withAnimation(.easeOut(duration: 0.25)) { keyboardHeight = frame.height }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+                withAnimation(.easeOut(duration: 0.25)) { keyboardHeight = 0 }
             }
         }
         .onChange(of: authService.isAuthenticated) { _, isAuth in

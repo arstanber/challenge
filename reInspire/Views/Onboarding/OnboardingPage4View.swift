@@ -27,6 +27,9 @@ struct PushNotificationsOnboardingView: View {
                     .scaledToFill()
                     .frame(width: geo.size.width, height: geo.size.height)
                     .clipped()
+                    // The illustration is grayscale ink art; desaturating drops
+                    // the baked-in blue background wash without touching the art.
+                    .saturation(0)
                     .allowsHitTesting(false)
             }
             .ignoresSafeArea()

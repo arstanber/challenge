@@ -48,7 +48,7 @@ struct ReInspirePhotoView: View {
                         .padding(.bottom, OBStyle.ctaBottomPad)
                 }
                 .padding(.horizontal, 20)
-                .padding(.top, 36)
+                .padding(.top, 96)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .readableWidth(560)
             }

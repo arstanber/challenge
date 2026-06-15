@@ -15,8 +15,12 @@ extension UIFont {
     static func sfProDisplay(ofSize size: CGFloat, weight: UIFont.Weight) -> UIFont {
         let base = UIFont.systemFont(ofSize: size, weight: weight)
         // Force the "Display" optical usage on the system font descriptor.
+        // The UI-usage attribute alone overrides the weight back to regular,
+        // so the weight trait is re-applied explicitly to keep semibold/bold
+        // from rendering thin.
         let descriptor = base.fontDescriptor.addingAttributes([
-            UIFontDescriptor.AttributeName(rawValue: "NSCTFontUIUsageAttribute"): "CTFontDisplayUsage"
+            UIFontDescriptor.AttributeName(rawValue: "NSCTFontUIUsageAttribute"): "CTFontDisplayUsage",
+            .traits: [UIFontDescriptor.TraitKey.weight: weight.rawValue]
         ])
         return UIFont(descriptor: descriptor, size: size)
     }

@@ -65,6 +65,18 @@ struct SettingsView: View {
         ZStack(alignment: .top) {
             Color(.systemBackground).ignoresSafeArea()
 
+            // Brand star as a full-width watermark anchored to the bottom edge,
+            // shown in full behind the scrolling content.
+            VStack {
+                Spacer()
+                Image("star2")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxWidth: .infinity)
+                    .shadow(color: .black.opacity(0.22), radius: 7)
+            }
+            .ignoresSafeArea()
+
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 26) {
                     // Upsell only makes sense for free users; isPremium also
@@ -392,17 +404,6 @@ struct SettingsView: View {
                     .foregroundStyle(.tertiary)
             }
             .padding(.top, 6)
-
-            // star2 is a white shape -- invisible on the light footer on its own.
-            // A soft even shadow haloes its edges so the white star reads on
-            // light backgrounds while staying white (and stays fine on dark).
-            Image("star2")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 200)
-                .frame(maxWidth: .infinity)   // centre under the links
-                .shadow(color: .black.opacity(0.22), radius: 7)
-                .padding(.top, 20)
         }
         .frame(maxWidth: .infinity)
         .padding(.top, 14)
