@@ -70,7 +70,9 @@ serve(async (req) => {
       return json({ error: "APNs secrets not configured" }, 500);
     }
 
-    const { user_id, title, body, data } = await req.json();
+    // content_state (optional): when present AND the user has a running Live
+    // Activity, the same notification is also routed through the Dynamic Island.
+    const { user_id, title, body, data, content_state } = await req.json();
     if (!user_id || !title) {
       return json({ error: "user_id and title are required" }, 400);
     }
@@ -83,15 +85,52 @@ serve(async (req) => {
 
     const { data: row, error: rowErr } = await supabase
       .from("push_tokens")
-      .select("apns_token")
+      .select("apns_token, live_activity_token")
       .eq("user_id", user_id)
       .single();
 
-    if (rowErr || !row?.apns_token) {
+    if (rowErr || (!row?.apns_token && !row?.live_activity_token)) {
       return json({ error: "No push token found for this user" }, 404);
     }
 
     const jwt = await makeApnsJwt(keyId, teamId, privateKey);
+
+    // Prefer routing through the Live Activity when one is running and a fresh
+    // content state was supplied: a single liveactivity push both updates the
+    // island AND shows the banner + sound, so we skip the duplicate alert push.
+    if (content_state && row?.live_activity_token) {
+      const now = Math.floor(Date.now() / 1000);
+      const laRes = await fetch(`${APNS_HOST}/3/device/${row.live_activity_token}`, {
+        method: "POST",
+        headers: {
+          authorization: `bearer ${jwt}`,
+          "apns-topic": `${bundleId}.push-type.liveactivity`,
+          "apns-push-type": "liveactivity",
+          "apns-priority": "10",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          aps: {
+            timestamp: now,
+            event: "update",
+            "content-state": content_state,
+            "stale-date": now + 3600,
+            "relevance-score": 100,
+            alert: { title, body: body ?? "" },
+          },
+        }),
+      });
+      if (laRes.ok) return json({ ok: true, via: "live-activity" });
+      if (laRes.status === 410) {
+        await supabase.from("push_tokens")
+          .update({ live_activity_token: null }).eq("user_id", user_id);
+      }
+      // Fall through to the regular alert push on any failure.
+    }
+
+    if (!row?.apns_token) {
+      return json({ error: "No alert push token for this user" }, 404);
+    }
 
     const apnsPayload = {
       aps: {

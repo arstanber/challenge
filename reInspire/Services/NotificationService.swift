@@ -260,18 +260,27 @@ final class NotificationService: NSObject {
 
     /// Sends a push notification to any user by their Supabase user_id.
     /// Requires APNS_* secrets configured in Supabase → Edge Functions → Secrets.
-    func sendPush(toUserId userId: UUID, title: String, body: String, data: [String: String]? = nil) async {
+    /// `liveActivityState`, when set and the recipient has a running Live
+    /// Activity, routes the same notification through the Dynamic Island (the
+    /// banner is shown by the liveactivity push itself). Pass the recipient's
+    /// own state -- typically `LiveActivityService.shared.lastPushedState()`
+    /// for a self-targeted push.
+    func sendPush(toUserId userId: UUID, title: String, body: String,
+                  data: [String: String]? = nil,
+                  liveActivityState: ReInspireActivityAttributes.ContentState? = nil) async {
         struct PushRequest: Encodable {
             let user_id: String
             let title: String
             let body: String
             let data: [String: String]?
+            let content_state: ReInspireActivityAttributes.ContentState?
         }
         let payload = PushRequest(
             user_id: userId.uuidString,
             title: title,
             body: body,
-            data: data
+            data: data,
+            content_state: liveActivityState
         )
         struct PushResult: Decodable { let ok: Bool? }
         do {

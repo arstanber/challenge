@@ -1,5 +1,7 @@
 import ActivityKit
 import Foundation
+import Supabase
+import PostgREST
 import os.log
 
 private let logger = Logger(subsystem: "com.reinspire", category: "LiveActivityService")
@@ -18,6 +20,9 @@ final class LiveActivityService {
     typealias LA = ActivityKit.Activity<ReInspireActivityAttributes>
 
     private var current: LA?
+    /// Observes `pushTokenUpdates` for the running activity so the server can
+    /// drive remote island updates (#20c).
+    private var tokenTask: Task<Void, Never>?
     /// Last state + goal we pushed, so the verification helpers can mutate one
     /// field (e.g. a task's `verifying` flag) and re-push a coherent snapshot
     /// without the ActivitiesViewModel re-deriving everything.
@@ -50,6 +55,10 @@ final class LiveActivityService {
             launch(dailyGoal: goal, state: state)
         }
     }
+
+    /// The last content state we pushed -- callers attach this to a remote
+    /// push so the server can mirror the notification onto the island.
+    func lastPushedState() -> LAState? { lastState }
 
     // MARK: - Verification (#20b)
 
@@ -97,15 +106,18 @@ final class LiveActivityService {
     /// activity re-launches on the next `update` when the feature is enabled.
     func endCurrent() {
         flashResetTask?.cancel()
+        tokenTask?.cancel()
         lastState = nil
         guard let activity = current ?? running() else { return }
         Task {
             await activity.end(nil, dismissalPolicy: ActivityUIDismissalPolicy.immediate)
             self.current = nil
+            await Self.clearToken()
         }
     }
 
     func end(todayDone: Int, streakCurrent: Int, goalReached: Bool) {
+        tokenTask?.cancel()
         guard let activity = current ?? running() else { return }
         let finalState = LAState(todayDone: todayDone, streakCurrent: streakCurrent,
                                  nextTaskTitle: "", goalReached: goalReached)
@@ -113,6 +125,7 @@ final class LiveActivityService {
         Task {
             await activity.end(content, dismissalPolicy: ActivityUIDismissalPolicy.default)
             self.current = nil
+            await Self.clearToken()
         }
     }
 
@@ -152,12 +165,57 @@ final class LiveActivityService {
         let stale = Calendar.current.date(byAdding: .hour, value: 1, to: Date())
         let content = ActivityContent(state: state, staleDate: stale)
         do {
-            current = try ActivityKit.Activity.request(
+            // pushType: .token so the server can push remote updates to the island.
+            let activity = try ActivityKit.Activity.request(
                 attributes: Attrs(dailyGoal: dailyGoal),
-                content: content
+                content: content,
+                pushType: .token
             )
+            current = activity
+            observePushToken(for: activity)
         } catch {
             logger.error("LiveActivityService start error: \(error)")
+        }
+    }
+
+    private func observePushToken(for activity: LA) {
+        tokenTask?.cancel()
+        tokenTask = Task {
+            for await tokenData in activity.pushTokenUpdates {
+                let token = tokenData.map { String(format: "%02x", $0) }.joined()
+                await Self.saveToken(token)
+            }
+        }
+    }
+
+    /// Persists the activity's push token on the user's push_tokens row so the
+    /// `push-live-activity` edge function can target the island. Uses UPDATE
+    /// (not upsert): apns_token is NOT NULL, and any user with a live activity
+    /// already has a row from APNs registration.
+    private static func saveToken(_ token: String) async {
+        guard let userId = AuthService.shared.currentUser?.id else { return }
+        do {
+            try await supabase
+                .from("push_tokens")
+                .update(["live_activity_token": token,
+                         "live_activity_updated_at": ISO8601DateFormatter().string(from: Date())])
+                .eq("user_id", value: userId.uuidString)
+                .execute()
+        } catch {
+            logger.error("Failed to save Live Activity token: \(error)")
+        }
+    }
+
+    private static func clearToken() async {
+        guard let userId = AuthService.shared.currentUser?.id else { return }
+        do {
+            try await supabase
+                .from("push_tokens")
+                .update(["live_activity_token": String?.none])
+                .eq("user_id", value: userId.uuidString)
+                .execute()
+        } catch {
+            logger.error("Failed to clear Live Activity token: \(error)")
         }
     }
 
