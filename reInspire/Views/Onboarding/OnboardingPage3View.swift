@@ -29,7 +29,7 @@ struct ReInspirePhotoView: View {
 
                 // Content
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("The\nChallenge.")
+                    Text("reInspire.")
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.black)
                         .lineSpacing(2)

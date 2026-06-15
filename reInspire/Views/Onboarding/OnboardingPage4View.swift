@@ -42,7 +42,7 @@ struct PushNotificationsOnboardingView: View {
 
             // Content
             VStack(alignment: .leading, spacing: 0) {
-                Text("The\nChallenge.")
+                Text("reInspire.")
                     .font(.system(size: 17, weight: .medium))
                     .foregroundColor(.black)
                     .lineSpacing(2)
