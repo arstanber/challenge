@@ -44,7 +44,7 @@ enum DiskCache {
             let data = try encoder.encode(value)
             try data.write(to: url(for: key), options: .atomic)
         } catch {
-            logger.error("save(\(key, privacy: .public)) failed: \(error)")
+            logger.error("save(\(key, privacy: .private)) failed: \(error)")
         }
     }
 
@@ -55,7 +55,7 @@ enum DiskCache {
         do {
             return try decoder.decode(T.self, from: data)
         } catch {
-            logger.error("load(\(key, privacy: .public)) failed: \(error)")
+            logger.error("load(\(key, privacy: .private)) failed: \(error)")
             return nil
         }
     }
