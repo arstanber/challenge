@@ -81,6 +81,32 @@ private struct DIProgressRing: View {
     }
 }
 
+// MARK: - Progress bar (expanded bottom)
+
+private struct DIProgressBar: View {
+    let done: Int
+    let goal: Int
+    let reached: Bool
+
+    private var progress: Double {
+        guard goal > 0 else { return 0 }
+        return min(Double(done) / Double(goal), 1)
+    }
+    private var tint: Color { reached ? DI.done : DI.accent }
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule().fill(tint.opacity(0.22))
+                Capsule()
+                    .fill(tint)
+                    .frame(width: max(0, geo.size.width * progress))
+            }
+        }
+        .frame(height: 4)
+    }
+}
+
 // MARK: - Streak pill (secondary metric)
 
 private struct DIStreak: View {
@@ -130,18 +156,27 @@ struct w1LiveActivity: Widget {
                     .padding(.trailing, 6)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    if context.state.goalReached {
-                        Label("Цель дня выполнена!", systemImage: "checkmark.seal.fill")
-                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                            .foregroundStyle(.green)
-                    } else {
-                        HStack(spacing: 8) {
-                            Image(systemName: "arrow.right.circle.fill")
-                                .foregroundStyle(DI.accent)
-                            Text(context.state.nextTaskTitle.isEmpty ? "Открой приложение" : context.state.nextTaskTitle)
-                                .font(.system(.subheadline, design: .rounded))
-                                .lineLimit(1)
+                    VStack(spacing: 8) {
+                        if context.state.goalReached {
+                            Label("Цель дня выполнена!", systemImage: "checkmark.seal.fill")
+                                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                                .foregroundStyle(DI.done)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        } else {
+                            HStack(spacing: 8) {
+                                Image(systemName: "arrow.right.circle.fill")
+                                    .foregroundStyle(DI.accent)
+                                Text(context.state.nextTaskTitle.isEmpty ? "Открой приложение" : context.state.nextTaskTitle)
+                                    .font(.system(.subheadline, design: .rounded))
+                                    .lineLimit(1)
+                                Spacer(minLength: 0)
+                            }
                         }
+                        DIProgressBar(
+                            done: context.state.todayDone,
+                            goal: context.attributes.dailyGoal,
+                            reached: context.state.goalReached
+                        )
                     }
                 }
             } compactLeading: {
@@ -200,6 +235,19 @@ private struct LockScreenBanner: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
+        // Subtle star2 watermark so the banner reads as part of the same widget
+        // family. The island itself can't take a background, only this banner.
+        .background(alignment: .bottomTrailing) {
+            Image("star2")
+                .resizable()
+                .renderingMode(.template)
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 96)
+                .foregroundStyle(state.goalReached ? DI.done : DI.accent)
+                .opacity(0.10)
+                .offset(x: 16, y: 12)
+                .allowsHitTesting(false)
+        }
     }
 }
 
