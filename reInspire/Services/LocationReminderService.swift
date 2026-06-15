@@ -5,6 +5,22 @@ import os.log
 
 private let logger = Logger(subsystem: "com.reinspire", category: "LocationReminderService")
 
+// MARK: - Place Reminder model
+
+/// A user-saved place that fires a push ("сфотографируй и выполни задачу")
+/// when the user arrives. Standalone -- not tied to a single activity.
+struct PlaceReminder: Codable, Identifiable, Hashable {
+    let id: UUID
+    var name: String
+    var latitude: Double
+    var longitude: Double
+    var radius: Double
+
+    var coordinate: CLLocationCoordinate2D {
+        CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+    }
+}
+
 // MARK: - Location Reminder Service (#10)
 // Schedules geofence-triggered local notifications ("remind me when I arrive").
 
@@ -108,5 +124,69 @@ final class LocationReminderService: NSObject, CLLocationManagerDelegate {
 
     func reminderPlaceName(for activityId: UUID) -> String? {
         defaults.string(forKey: identifier(for: activityId))
+    }
+
+    // MARK: - Standalone place reminders (Settings -> Локации)
+
+    /// iOS monitors at most 20 regions per app; cap the saved list well below
+    /// that so per-activity geofences keep room to register.
+    static let maxPlaces = 10
+
+    private let placesKey = "place_reminders_v1"
+    private func placeIdentifier(_ id: UUID) -> String { "place_\(id.uuidString)" }
+
+    func savedPlaces() -> [PlaceReminder] {
+        guard let data = defaults.data(forKey: placesKey),
+              let places = try? JSONDecoder().decode([PlaceReminder].self, from: data) else { return [] }
+        return places
+    }
+
+    private func persist(_ places: [PlaceReminder]) {
+        if let data = try? JSONEncoder().encode(places) {
+            defaults.set(data, forKey: placesKey)
+        }
+    }
+
+    /// Registers an entry-geofence push for a new place and persists it.
+    func addPlace(name: String, coordinate: CLLocationCoordinate2D, radius: CLLocationDistance) async throws -> PlaceReminder {
+        let place = PlaceReminder(
+            id: UUID(),
+            name: name,
+            latitude: coordinate.latitude,
+            longitude: coordinate.longitude,
+            radius: radius
+        )
+
+        let region = CLCircularRegion(
+            center: coordinate,
+            radius: min(max(radius, 100), 1000),
+            identifier: placeIdentifier(place.id)
+        )
+        region.notifyOnEntry = true
+        region.notifyOnExit = false
+
+        let content = UNMutableNotificationContent()
+        content.title = "📍 \(name)"
+        content.body = "Вы рядом с \(name) -- пора сфотографировать и выполнить задачу!"
+        content.sound = NotificationService.chime
+
+        let trigger = UNLocationNotificationTrigger(region: region, repeats: true)
+        let request = UNNotificationRequest(identifier: placeIdentifier(place.id),
+                                            content: content, trigger: trigger)
+        do {
+            try await UNUserNotificationCenter.current().add(request)
+        } catch {
+            logger.error("PlaceReminder add error: \(error)")
+            throw error
+        }
+
+        persist(savedPlaces() + [place])
+        return place
+    }
+
+    func removePlace(id: UUID) {
+        UNUserNotificationCenter.current()
+            .removePendingNotificationRequests(withIdentifiers: [placeIdentifier(id)])
+        persist(savedPlaces().filter { $0.id != id })
     }
 }

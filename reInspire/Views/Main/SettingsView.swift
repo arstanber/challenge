@@ -53,6 +53,7 @@ struct SettingsView: View {
     @State private var showReferral = false
     @State private var showFamily = false
     @State private var showStatistics = false
+    @State private var showLocations = false
 
     private let blue = Color(hex: "0A84FF")
 
@@ -114,6 +115,9 @@ struct SettingsView: View {
         }
         .sheet(isPresented: $showStatistics) {
             StatisticsView()
+        }
+        .sheet(isPresented: $showLocations) {
+            LocationsSettingsView()
         }
         .fullScreenCover(isPresented: $showHallOfFame) {
             ZStack(alignment: .topTrailing) {
@@ -286,6 +290,10 @@ struct SettingsView: View {
             SettingsDivider()
             SettingsRow(icon: "bell", title: "Уведомления", trailing: .chevron) {
                 Haptics.tap(); openSystemSettings()
+            }
+            SettingsDivider()
+            SettingsRow(icon: "mappin.and.ellipse", title: "Локации", trailing: .chevron) {
+                Haptics.tap(); showLocations = true
             }
             SettingsDivider()
             SettingsToggleRow(
