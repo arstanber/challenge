@@ -61,14 +61,14 @@ struct w1LiveActivity: Widget {
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     if context.state.goalReached {
-                        Label("Daily goal reached!", systemImage: "checkmark.seal.fill")
+                        Label("Цель дня выполнена!", systemImage: "checkmark.seal.fill")
                             .font(.system(.subheadline, design: .rounded).weight(.semibold))
                             .foregroundStyle(.green)
                     } else {
                         HStack(spacing: 8) {
                             Image(systemName: "arrow.right.circle.fill")
                                 .foregroundStyle(Color(hex: "4580FF"))
-                            Text(context.state.nextTaskTitle)
+                            Text(context.state.nextTaskTitle.isEmpty ? "Открой приложение" : context.state.nextTaskTitle)
                                 .font(.system(.subheadline, design: .rounded))
                                 .lineLimit(1)
                         }
@@ -125,15 +125,15 @@ private struct LockScreenBanner: View {
 
             VStack(alignment: .leading, spacing: 3) {
                 if state.goalReached {
-                    Text("Daily goal reached!")
+                    Text("Цель дня выполнена!")
                         .font(.system(.subheadline, design: .rounded).weight(.bold))
                         .foregroundStyle(.green)
                 } else {
-                    Text(state.nextTaskTitle.isEmpty ? "Open app to continue" : state.nextTaskTitle)
+                    Text(state.nextTaskTitle.isEmpty ? "Открой приложение, чтобы продолжить" : state.nextTaskTitle)
                         .font(.system(.subheadline, design: .rounded).weight(.semibold))
                         .lineLimit(1)
                 }
-                Text("\(state.todayDone) of \(attrs.dailyGoal) done · \(state.streakCurrent)-day streak 🔥")
+                Text("\(state.todayDone) из \(attrs.dailyGoal) выполнено · стрик \(state.streakCurrent) 🔥")
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(.secondary)
             }
@@ -156,7 +156,7 @@ extension ReInspireActivityAttributes {
 }
 extension ReInspireActivityAttributes.ContentState {
     static var inProgress: Self {
-        .init(todayDone: 1, streakCurrent: 7, nextTaskTitle: "Morning workout", goalReached: false)
+        .init(todayDone: 1, streakCurrent: 7, nextTaskTitle: "Утренняя зарядка", goalReached: false)
     }
     static var reached: Self {
         .init(todayDone: 3, streakCurrent: 7, nextTaskTitle: "", goalReached: true)
