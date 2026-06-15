@@ -481,6 +481,7 @@ final class ActivitiesViewModel {
                 logger.error("persistOrder failed for \(activity.title): \(error)")
             }
         }
+        persistCache()
     }
 
     func markCompleted(_ activity: Activity) async {
@@ -521,6 +522,7 @@ final class ActivitiesViewModel {
             if let idx = myActivities.firstIndex(where: { $0.id == activity.id }) {
                 myActivities[idx].deadline = target
             }
+            persistCache()
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -553,6 +555,7 @@ final class ActivitiesViewModel {
                 .execute()
                 .value
             myActivities.insert(created, at: 0)
+            persistCache()
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -596,6 +599,7 @@ final class ActivitiesViewModel {
                 .execute()
                 .value
             myActivities.insert(created, at: 0)
+            persistCache()
             ConnectorSuggestionEngine.shared.taskCreated(title: created.title, description: created.description)
             return created
         } catch {
@@ -633,6 +637,7 @@ final class ActivitiesViewModel {
                 .execute()
                 .value
             myActivities.append(created)
+            persistCache()
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -698,6 +703,7 @@ final class ActivitiesViewModel {
             if let idx = myActivities.firstIndex(where: { $0.id == activity.id }) {
                 NotificationService.shared.scheduleLocalReminder(for: myActivities[idx])
             }
+            persistCache()
         } catch {
             errorMessage = error.localizedDescription
         }
