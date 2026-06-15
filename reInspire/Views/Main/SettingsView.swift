@@ -73,7 +73,6 @@ struct SettingsView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(maxWidth: .infinity)
-                    .shadow(color: .black.opacity(0.22), radius: 7)
             }
             .ignoresSafeArea()
 

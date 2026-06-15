@@ -29,13 +29,17 @@ enum OBStyle {
 // MARK: - Liquid Glass Button
 struct LiquidGlassButton: View {
     let title: String
+    /// Defaults match the iPhone metrics; pages can scale these up on iPad.
+    var width: CGFloat = OBStyle.buttonW
+    var height: CGFloat = OBStyle.buttonH
+    var fontSize: CGFloat = OBStyle.buttonSize
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: OBStyle.buttonSize, weight: .medium))
-                .frame(width: OBStyle.buttonW, height: OBStyle.buttonH)
+                .font(.system(size: fontSize, weight: .medium))
+                .frame(width: width, height: height)
                 .glassEffect(in: Capsule())
         }
         .buttonStyle(PressableButtonStyle())
@@ -141,6 +145,15 @@ struct OnboardingView: View {
 // MARK: - Page 1: Landing
 private struct OnboardingLandingPage: View {
     let onNext: () -> Void
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
+    /// iPad (regular width) gets larger type, a bigger CTA and more breathing
+    /// room from the bottom so the screen reads as designed for the canvas
+    /// instead of a stretched iPhone layout.
+    private var isPad: Bool { sizeClass == .regular }
+    private var titleSize: CGFloat { isPad ? 52 : OBStyle.titleSize }
+    private var taglineSize: CGFloat { isPad ? 60 : OBStyle.taglineSize }
+    private var bottomPad: CGFloat { isPad ? 96 : OBStyle.ctaBottomPad }
 
     var body: some View {
         GeometryReader { geo in
@@ -165,16 +178,16 @@ private struct OnboardingLandingPage: View {
                 .ignoresSafeArea()
 
                 // Bottom content
-                VStack(alignment: .center, spacing: 16) {
+                VStack(alignment: .center, spacing: isPad ? 24 : 16) {
 
                     VStack(alignment: .center, spacing: 4) {
                         Text("reInspire.")
-                            .font(.system(size: OBStyle.titleSize, weight: .medium))
+                            .font(.system(size: titleSize, weight: .medium))
                             .foregroundColor(.white)
                             .appearEffect(delay: 0.15)
 
                         Text("New life starts here")
-                            .font(.system(size: OBStyle.taglineSize, weight: .medium))
+                            .font(.system(size: taglineSize, weight: .medium))
                             .foregroundStyle(
                                 LinearGradient(
                                     stops: [
@@ -193,13 +206,19 @@ private struct OnboardingLandingPage: View {
                     }
                     .multilineTextAlignment(.center)
 
-                    LiquidGlassButton(title: "Get Started", action: onNext)
-                        .frame(maxWidth: .infinity, alignment: .center)
+                    LiquidGlassButton(
+                        title: "Get Started",
+                        width: isPad ? 360 : OBStyle.buttonW,
+                        height: isPad ? 58 : OBStyle.buttonH,
+                        fontSize: isPad ? 20 : OBStyle.buttonSize,
+                        action: onNext
+                    )
+                    .frame(maxWidth: .infinity, alignment: .center)
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.horizontal, OBStyle.hPad)
-                .padding(.bottom, OBStyle.ctaBottomPad)
-                .readableWidth(480)
+                .padding(.bottom, bottomPad)
+                .readableWidth(isPad ? 600 : 480)
             }
             .frame(width: geo.size.width, height: geo.size.height)
             .ignoresSafeArea()
