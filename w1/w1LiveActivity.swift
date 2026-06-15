@@ -33,31 +33,101 @@ struct ReInspireActivityAttributes: ActivityAttributes {
     }
 }
 
+// MARK: - Palette
+
+private enum DI {
+    static let accent = Color(hex: "4580FF")   // primary progress
+    static let done = Color.green              // goal reached
+    static let streak = Color(hex: "FF8A3D")   // softened flame (secondary)
+}
+
+// MARK: - Progress ring (shared by island + lock screen)
+
+private struct DIProgressRing: View {
+    let done: Int
+    let goal: Int
+    let reached: Bool
+    var size: CGFloat = 22
+    var lineWidth: CGFloat = 3
+    var fontSize: CGFloat = 11
+    /// When false, the count label is hidden (used in the minimal presentation).
+    var showLabel: Bool = true
+
+    private var progress: Double {
+        guard goal > 0 else { return 0 }
+        return min(Double(done) / Double(goal), 1)
+    }
+    private var tint: Color { reached ? DI.done : DI.accent }
+
+    var body: some View {
+        ZStack {
+            Circle().stroke(tint.opacity(0.22), lineWidth: lineWidth)
+            Circle()
+                .trim(from: 0, to: progress)
+                .stroke(tint, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+            if reached {
+                Image(systemName: "checkmark")
+                    .font(.system(size: fontSize, weight: .bold))
+                    .foregroundStyle(tint)
+            } else if showLabel {
+                Text("\(done)")
+                    .font(.system(size: fontSize, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(.primary)
+            }
+        }
+        .frame(width: size, height: size)
+    }
+}
+
+// MARK: - Streak pill (secondary metric)
+
+private struct DIStreak: View {
+    let value: Int
+    var iconSize: CGFloat = 13
+    var fontSize: CGFloat = 13
+    var body: some View {
+        HStack(spacing: 3) {
+            Image(systemName: "flame.fill")
+                .font(.system(size: iconSize, weight: .bold))
+            Text("\(value)")
+                .font(.system(size: fontSize, weight: .bold, design: .rounded))
+                .monospacedDigit()
+        }
+        .foregroundStyle(DI.streak)
+    }
+}
+
 // MARK: - Widget
 
 struct w1LiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: ReInspireActivityAttributes.self) { context in
             LockScreenBanner(attrs: context.attributes, state: context.state)
-                .activityBackgroundTint(Color(hex: "4580FF").opacity(0.12))
-                .activitySystemActionForegroundColor(Color(hex: "4580FF"))
+                .activityBackgroundTint(DI.accent.opacity(0.12))
+                .activitySystemActionForegroundColor(DI.accent)
 
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "flame.fill").foregroundStyle(.orange)
-                        Text("\(context.state.streakCurrent)")
-                            .font(.system(.title2, design: .rounded).weight(.bold))
-                            .foregroundStyle(.orange)
-                    }
+                    DIProgressRing(
+                        done: context.state.todayDone,
+                        goal: context.attributes.dailyGoal,
+                        reached: context.state.goalReached,
+                        size: 40, lineWidth: 4, fontSize: 17
+                    )
                     .padding(.leading, 4)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    Text("\(context.state.todayDone)/\(context.attributes.dailyGoal)")
-                        .font(.system(.title2, design: .rounded).weight(.bold))
-                        .foregroundStyle(context.state.goalReached ? .green : Color(hex: "4580FF"))
-                        .padding(.trailing, 4)
+                    VStack(spacing: 0) {
+                        DIStreak(value: context.state.streakCurrent, iconSize: 15, fontSize: 17)
+                        Text("\(context.state.todayDone)/\(context.attributes.dailyGoal)")
+                            .font(.system(.caption, design: .rounded).weight(.semibold))
+                            .monospacedDigit()
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.trailing, 6)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     if context.state.goalReached {
@@ -67,7 +137,7 @@ struct w1LiveActivity: Widget {
                     } else {
                         HStack(spacing: 8) {
                             Image(systemName: "arrow.right.circle.fill")
-                                .foregroundStyle(Color(hex: "4580FF"))
+                                .foregroundStyle(DI.accent)
                             Text(context.state.nextTaskTitle.isEmpty ? "Открой приложение" : context.state.nextTaskTitle)
                                 .font(.system(.subheadline, design: .rounded))
                                 .lineLimit(1)
@@ -75,21 +145,24 @@ struct w1LiveActivity: Widget {
                     }
                 }
             } compactLeading: {
-                Image(systemName: "flame.fill")
-                    .foregroundStyle(.orange)
-                    .font(.system(size: 13, weight: .bold))
+                DIStreak(value: context.state.streakCurrent, iconSize: 12, fontSize: 13)
             } compactTrailing: {
-                Text("\(context.state.todayDone)/\(context.attributes.dailyGoal)")
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
-                    .foregroundStyle(context.state.goalReached ? .green : Color(hex: "4580FF"))
-                    .monospacedDigit()
+                DIProgressRing(
+                    done: context.state.todayDone,
+                    goal: context.attributes.dailyGoal,
+                    reached: context.state.goalReached,
+                    size: 20, lineWidth: 2.5, fontSize: 11
+                )
             } minimal: {
-                Image(systemName: context.state.goalReached ? "checkmark.seal.fill" : "flame.fill")
-                    .foregroundStyle(context.state.goalReached ? .green : .orange)
-                    .font(.system(size: 13, weight: .bold))
+                DIProgressRing(
+                    done: context.state.todayDone,
+                    goal: context.attributes.dailyGoal,
+                    reached: context.state.goalReached,
+                    size: 20, lineWidth: 2.5, fontSize: 10, showLabel: false
+                )
             }
             .widgetURL(URL(string: "reinspire://open"))
-            .keylineTint(Color(hex: "4580FF"))
+            .keylineTint(DI.accent)
         }
     }
 }
@@ -102,26 +175,12 @@ private struct LockScreenBanner: View {
 
     var body: some View {
         HStack(spacing: 16) {
-            ZStack {
-                Circle()
-                    .stroke(Color(hex: "4580FF").opacity(0.2), lineWidth: 5)
-                Circle()
-                    .trim(from: 0, to: progress)
-                    .stroke(
-                        state.goalReached ? Color.green : Color(hex: "4580FF"),
-                        style: StrokeStyle(lineWidth: 5, lineCap: .round)
-                    )
-                    .rotationEffect(.degrees(-90))
-                if state.goalReached {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(.green)
-                } else {
-                    Text("\(state.todayDone)")
-                        .font(.system(size: 15, weight: .heavy, design: .rounded))
-                }
-            }
-            .frame(width: 44, height: 44)
+            DIProgressRing(
+                done: state.todayDone,
+                goal: attrs.dailyGoal,
+                reached: state.goalReached,
+                size: 44, lineWidth: 5, fontSize: 15
+            )
 
             VStack(alignment: .leading, spacing: 3) {
                 if state.goalReached {
@@ -141,11 +200,6 @@ private struct LockScreenBanner: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-    }
-
-    private var progress: Double {
-        guard attrs.dailyGoal > 0 else { return 0 }
-        return min(Double(state.todayDone) / Double(attrs.dailyGoal), 1.0)
     }
 }
 
