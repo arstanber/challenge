@@ -23,6 +23,13 @@ private extension Color {
 
 // MARK: - Attributes (mirror of reInspire/Models/ReInspireActivityAttributes.swift)
 
+struct LiveTask: Codable, Hashable, Identifiable {
+    var id: UUID
+    var title: String
+    var done: Bool
+    var verifying: Bool
+}
+
 struct ReInspireActivityAttributes: ActivityAttributes {
     var dailyGoal: Int
     struct ContentState: Codable, Hashable {
@@ -30,6 +37,8 @@ struct ReInspireActivityAttributes: ActivityAttributes {
         var streakCurrent: Int
         var nextTaskTitle: String
         var goalReached: Bool
+        var tasks: [LiveTask]
+        var flashApproved: Bool
     }
 }
 
@@ -125,6 +134,68 @@ private struct DIStreak: View {
     }
 }
 
+// MARK: - Compact indicator (spinner -> check -> ring)
+
+private struct DICompactProgress: View {
+    let state: ReInspireActivityAttributes.ContentState
+    let goal: Int
+    var showLabel: Bool = true
+
+    private var anyVerifying: Bool { state.tasks.contains { $0.verifying } }
+
+    var body: some View {
+        if anyVerifying {
+            ProgressView()
+                .controlSize(.mini)
+                .tint(DI.accent)
+        } else if state.flashApproved {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 15, weight: .bold))
+                .foregroundStyle(DI.done)
+                .transition(.scale.combined(with: .opacity))
+        } else {
+            DIProgressRing(
+                done: state.todayDone, goal: goal, reached: state.goalReached,
+                size: 20, lineWidth: 2.5, fontSize: showLabel ? 11 : 10, showLabel: showLabel
+            )
+        }
+    }
+}
+
+// MARK: - Task row with checkbox (expanded list)
+
+private struct DITaskRow: View {
+    let task: LiveTask
+
+    var body: some View {
+        // Tap opens the task in the app. uuidString in our own scheme is always
+        // a valid URL, so the force-unwrap cannot fail.
+        Link(destination: URL(string: "reinspire://task/\(task.id.uuidString)")!) {
+            HStack(spacing: 8) {
+                Group {
+                    if task.verifying {
+                        ProgressView()
+                            .controlSize(.small)
+                            .tint(DI.accent)
+                    } else {
+                        Image(systemName: task.done ? "checkmark.circle.fill" : "circle")
+                            .font(.system(size: 16))
+                            .foregroundStyle(task.done ? DI.done : .secondary)
+                            .contentTransition(.symbolEffect(.replace))
+                    }
+                }
+                .frame(width: 18, height: 18)
+                Text(task.title)
+                    .font(.system(.subheadline, design: .rounded))
+                    .foregroundStyle(task.done ? .secondary : .primary)
+                    .strikethrough(task.done, color: .secondary)
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+            }
+        }
+    }
+}
+
 // MARK: - Widget
 
 struct w1LiveActivity: Widget {
@@ -156,13 +227,13 @@ struct w1LiveActivity: Widget {
                     .padding(.trailing, 6)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    VStack(spacing: 8) {
+                    VStack(spacing: 6) {
                         if context.state.goalReached {
                             Label("Цель дня выполнена!", systemImage: "checkmark.seal.fill")
                                 .font(.system(.subheadline, design: .rounded).weight(.semibold))
                                 .foregroundStyle(DI.done)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                        } else {
+                        } else if context.state.tasks.isEmpty {
                             HStack(spacing: 8) {
                                 Image(systemName: "arrow.right.circle.fill")
                                     .foregroundStyle(DI.accent)
@@ -171,30 +242,25 @@ struct w1LiveActivity: Widget {
                                     .lineLimit(1)
                                 Spacer(minLength: 0)
                             }
+                        } else {
+                            ForEach(context.state.tasks.prefix(4)) { task in
+                                DITaskRow(task: task)
+                            }
                         }
                         DIProgressBar(
                             done: context.state.todayDone,
                             goal: context.attributes.dailyGoal,
                             reached: context.state.goalReached
                         )
+                        .padding(.top, 2)
                     }
                 }
             } compactLeading: {
                 DIStreak(value: context.state.streakCurrent, iconSize: 12, fontSize: 13)
             } compactTrailing: {
-                DIProgressRing(
-                    done: context.state.todayDone,
-                    goal: context.attributes.dailyGoal,
-                    reached: context.state.goalReached,
-                    size: 20, lineWidth: 2.5, fontSize: 11
-                )
+                DICompactProgress(state: context.state, goal: context.attributes.dailyGoal)
             } minimal: {
-                DIProgressRing(
-                    done: context.state.todayDone,
-                    goal: context.attributes.dailyGoal,
-                    reached: context.state.goalReached,
-                    size: 20, lineWidth: 2.5, fontSize: 10, showLabel: false
-                )
+                DICompactProgress(state: context.state, goal: context.attributes.dailyGoal, showLabel: false)
             }
             .widgetURL(URL(string: "reinspire://open"))
             .keylineTint(DI.accent)
@@ -257,11 +323,25 @@ extension ReInspireActivityAttributes {
     static var preview: Self { .init(dailyGoal: 3) }
 }
 extension ReInspireActivityAttributes.ContentState {
+    private static let sampleTasks: [LiveTask] = [
+        LiveTask(id: UUID(), title: "Утренняя зарядка", done: true, verifying: false),
+        LiveTask(id: UUID(), title: "Прочитать 10 страниц", done: false, verifying: false),
+        LiveTask(id: UUID(), title: "Медитация", done: false, verifying: false)
+    ]
     static var inProgress: Self {
-        .init(todayDone: 1, streakCurrent: 7, nextTaskTitle: "Утренняя зарядка", goalReached: false)
+        .init(todayDone: 1, streakCurrent: 7, nextTaskTitle: "Прочитать 10 страниц",
+              goalReached: false, tasks: sampleTasks, flashApproved: false)
+    }
+    static var verifying: Self {
+        var t = sampleTasks
+        t[1].verifying = true
+        return .init(todayDone: 1, streakCurrent: 7, nextTaskTitle: "Прочитать 10 страниц",
+                     goalReached: false, tasks: t, flashApproved: false)
     }
     static var reached: Self {
-        .init(todayDone: 3, streakCurrent: 7, nextTaskTitle: "", goalReached: true)
+        .init(todayDone: 3, streakCurrent: 7, nextTaskTitle: "",
+              goalReached: true, tasks: sampleTasks.map { var x = $0; x.done = true; return x },
+              flashApproved: false)
     }
 }
 
@@ -276,5 +356,14 @@ extension ReInspireActivityAttributes.ContentState {
     w1LiveActivity()
 } contentStates: {
     ReInspireActivityAttributes.ContentState.inProgress
+    ReInspireActivityAttributes.ContentState.verifying
+    ReInspireActivityAttributes.ContentState.reached
+}
+
+#Preview("Dynamic Island Compact", as: .dynamicIsland(.compact), using: ReInspireActivityAttributes.preview) {
+    w1LiveActivity()
+} contentStates: {
+    ReInspireActivityAttributes.ContentState.inProgress
+    ReInspireActivityAttributes.ContentState.verifying
     ReInspireActivityAttributes.ContentState.reached
 }

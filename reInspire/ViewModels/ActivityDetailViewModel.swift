@@ -113,6 +113,7 @@ final class ActivityDetailViewModel {
 
             do {
                 submissionStage = .verifying
+                LiveActivityService.shared.setVerifying(taskId: activity.id, title: activity.title)
                 let aiResponse = try await aiService.verify(
                     reportId:   report.id,
                     activityId: activity.id,
@@ -167,6 +168,9 @@ final class ActivityDetailViewModel {
                     // Rejected — nothing
                     break
                 }
+                // Drive the island spinner -> check. Approved/excused/not_applicable
+                // hold or count the day; only an outright rejection is "not done".
+                LiveActivityService.shared.resolveVerifying(taskId: activity.id, approved: resultEnum != .rejected)
                 await TaskEngine.shared.noteReportChanged(activityId: activity.id)
             } catch {
                 if let fnError = error as? FunctionsError,
@@ -178,6 +182,7 @@ final class ActivityDetailViewModel {
                 lastAIResult = .notApplicable
                 if activity.frequency == .once { try await markCompleted() }
                 onReportSubmitted?()
+                LiveActivityService.shared.resolveVerifying(taskId: activity.id, approved: true)
                 await TaskEngine.shared.noteReportChanged(activityId: activity.id)
             }
         } catch {

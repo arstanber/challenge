@@ -377,12 +377,18 @@ final class ActivitiesViewModel {
             .filter { $0.parentId == nil && $0.status == .active && !engine.isHandledToday($0.id) }
             .first?.title ?? ""
         let goalReached = todayDoneTopLevelCount >= dailyStreakGoal
+        // Today's list for the expanded island (cap at 4 to stay within the
+        // ActivityKit content-state budget).
+        let liveTasks: [LiveTask] = topLevelActive
+            .prefix(4)
+            .map { LiveTask(id: $0.id, title: $0.title, done: engine.isDoneToday($0.id)) }
         LiveActivityService.shared.update(
             dailyGoal: dailyStreakGoal,
             todayDone: todayDoneTopLevelCount,
             streakCurrent: globalStreakCurrent,
             nextTaskTitle: nextTask,
-            goalReached: goalReached
+            goalReached: goalReached,
+            tasks: liveTasks
         )
 
         // Keep the cold-start cache in step with optimistic mutations so a
