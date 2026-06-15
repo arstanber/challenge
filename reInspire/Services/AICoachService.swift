@@ -31,9 +31,11 @@ struct GoalSplit: Decodable {
 }
 
 struct SplitTask: Decodable, Identifiable {
-    var id: UUID { UUID() }     // synthetic — not from server
+    let id = UUID()             // synthetic, stable -- not from server
     let title: String
     let estimatedDays: Int?
+
+    private enum CodingKeys: String, CodingKey { case title, estimatedDays }
 }
 
 // MARK: - Service
