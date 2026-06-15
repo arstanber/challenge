@@ -4,8 +4,10 @@ import SwiftUI
 
 struct ReInspirePhotoView: View {
     let onContinue: () -> Void
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
+        let s = OBStyle.scale(sizeClass)
         GeometryReader { geo in
             ZStack(alignment: .bottom) {
 
@@ -30,13 +32,13 @@ struct ReInspirePhotoView: View {
                 // Content
                 VStack(alignment: .leading, spacing: 16) {
                     Text("reInspire.")
-                        .font(.system(size: 16, weight: .medium))
+                        .font(.system(size: 16 * s, weight: .medium))
                         .foregroundColor(.black)
                         .lineSpacing(2)
                         .appearEffect(delay: 0.05)
 
                     Text("You can't talk yourself out of doing this. Send photo to prove.")
-                        .font(.system(size: 36, weight: .medium))
+                        .font(.system(size: 36 * s, weight: .medium))
                         .foregroundColor(.white)
                         .lineSpacing(4)
                         .appearEffect(delay: 0.2)
@@ -50,7 +52,7 @@ struct ReInspirePhotoView: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 96)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                .readableWidth(560)
+                .readableWidth(560 * s)
             }
             .frame(width: geo.size.width, height: geo.size.height)
             .ignoresSafeArea()

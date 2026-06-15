@@ -8,6 +8,7 @@ import SwiftUI
 
 struct PushNotificationsOnboardingView: View {
     let onContinue: () -> Void
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     private let notifications: [P4NotificationItem] = [
         .init(title: "WE ARE SO BACK 🔥", time: "34 мин",
@@ -19,6 +20,7 @@ struct PushNotificationsOnboardingView: View {
     ]
 
     var body: some View {
+        let s = OBStyle.scale(sizeClass)
         ZStack(alignment: .topLeading) {
             // Brand illustration, full-bleed.
             GeometryReader { geo in
@@ -34,39 +36,40 @@ struct PushNotificationsOnboardingView: View {
             }
             .ignoresSafeArea()
 
-            // White fade at the top for headline + card legibility.
+            // White fade at the top for headline + card legibility. Scales with
+            // the content so the (taller) iPad stack stays fully covered.
             LinearGradient(
                 colors: [Color.white, Color.white, Color.white.opacity(0)],
                 startPoint: .top,
                 endPoint: .bottom
             )
-            .frame(height: 520)
+            .frame(height: 520 * s)
             .ignoresSafeArea()
 
             // Content
             VStack(alignment: .leading, spacing: 0) {
                 Text("reInspire.")
-                    .font(.system(size: 17, weight: .medium))
+                    .font(.system(size: 17 * s, weight: .medium))
                     .foregroundColor(.black)
                     .lineSpacing(2)
                     .padding(.top, 16)
                     .appearEffect(delay: 0.05)
 
                 Text("You can't \nforget about it. Turn on \nthe Push-notifications.")
-                    .font(.system(size: 34, weight: .medium))
+                    .font(.system(size: 34 * s, weight: .medium))
                     .foregroundColor(.black)
                     .lineSpacing(4)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 4)
                     .appearEffect(delay: 0.2)
 
-                VStack(spacing: 8) {
+                VStack(spacing: 8 * s) {
                     ForEach(notifications.indices, id: \.self) { i in
-                        P4NotificationCard(item: notifications[i])
+                        P4NotificationCard(item: notifications[i], scale: s)
                             .appearEffect(delay: 0.35 + Double(i) * 0.12, yOffset: 24)
                     }
                 }
-                .padding(.top, 22)
+                .padding(.top, 22 * s)
 
                 Spacer()
 
@@ -80,7 +83,7 @@ struct PushNotificationsOnboardingView: View {
                 .padding(.bottom, OBStyle.ctaBottomPad)
             }
             .padding(.horizontal, 20)
-            .readableWidth(560)
+            .readableWidth(560 * s)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -101,30 +104,31 @@ private struct P4NotificationItem {
 
 private struct P4NotificationCard: View {
     let item: P4NotificationItem
+    var scale: CGFloat = 1
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .firstTextBaseline, spacing: 10) {
                 Text(item.title)
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.system(size: 15 * scale, weight: .semibold))
                     .foregroundColor(.black)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .lineLimit(1)
                 Text(item.time)
-                    .font(.system(size: 13, weight: .regular))
+                    .font(.system(size: 13 * scale, weight: .regular))
                     .foregroundColor(.black.opacity(0.5))
                     .lineLimit(1)
             }
 
             Text(item.body)
-                .font(.system(size: 13, weight: .regular))
+                .font(.system(size: 13 * scale, weight: .regular))
                 .foregroundColor(.black.opacity(0.8))
                 .multilineTextAlignment(.leading)
                 .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 2)
         }
-        .padding(12)
+        .padding(12 * scale)
         .frame(maxWidth: .infinity, alignment: .leading)
         // Native iOS Liquid Glass (matches the onboarding CTA button).
         .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 16, style: .continuous))

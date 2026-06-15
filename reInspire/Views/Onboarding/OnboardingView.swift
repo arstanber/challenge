@@ -24,22 +24,38 @@ enum OBStyle {
     /// CTA button ("Continue" / "Get Started") so every onboarding page
     /// lines its button up at the same level.
     static let ctaBottomPad: CGFloat = 50
+
+    /// Multiplier applied to onboarding type and controls on iPad (regular
+    /// width). The screens are tuned for the iPhone column; scaling metrics
+    /// and the readable width by the same factor keeps wrapping identical
+    /// while filling the larger canvas.
+    static let ipadScale: CGFloat = 1.18
+
+    /// `ipadScale` on a regular-width (iPad) layout, `1` on compact (iPhone).
+    static func scale(_ sizeClass: UserInterfaceSizeClass?) -> CGFloat {
+        sizeClass == .regular ? ipadScale : 1
+    }
 }
 
 // MARK: - Liquid Glass Button
 struct LiquidGlassButton: View {
     let title: String
-    /// Defaults match the iPhone metrics; pages can scale these up on iPad.
+    /// Base metrics default to the iPhone values; the button scales them up
+    /// automatically on iPad (regular width) so every onboarding CTA grows
+    /// together. Callers can still override the base sizes.
     var width: CGFloat = OBStyle.buttonW
     var height: CGFloat = OBStyle.buttonH
     var fontSize: CGFloat = OBStyle.buttonSize
     let action: () -> Void
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
     var body: some View {
+        let s = OBStyle.scale(sizeClass)
         Button(action: action) {
             Text(title)
-                .font(.system(size: fontSize, weight: .medium))
-                .frame(width: width, height: height)
+                .font(.system(size: fontSize * s, weight: .medium))
+                .frame(width: width * s, height: height * s)
                 .glassEffect(in: Capsule())
         }
         .buttonStyle(PressableButtonStyle())
@@ -206,14 +222,8 @@ private struct OnboardingLandingPage: View {
                     }
                     .multilineTextAlignment(.center)
 
-                    LiquidGlassButton(
-                        title: "Get Started",
-                        width: isPad ? 360 : OBStyle.buttonW,
-                        height: isPad ? 58 : OBStyle.buttonH,
-                        fontSize: isPad ? 20 : OBStyle.buttonSize,
-                        action: onNext
-                    )
-                    .frame(maxWidth: .infinity, alignment: .center)
+                    LiquidGlassButton(title: "Get Started", action: onNext)
+                        .frame(maxWidth: .infinity, alignment: .center)
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.horizontal, OBStyle.hPad)
