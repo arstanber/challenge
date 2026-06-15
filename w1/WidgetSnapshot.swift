@@ -98,22 +98,35 @@ enum WidgetRisk {
 // MARK: - Shared widget background
 
 /// The star2 motif over the system background, shared by every home-screen
-/// widget so the set reads as one family. Anchored to the top-trailing corner
-/// and kept low-opacity (matching the in-app TasksProgressCard) so it stays
-/// behind foreground content. The system ignores `.containerBackground` on
-/// accessory (lock screen) families, which supply their own vibrant background.
+/// widget so the set reads as one family. The asset is a white star on a
+/// transparent ground, so it's invisible over the (white) light-mode
+/// systemBackground -- we render it as a `.template` silhouette tinted with
+/// `Color.primary`, which yields a dark star in light mode and a light star in
+/// dark mode. Kept low-opacity so it stays behind foreground content. The
+/// system ignores `.containerBackground` on accessory (lock screen) families,
+/// which supply their own vibrant background.
 struct WidgetStarBackground: View {
     var body: some View {
         ZStack {
             Color(.systemBackground)
-            Image("star2")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 200, height: 200)
-                .opacity(0.06)
-                .offset(x: 44, y: -44)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-                .allowsHitTesting(false)
+            GeometryReader { geo in
+                // Oversized star anchored to the bottom-trailing corner so the
+                // whole burst stays recognizable on any widget aspect ratio and
+                // bleeds off the edge for a backdrop feel; the top-left stays
+                // clean for titles.
+                Image("star2")
+                    .resizable()
+                    .renderingMode(.template)
+                    .aspectRatio(contentMode: .fit)
+                    .frame(height: geo.size.height * 1.35)
+                    .foregroundStyle(Color.primary)
+                    .opacity(0.13)
+                    .frame(width: geo.size.width,
+                           height: geo.size.height,
+                           alignment: .bottomTrailing)
+                    .clipped()
+            }
+            .allowsHitTesting(false)
         }
     }
 }
