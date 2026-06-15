@@ -188,6 +188,9 @@ final class TaskEngine {
     /// the new day. Re-reads the overlay from the new day-keyed cache (empty
     /// for a fresh day) and re-pulls today's reports and streaks.
     func handleDayChange() async {
+        // Drop yesterday's Live Activity so it never carries stale day counts
+        // into the new day; a fresh one re-launches on the next snapshot.
+        LiveActivityService.shared.endCurrent()
         optimisticDoneIds = Self.readIdSet(key: Self.doneKey)
         handledTodayIds = []
         doneTodayIds = []

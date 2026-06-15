@@ -11,6 +11,7 @@ enum AppPrefs {
         static let groupCompleted = "groupCompleted"
         static let strictMode = "strictMode"
         static let zoomerMode = "zoomerMode"
+        static let liveActivityEnabled = "liveActivityEnabled"
     }
 
     enum Option {
@@ -31,6 +32,9 @@ enum AppPrefs {
     static var strictMode: Bool { (defaults.object(forKey: Key.strictMode) as? Bool) ?? true }
     /// Gen-Z tone for push notifications and nudges. Off by default.
     static var zoomerMode: Bool { (defaults.object(forKey: Key.zoomerMode) as? Bool) ?? false }
+    /// Live Activity / Dynamic Island progress banner. On by default; turning
+    /// it off ends any running activity and suppresses new launches.
+    static var liveActivityEnabled: Bool { (defaults.object(forKey: Key.liveActivityEnabled) as? Bool) ?? true }
 
     /// Calendar honoring "Начало недели".
     static var calendar: Calendar {

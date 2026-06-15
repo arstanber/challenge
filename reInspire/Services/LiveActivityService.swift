@@ -23,12 +23,28 @@ final class LiveActivityService {
 
     func update(dailyGoal: Int? = nil, todayDone: Int, streakCurrent: Int,
                 nextTaskTitle: String, goalReached: Bool) {
+        // User opt-out: tear down anything running and never launch.
+        guard AppPrefs.liveActivityEnabled else {
+            endCurrent()
+            return
+        }
         let state = LAState(todayDone: todayDone, streakCurrent: streakCurrent,
                             nextTaskTitle: nextTaskTitle, goalReached: goalReached)
         if let activity = current ?? running() {
             push(activity, state: state)
         } else if let goal = dailyGoal {
             launch(dailyGoal: goal, state: state)
+        }
+    }
+
+    /// Dismisses the running activity immediately, keeping its last content
+    /// (used on day rollover and when the user disables the feature). A fresh
+    /// activity re-launches on the next `update` when the feature is enabled.
+    func endCurrent() {
+        guard let activity = current ?? running() else { return }
+        Task {
+            await activity.end(nil, dismissalPolicy: ActivityUIDismissalPolicy.immediate)
+            self.current = nil
         }
     }
 

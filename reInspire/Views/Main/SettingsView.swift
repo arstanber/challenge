@@ -36,6 +36,7 @@ struct SettingsView: View {
     @AppStorage("weekStart") private var weekStart = "Понедельник"
     @AppStorage(Haptics.enabledKey) private var hapticsEnabled = true
     @AppStorage(AppPrefs.Key.zoomerMode) private var zoomerMode = false
+    @AppStorage(AppPrefs.Key.liveActivityEnabled) private var liveActivityEnabled = true
     // Habits
     // Default true: done tasks collect at the bottom (HomeView reads this too).
     @AppStorage("groupCompleted") private var groupCompleted = true
@@ -142,6 +143,11 @@ struct SettingsView: View {
                 }
                 .padding(20)
             }
+        }
+        .onChange(of: liveActivityEnabled) { _, enabled in
+            // Off -> dismiss right away. On -> a fresh activity re-launches on
+            // the next snapshot rebuild from ActivitiesViewModel.
+            if !enabled { LiveActivityService.shared.endCurrent() }
         }
         .confirmationDialog("Выйти из аккаунта?", isPresented: $showSignOut, titleVisibility: .visible) {
             Button("Выйти", role: .destructive) {
@@ -284,6 +290,13 @@ struct SettingsView: View {
                 title: "Режим зумера",
                 subtitle: "Пуши начнут общаться с тобой на сленге: стрики, пруфы, вайб. Без кринжа (почти).",
                 isOn: $zoomerMode
+            )
+            SettingsDivider()
+            SettingsToggleRow(
+                icon: "capsule.portrait",
+                title: "Живая активность",
+                subtitle: "Прогресс дня и стрик в Dynamic Island и на экране блокировки. Выключите, чтобы убрать.",
+                isOn: $liveActivityEnabled
             )
         }
     }
