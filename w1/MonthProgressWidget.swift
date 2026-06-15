@@ -7,7 +7,7 @@ struct MonthProgressWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
             MonthProgressWidgetView(snapshot: entry.snapshot)
-                .containerBackground(for: .widget) { Color(.systemBackground) }
+                .containerBackground(for: .widget) { WidgetStarBackground() }
         }
         .configurationDisplayName("Month Progress")
         .description("A dot for every day this month -- filled when you hit the goal.")
@@ -26,44 +26,36 @@ struct MonthProgressWidgetView: View {
     private var metCount: Int { days.prefix(snapshot.todayDayIndex).filter { $0 }.count }
 
     var body: some View {
-        ZStack(alignment: .topLeading) {
-            Image("star2")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 150, height: 150)
-                .opacity(0.04)
-                .offset(x: 150, y: -10)
-                .allowsHitTesting(false)
+        // Background star comes from the shared WidgetStarBackground container.
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Tasks Progress in Month")
+                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.primary)
+                Spacer()
+                Text("\(metCount)/\(days.count)")
+                    .font(.system(size: 14, weight: .heavy, design: .rounded))
+                    .foregroundStyle(Self.active)
+            }
 
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(alignment: .firstTextBaseline) {
-                    Text("Tasks Progress in Month")
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.primary)
-                    Spacer()
-                    Text("\(metCount)/\(days.count)")
-                        .font(.system(size: 14, weight: .heavy, design: .rounded))
-                        .foregroundStyle(Self.active)
-                }
-
-                if days.isEmpty {
-                    Spacer()
-                    Text("Open the app to start tracking")
-                        .font(.system(size: 13, design: .rounded))
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                } else {
-                    MonthDotGrid(days: days,
-                                 todayDay: snapshot.todayDayIndex,
-                                 active: Self.active)
-                    Spacer(minLength: 0)
-                    Text("reInspire")
-                        .font(.system(size: 12, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-                }
+            if days.isEmpty {
+                Spacer()
+                Text("Open the app to start tracking")
+                    .font(.system(size: 13, design: .rounded))
+                    .foregroundStyle(.secondary)
+                Spacer()
+            } else {
+                MonthDotGrid(days: days,
+                             todayDay: snapshot.todayDayIndex,
+                             active: Self.active)
+                Spacer(minLength: 0)
+                Text("reInspire")
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }
 

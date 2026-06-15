@@ -7,7 +7,7 @@ struct PerformanceWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
             PerformanceWidgetView(snapshot: entry.snapshot)
-                .containerBackground(for: .widget) { Color(.systemBackground) }
+                .containerBackground(for: .widget) { WidgetStarBackground() }
         }
         .configurationDisplayName("Performance")
         .description("Weekly completion over the last 6 weeks, plus 30-day growth.")

@@ -95,6 +95,29 @@ enum WidgetRisk {
     case none, atRisk, critical
 }
 
+// MARK: - Shared widget background
+
+/// The star2 motif over the system background, shared by every home-screen
+/// widget so the set reads as one family. Anchored to the top-trailing corner
+/// and kept low-opacity (matching the in-app TasksProgressCard) so it stays
+/// behind foreground content. The system ignores `.containerBackground` on
+/// accessory (lock screen) families, which supply their own vibrant background.
+struct WidgetStarBackground: View {
+    var body: some View {
+        ZStack {
+            Color(.systemBackground)
+            Image("star2")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 200, height: 200)
+                .opacity(0.06)
+                .offset(x: 44, y: -44)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                .allowsHitTesting(false)
+        }
+    }
+}
+
 struct WidgetTask: Codable, Identifiable {
     var id: UUID
     var title: String

@@ -7,7 +7,7 @@ struct StreakWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
             StreakWidgetView(snapshot: entry.snapshot)
-                .containerBackground(for: .widget) { backgroundGradient }
+                .containerBackground(for: .widget) { WidgetStarBackground() }
         }
         .configurationDisplayName("Streak")
         .description("Your current daily streak at a glance.")
@@ -17,14 +17,6 @@ struct StreakWidget: Widget {
             .accessoryInline,
             .accessoryRectangular
         ])
-    }
-
-    private var backgroundGradient: LinearGradient {
-        LinearGradient(
-            colors: [Color.orange.opacity(0.22), Color.red.opacity(0.12)],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
     }
 }
 

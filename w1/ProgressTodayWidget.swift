@@ -7,7 +7,7 @@ struct ProgressTodayWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
             ProgressTodayWidgetView(snapshot: entry.snapshot)
-                .containerBackground(for: .widget) { Color(.systemBackground) }
+                .containerBackground(for: .widget) { WidgetStarBackground() }
         }
         .configurationDisplayName("Today's Progress")
         .description("Your completion versus today's goal, with a nudge.")

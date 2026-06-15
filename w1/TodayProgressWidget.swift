@@ -7,7 +7,7 @@ struct TodayProgressWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
             TodayProgressWidgetView(snapshot: entry.snapshot)
-                .containerBackground(for: .widget) { Color(.systemBackground) }
+                .containerBackground(for: .widget) { WidgetStarBackground() }
         }
         .configurationDisplayName("Today's Goal")
         .description("How many activities you've completed today.")

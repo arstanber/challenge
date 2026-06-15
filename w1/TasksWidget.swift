@@ -8,7 +8,7 @@ struct TasksWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
             TasksWidgetView(snapshot: entry.snapshot)
-                .containerBackground(for: .widget) { Color(.systemBackground) }
+                .containerBackground(for: .widget) { WidgetStarBackground() }
         }
         .configurationDisplayName("Today's Activities")
         .description("Your active activities and what's left today.")
