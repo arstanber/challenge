@@ -8,10 +8,9 @@ insert into storage.buckets (id, name, public)
 values ('avatars', 'avatars', true)
 on conflict (id) do nothing;
 
--- Public read of avatar objects (URLs are shared in leaderboards/family lists).
-drop policy if exists "Public read avatars" on storage.objects;
-create policy "Public read avatars" on storage.objects
-  for select using (bucket_id = 'avatars');
+-- No broad SELECT policy: a public bucket already serves object URLs directly,
+-- and a SELECT policy on storage.objects would let clients LIST every file
+-- (the same risk the reports bucket was hardened against in 20260610).
 
 -- A user can upload/replace/delete only files under their own id prefix.
 drop policy if exists "Users write own avatar" on storage.objects;
