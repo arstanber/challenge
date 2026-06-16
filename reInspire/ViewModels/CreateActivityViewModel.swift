@@ -25,9 +25,7 @@ final class CreateActivityViewModel {
         return Calendar.current.date(from: comps) ?? Date()
     }()
     var goalTarget: String = ""
-    /// Live text in the connector picker, e.g. "chess.com".
-    var connectorQuery: String = ""
-    /// Capability the user picked from the connector picker (binds the task).
+    /// Data-source capability bound to this task (auto-tracks its progress).
     private(set) var selectedCapability: ConnectorCapability?
     var assignToChildId: UUID?
     /// When non-empty, the activity is created once for each of these children
@@ -55,32 +53,12 @@ final class CreateActivityViewModel {
     var showConditionField: Bool { type.hasAIVerification && selectedCapability == nil }
     var showGoalTarget: Bool { type == .goal }
 
-    // MARK: - Connector capability picker
-
-    /// Capabilities matching the current query (full list when query is empty).
-    var capabilityResults: [ConnectorCapability] {
-        ConnectorCapability.search(connectorQuery)
-    }
-
-    /// Unit for the goal-target field once a capability is bound (e.g. "партий").
-    var goalTargetUnit: String? { selectedCapability?.unit }
-
-    /// Bind a capability: the task becomes an auto-tracked goal with a prefilled
-    /// target and title (title only when the user hasn't typed their own).
-    func selectCapability(_ capability: ConnectorCapability) {
+    /// Bind a data-source capability so this task auto-tracks against it. The
+    /// task becomes a goal; the caller supplies the numeric target.
+    func bindConnector(_ capability: ConnectorCapability, target: Double) {
         selectedCapability = capability
         type = .goal
-        if (Double(goalTarget) ?? 0) <= 0 {
-            goalTarget = String(Int(capability.defaultTarget))
-        }
-        if title.trimmingCharacters(in: .whitespaces).isEmpty {
-            title = capability.taskTitle(target: Double(goalTarget) ?? capability.defaultTarget)
-        }
-        connectorQuery = ""
-    }
-
-    func clearCapability() {
-        selectedCapability = nil
+        goalTarget = String(Int(target))
     }
 
     func create() async {

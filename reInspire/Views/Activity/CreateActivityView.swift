@@ -43,17 +43,10 @@ struct CreateActivityView: View {
                     }
                 }
 
-                connectorSection
-
                 if vm.showGoalTarget {
-                    Section("Цель") {
-                        HStack {
-                            TextField("Например: 10", text: $vm.goalTarget)
-                                .keyboardType(.decimalPad)
-                            if let unit = vm.goalTargetUnit {
-                                Text(unit).foregroundStyle(.secondary)
-                            }
-                        }
+                    Section("Goal target") {
+                        TextField("Target value (e.g. 100 for 100 km)", text: $vm.goalTarget)
+                            .keyboardType(.decimalPad)
                     }
                 }
 
@@ -132,90 +125,6 @@ struct CreateActivityView: View {
                 }
             }
         }
-    }
-
-    // MARK: - Connector capability picker
-
-    /// Whether this is a parent assigning to a child. Auto-tracking reads the
-    /// current device's connected sources, so it's hidden in that flow.
-    private var isChildAssignment: Bool {
-        presetChildId != nil || !(presetChildIds?.isEmpty ?? true)
-    }
-
-    @ViewBuilder
-    private var connectorSection: some View {
-        if !isChildAssignment {
-            Section {
-                if let cap = vm.selectedCapability {
-                    selectedCapabilityRow(cap)
-                } else {
-                    TextField("Например: Chess.com", text: $vm.connectorQuery)
-                    ForEach(vm.capabilityResults) { cap in
-                        Button { Haptics.selection(); vm.selectCapability(cap) } label: {
-                            capabilityRow(cap)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-            } header: {
-                Text("Автопроверка через источник")
-            } footer: {
-                Text("Введи название источника -- например Chess.com -- и выбери, что засчитывать. Прогресс будет считаться автоматически, без фото.")
-            }
-        }
-    }
-
-    private func capabilityRow(_ cap: ConnectorCapability) -> some View {
-        HStack(spacing: 12) {
-            connectorIcon(cap.connector)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(cap.connector.displayName)
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(.primary)
-                Text(cap.title)
-                    .font(.system(size: 13))
-                    .foregroundStyle(.secondary)
-            }
-            Spacer(minLength: 8)
-            Image(systemName: "plus.circle.fill")
-                .font(.system(size: 20))
-                .foregroundStyle(cap.connector.tint)
-        }
-        .contentShape(Rectangle())
-    }
-
-    private func selectedCapabilityRow(_ cap: ConnectorCapability) -> some View {
-        HStack(spacing: 12) {
-            connectorIcon(cap.connector)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(cap.connector.displayName)
-                    .font(.system(size: 16, weight: .medium))
-                Text(cap.title)
-                    .font(.system(size: 13))
-                    .foregroundStyle(.secondary)
-            }
-            Spacer(minLength: 8)
-            Button {
-                Haptics.tap()
-                vm.clearCapability()
-            } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 20))
-                    .foregroundStyle(.secondary)
-            }
-            .buttonStyle(.plain)
-        }
-    }
-
-    private func connectorIcon(_ connector: DataConnector) -> some View {
-        RoundedRectangle(cornerRadius: 10, style: .continuous)
-            .fill(connector.tint.opacity(0.15))
-            .frame(width: 36, height: 36)
-            .overlay {
-                Image(systemName: connector.icon)
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(connector.tint)
-            }
     }
 }
 

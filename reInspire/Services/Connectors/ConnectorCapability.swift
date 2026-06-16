@@ -18,6 +18,17 @@ struct ConnectorCapability: Identifiable, Hashable {
 
     var id: String { "\(connector.rawValue).\(metric.rawValue)" }
 
+    /// Increment for the target stepper, scaled to the metric.
+    var targetStep: Double {
+        switch metric {
+        case .steps:           return 500
+        case .activeEnergy:    return 50
+        case .distance:        return 1
+        case .exerciseMinutes: return 5
+        case .itemsToday:      return 1
+        }
+    }
+
     /// A ready-made task title, e.g. "Сыграть 10 партий" (target filled in by the VM).
     func taskTitle(target: Double) -> String {
         let n = Int(target)
@@ -93,15 +104,18 @@ extension ConnectorCapability {
         DataConnector.allCases.filter { $0.isConfigured }.flatMap { $0.capabilities }
     }
 
-    /// Capabilities whose connector matches `query` (name or alias). An empty
-    /// query returns the full browseable list.
-    static func search(_ query: String) -> [ConnectorCapability] {
-        let q = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        guard !q.isEmpty else { return all }
+    /// Capabilities whose connector is mentioned in `text` -- either the user is
+    /// typing a connector name ("chess.c") or wrote a line that names it
+    /// ("сыграть в шахматы"). Returns [] for short/no-match text so we never
+    /// surface the whole list unprompted.
+    static func detect(in text: String) -> [ConnectorCapability] {
+        let q = text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard q.count >= 3 else { return [] }
         return all.filter { cap in
-            let tokens = [cap.connector.displayName.lowercased(), cap.title.lowercased()]
-                + cap.connector.searchAliases
-            return tokens.contains { $0.contains(q) || q.contains($0) }
+            let tokens = cap.connector.searchAliases + [cap.connector.displayName.lowercased()]
+            return tokens.contains { token in
+                token.count >= 3 && (q.contains(token) || token.contains(q))
+            }
         }
     }
 }
