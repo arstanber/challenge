@@ -430,7 +430,7 @@ final class TaskEngine {
                 .value
 
             let minPerDay = max(1, Int((Constants.App.streakDailyCompletionRatio
-                                        * Double(knownActivityIds.count)).rounded(.up)))
+                                        * Double(knownActivityIds.count)).rounded(.down)))
             var dayActivities: [Date: Set<UUID>] = [:]
             for row in rows {
                 let day = calendar.startOfDay(for: row.createdAt)
