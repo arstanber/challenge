@@ -3,455 +3,314 @@ import StoreKit
 
 // MARK: - Design tokens
 
-private enum PaywallColors {
-    static let background = Color(.systemBackground)
-    static let cardBg     = Color(.secondarySystemBackground)
-    static let separator  = Color.primary.opacity(0.12)
-    /// The app's violet accent (matches the landing site's `#7c4df0`).
-    static let accent     = Color(hex: "7C4DF0")
-    static let accentDeep = Color(hex: "5B2FD6")
+private enum PaywallStyle {
+    static let bg          = Color.black
+    static let accentRed   = Color(red: 1, green: 0.039, blue: 0.039)
+    static let subscribe   = Color(hex: "0048E2")
+    static let cardWhite   = Color.white.opacity(0.06)
+    static let cardBorder  = Color.white.opacity(0.12)
+    static let subtitle    = Color.white.opacity(0.7)
+    static let heroHeight: CGFloat = 280
 }
 
-// MARK: - Plan / period model
-
-private enum PaywallPlan: String, CaseIterable, Identifiable {
-    case premium, family, max
-    var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .premium: return "Premium"
-        case .family:  return "Family"
-        case .max:     return "Max"
-        }
-    }
-
-    var badge: String? {
-        self == .max ? "MAX" : nil
-    }
-
-    var periods: [PaywallPeriod] {
-        switch self {
-        case .premium: return [.monthly, .annual, .forever]
-        case .family:  return [.monthly, .annual]
-        case .max:     return [.monthly]
-        }
-    }
-
-    var features: [String] {
-        switch self {
-        case .premium:
-            return [
-                "Безлимит задач и привычек",
-                "30 AI-проверок фото в месяц",
-                "AI-коуч и планировщик целей",
-                "Полная история и статистика",
-                "Заморозка серии 1 раз в неделю"
-            ]
-        case .family:
-            return [
-                "Всё из Premium для 5 человек",
-                "Семейный рейтинг",
-                "Код приглашения для семьи"
-            ]
-        case .max:
-            return [
-                "Всё из Premium",
-                "100 AI-проверок фото в месяц",
-                "Расширенные лимиты AI-коуча и планера",
-                "Коннектор Max: Strava",
-                "Приоритетная обработка"
-            ]
-        }
-    }
+private struct PaywallFeature: Identifiable {
+    let id = UUID()
+    let icon: String
+    let text: String
 }
 
-private enum PaywallPeriod: String, CaseIterable, Identifiable {
-    case monthly, annual, forever
-    var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .monthly: return "Месяц"
-        case .annual:  return "Год"
-        case .forever: return "Навсегда"
-        }
-    }
+/// A purchasable option backed by a real StoreKit product id.
+private struct PaywallOption: Identifiable {
+    let id: String          // product id
+    let title: String
+    let period: String      // "/год", "/мес", ""
+    let monthlyForSavings: String?  // monthly product id to compute the savings badge
 }
 
-// MARK: - Paywall
+// MARK: - Paywall (dark)
+// Struct name kept as `PremiumView` -- every call site presents this.
 
 struct PremiumView: View {
     @State private var store = StoreService.shared
     @Environment(\.dismiss) private var dismiss
 
-    @State private var selectedPlan: PaywallPlan = .premium
-    @State private var selectedPeriod: PaywallPeriod = .monthly
+    @State private var selected: String = Constants.Store.premiumAnnualID
+
+    private let features: [PaywallFeature] = [
+        .init(icon: "infinity",            text: "Безлимит задач и привычек"),
+        .init(icon: "checkmark.seal",      text: "Больше AI-проверок фото"),
+        .init(icon: "sparkles",            text: "AI-коуч и планировщик целей"),
+        .init(icon: "chart.xyaxis.line",   text: "Полная статистика и история"),
+        .init(icon: "snowflake",           text: "Заморозка серии и бонусы")
+    ]
+
+    private var proOptions: [PaywallOption] {
+        [
+            .init(id: Constants.Store.premiumAnnualID, title: "Год", period: "/год",
+                  monthlyForSavings: Constants.Store.premiumMonthlyID),
+            .init(id: Constants.Store.premiumMonthlyID, title: "Месяц", period: "/мес",
+                  monthlyForSavings: nil)
+        ]
+    }
+
+    private var familyOptions: [PaywallOption] {
+        [
+            .init(id: Constants.Store.familyAnnualID, title: "Год", period: "/год",
+                  monthlyForSavings: Constants.Store.familyMonthlyID),
+            .init(id: Constants.Store.familyMonthlyID, title: "Месяц", period: "/мес",
+                  monthlyForSavings: nil)
+        ]
+    }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                header
+        ZStack(alignment: .top) {
+            PaywallStyle.bg.ignoresSafeArea()
 
-                if store.currentPlan != .free {
-                    currentPlanBanner
-                }
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 0) {
+                    hero
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("reInspire")
+                            .font(.system(size: 26, weight: .semibold))
+                            .foregroundColor(.white)
 
-                planSelector
+                        Text("🚀 Перейди на Премиум -- успевай больше")
+                            .font(.system(size: 24, weight: .bold))
+                            .foregroundColor(.white)
+                            .fixedSize(horizontal: false, vertical: true)
 
-                periodSelector
+                        featureList.padding(.top, 4)
 
-                featureList
+                        sectionLabel("reInspire Pro")
+                        ForEach(proOptions) { optionRow($0) }
 
-                if let err = store.errorMessage {
-                    Text(err)
-                        .font(.footnote)
-                        .foregroundStyle(.red)
-                        .multilineTextAlignment(.center)
-                }
+                        sectionLabel("reInspire Family").padding(.top, 4)
+                        Text("Премиум для всей семьи (до 5 человек).")
+                            .font(.system(size: 14))
+                            .foregroundColor(PaywallStyle.subtitle)
+                        ForEach(familyOptions) { optionRow($0) }
 
-                ctaButton
+                        if let err = store.errorMessage {
+                            Text(err).font(.footnote).foregroundColor(PaywallStyle.accentRed)
+                        }
 
-                restoreButton
-
-                footer
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 8)
-            .padding(.bottom, 32)
-            .readableWidth(560)
-        }
-        .background(PaywallColors.background.ignoresSafeArea())
-        .navigationTitle("Подписка")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    Haptics.tap()
-                    dismiss()
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.secondary)
-                        .font(.title3)
+                        subscribeButton.padding(.top, 8)
+                        legal.padding(.bottom, 24)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 16)
+                    .readableWidth(560)
                 }
             }
+
+            closeButton
         }
-        .onAppear {
-            AnalyticsService.shared.track(.premiumPaywallShown)
-            // Make sure the chosen plan always has a valid period selected.
-            if !selectedPlan.periods.contains(selectedPeriod) {
-                selectedPeriod = selectedPlan.periods.first ?? .monthly
-            }
-        }
-        .onChange(of: selectedPlan) { _, newPlan in
-            Haptics.selection()
-            if !newPlan.periods.contains(selectedPeriod) {
-                selectedPeriod = newPlan.periods.first ?? .monthly
-            }
-        }
+        .preferredColorScheme(.dark)
+        .toolbar(.hidden, for: .navigationBar)
+        .onAppear { AnalyticsService.shared.track(.premiumPaywallShown) }
     }
 
-    // MARK: Header
+    // MARK: Hero
 
-    private var header: some View {
-        VStack(spacing: 10) {
-            ZStack {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [PaywallColors.accent, PaywallColors.accentDeep],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 64, height: 64)
-                Image(systemName: "sparkles")
-                    .font(.system(size: 28, weight: .semibold))
-                    .foregroundStyle(.white)
-            }
-            .padding(.top, 8)
-
-            Text("reInspire Premium")
-                .font(.title2.bold())
-                .multilineTextAlignment(.center)
-
-            Text("AI проверяет твои привычки по фото")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-        }
-    }
-
-    // MARK: Current plan banner
-
-    private var currentPlanBanner: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "checkmark.seal.fill")
-                .foregroundStyle(PaywallColors.accent)
-            Text("Твой план: \(store.currentPlan.displayName)")
-                .font(.subheadline.weight(.semibold))
-            Spacer()
-            Text("Улучшить")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background(PaywallColors.cardBg, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-    }
-
-    // MARK: Plan selector
-
-    private var planSelector: some View {
-        HStack(spacing: 10) {
-            ForEach(PaywallPlan.allCases) { plan in
-                planCard(plan)
-            }
-        }
-    }
-
-    private func planCard(_ plan: PaywallPlan) -> some View {
-        let isSelected = selectedPlan == plan
-        return Button {
-            selectedPlan = plan
-        } label: {
-            VStack(spacing: 6) {
-                if let badge = plan.badge {
-                    Text(badge)
-                        .font(.system(size: 10, weight: .bold))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 2)
-                        .background(
-                            Capsule().fill(.white.opacity(isSelected ? 0.25 : 0.15))
-                        )
-                        .foregroundStyle(isSelected ? .white : PaywallColors.accent)
-                }
-                Text(plan.title)
-                    .font(.subheadline.weight(.bold))
-                    .foregroundStyle(isSelected && plan == .max ? .white : .primary)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
-            .background(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(planCardBackground(plan, isSelected: isSelected))
+    private var hero: some View {
+        ZStack(alignment: .bottom) {
+            LinearGradient(
+                colors: [Color(hex: "1B3A8F"), Color(hex: "0A1838")],
+                startPoint: .top, endPoint: .bottom
             )
-            .overlay(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .strokeBorder(
-                        isSelected ? PaywallColors.accent.opacity(plan == .max ? 0 : 0.6) : PaywallColors.separator,
-                        lineWidth: isSelected ? 2 : 1
-                    )
-            )
-        }
-        .buttonStyle(.haptic(.light))
-    }
-
-    private func planCardBackground(_ plan: PaywallPlan, isSelected: Bool) -> AnyShapeStyle {
-        if plan == .max && isSelected {
-            return AnyShapeStyle(
-                LinearGradient(
-                    colors: [PaywallColors.accent, PaywallColors.accentDeep],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-        }
-        if isSelected {
-            return AnyShapeStyle(PaywallColors.accent.opacity(0.12))
-        }
-        return AnyShapeStyle(PaywallColors.cardBg)
-    }
-
-    // MARK: Period selector
-
-    private var periodSelector: some View {
-        HStack(spacing: 10) {
-            ForEach(selectedPlan.periods) { period in
-                periodPill(period)
+            .frame(height: PaywallStyle.heroHeight)
+            .overlay {
+                Image("icon_preview_blue")
+                    .resizable().scaledToFit()
+                    .frame(width: 110, height: 110)
+                    .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                    .shadow(color: .black.opacity(0.4), radius: 20, y: 10)
             }
-        }
-    }
 
-    private func periodPill(_ period: PaywallPeriod) -> some View {
-        let isSelected = selectedPeriod == period
-        return Button {
-            Haptics.selection()
-            selectedPeriod = period
-        } label: {
-            VStack(spacing: 4) {
-                Text(period.title)
-                    .font(.subheadline.weight(.semibold))
-                if let badge = savingsBadge(for: period) {
-                    Text(badge)
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(isSelected ? .white : PaywallColors.accent)
-                }
-                Text(priceLabel(for: selectedPlan, period: period))
-                    .font(.caption)
-                    .foregroundStyle(isSelected ? .white.opacity(0.85) : .secondary)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
-            .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(isSelected ? PaywallColors.accent : PaywallColors.cardBg)
+            LinearGradient(
+                stops: [
+                    .init(color: .clear, location: 0),
+                    .init(color: .black.opacity(0.6), location: 0.65),
+                    .init(color: .black, location: 1)
+                ],
+                startPoint: .top, endPoint: .bottom
             )
-            .foregroundStyle(isSelected ? .white : .primary)
+            .frame(height: PaywallStyle.heroHeight)
         }
-        .buttonStyle(.haptic(.light))
+        .frame(height: PaywallStyle.heroHeight)
+        .clipped()
     }
 
-    // MARK: Feature list
+    private func sectionLabel(_ title: String) -> some View {
+        Text(title)
+            .font(.system(size: 22, weight: .semibold))
+            .foregroundColor(.white)
+    }
+
+    // MARK: Features
 
     private var featureList: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Что входит в \(selectedPlan.title)")
-                .font(.headline)
-
-            VStack(alignment: .leading, spacing: 12) {
-                ForEach(selectedPlan.features, id: \.self) { feature in
-                    HStack(alignment: .top, spacing: 12) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(PaywallColors.accent)
-                            .font(.system(size: 18))
-                        Text(feature)
-                            .font(.subheadline)
-                            .foregroundStyle(.primary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
+            ForEach(features) { f in
+                HStack(spacing: 12) {
+                    Image(systemName: f.icon)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(PaywallStyle.accentRed)
+                        .frame(width: 22)
+                    Text(f.text)
+                        .font(.system(size: 16))
+                        .foregroundColor(.white.opacity(0.9))
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(20)
-        .background(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(PaywallColors.cardBg)
-        )
     }
 
-    // MARK: CTA
+    // MARK: Plan option row
 
-    private var ctaButton: some View {
+    private func optionRow(_ option: PaywallOption) -> some View {
+        let isSelected = selected == option.id
+        return Button {
+            Haptics.selection(); selected = option.id
+        } label: {
+            HStack(spacing: 10) {
+                ZStack {
+                    Circle()
+                        .strokeBorder(isSelected ? PaywallStyle.accentRed : Color.white.opacity(0.3), lineWidth: 2)
+                        .frame(width: 22, height: 22)
+                    if isSelected {
+                        Circle().fill(PaywallStyle.accentRed).frame(width: 14, height: 14)
+                        Image(systemName: "checkmark").font(.system(size: 9, weight: .bold)).foregroundColor(.white)
+                    }
+                }
+                Text(option.title)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.white)
+                if let badge = savingsBadge(for: option) {
+                    Text(badge)
+                        .font(.system(size: 13))
+                        .foregroundColor(PaywallStyle.accentRed)
+                        .padding(.horizontal, 8).padding(.vertical, 4)
+                        .background(Capsule().fill(PaywallStyle.accentRed.opacity(0.12)))
+                        .overlay(Capsule().strokeBorder(PaywallStyle.accentRed.opacity(0.5), lineWidth: 1))
+                }
+                Spacer()
+                HStack(spacing: 0) {
+                    Text(priceText(for: option.id))
+                        .font(.system(size: 16, weight: .semibold)).foregroundColor(.white)
+                    Text(option.period)
+                        .font(.system(size: 16)).foregroundColor(.white.opacity(0.7))
+                }
+            }
+            .padding(.horizontal, 16)
+            .frame(height: 60)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(isSelected ? PaywallStyle.accentRed.opacity(0.05) : PaywallStyle.cardWhite)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .strokeBorder(isSelected ? PaywallStyle.accentRed : PaywallStyle.cardBorder, lineWidth: 1)
+                    )
+            )
+        }
+        .buttonStyle(.plain)
+        .animation(.easeInOut(duration: 0.2), value: isSelected)
+    }
+
+    // MARK: Subscribe + legal
+
+    private var subscribeButton: some View {
         Button {
             Haptics.tap()
             Task {
-                let success = await store.purchase(productID: productID(for: selectedPlan, period: selectedPeriod))
-                if success {
-                    Haptics.success()
-                    dismiss()
+                if await store.purchase(productID: selected) {
+                    Haptics.success(); dismiss()
                 }
             }
         } label: {
             Group {
-                if store.isPurchasing {
-                    ProgressView().tint(.white)
-                } else {
-                    Text("Оформить -- \(priceLabel(for: selectedPlan, period: selectedPeriod))")
-                        .fontWeight(.semibold)
-                }
+                if store.isPurchasing { ProgressView().tint(.white) }
+                else { Text("Подписаться").font(.system(size: 17, weight: .semibold)) }
             }
-            .frame(maxWidth: .infinity)
-            .frame(height: 52)
-        }
-        .buttonStyle(.borderedProminent)
-        .tint(PaywallColors.accent)
-        .disabled(store.isPurchasing)
-    }
-
-    private var restoreButton: some View {
-        Button {
-            Haptics.tap()
-            Task { await store.restore() }
-        } label: {
-            Text("Восстановить покупки")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity).frame(height: 50)
+            .background(RoundedRectangle(cornerRadius: 12).fill(PaywallStyle.subscribe))
         }
         .disabled(store.isPurchasing)
     }
 
-    private var footer: some View {
-        Text("Подписка продлевается автоматически. Отменить можно в любой момент в настройках App Store.")
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            .multilineTextAlignment(.center)
-            .padding(.horizontal, 8)
+    private var legal: some View {
+        VStack(spacing: 10) {
+            Button { Haptics.tap(); Task { await store.restore() } } label: {
+                Text("Восстановить покупки")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.white.opacity(0.85))
+            }
+            Text("Подписка продлевается автоматически. Отменить можно в любой момент в App Store.")
+                .font(.system(size: 12))
+                .foregroundColor(PaywallStyle.subtitle)
+                .multilineTextAlignment(.center)
+            HStack(spacing: 16) {
+                Link("Условия", destination: URL(string: "https://thechallenges.app/terms.html")!)
+                Link("Конфиденциальность", destination: URL(string: "https://thechallenges.app/privacy.html")!)
+            }
+            .font(.system(size: 12))
+            .foregroundColor(.white.opacity(0.6))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 4)
     }
 
-    // MARK: - Pricing helpers
+    private var closeButton: some View {
+        HStack {
+            Button { Haptics.tap(); dismiss() } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundColor(.white)
+                    .frame(width: 34, height: 34)
+                    .background(Circle().fill(.black.opacity(0.35)))
+            }
+            Spacer()
+        }
+        .padding(.leading, 16)
+        .padding(.top, 56)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
 
-    /// Maps a plan + period to the StoreKit product ID.
-    private func productID(for plan: PaywallPlan, period: PaywallPeriod) -> String {
-        switch (plan, period) {
-        case (.premium, .monthly): return Constants.Store.premiumMonthlyID
-        case (.premium, .annual):  return Constants.Store.premiumAnnualID
-        case (.premium, .forever): return Constants.Store.premiumForeverID
-        case (.family, .monthly):  return Constants.Store.familyMonthlyID
-        case (.family, .annual):   return Constants.Store.familyAnnualID
-        case (.max, .monthly):     return Constants.Store.maxMonthlyID
-        default:                   return Constants.Store.premiumMonthlyID
+    // MARK: Pricing helpers
+
+    private func priceText(for productID: String) -> String {
+        if let p = store.product(for: productID)?.displayPrice { return p }
+        // Fallbacks until StoreKit products load.
+        switch productID {
+        case Constants.Store.premiumAnnualID:  return "$39.99"
+        case Constants.Store.premiumMonthlyID: return "$4.99"
+        case Constants.Store.familyAnnualID:   return "$79.99"
+        case Constants.Store.familyMonthlyID:  return "$9.99"
+        default:                               return "--"
         }
     }
 
-    /// Display price for a plan + period, falling back to hardcoded prices
-    /// when the StoreKit product hasn't loaded yet.
-    private func priceLabel(for plan: PaywallPlan, period: PaywallPeriod) -> String {
-        let id = productID(for: plan, period: period)
-        if let price = store.product(for: id)?.displayPrice {
-            return price
-        }
-        return fallbackPrice(for: plan, period: period)
-    }
-
-    private func fallbackPrice(for plan: PaywallPlan, period: PaywallPeriod) -> String {
-        switch (plan, period) {
-        case (.premium, .monthly): return "$4.99/мес"
-        case (.premium, .annual):  return "$39.99/год"
-        case (.premium, .forever): return "$99.99 навсегда"
-        case (.family, .monthly):  return "$9.99/мес"
-        case (.family, .annual):   return "$79.99/год"
-        case (.max, .monthly):     return "$19.99/мес"
-        default:                   return ""
-        }
-    }
-
-    /// Savings badge for annual periods, computed from loaded product prices
-    /// when available, otherwise from the fallback prices above.
-    private func savingsBadge(for period: PaywallPeriod) -> String? {
-        guard period == .annual else { return nil }
-
-        let monthlyID = productID(for: selectedPlan, period: .monthly)
-        let annualID = productID(for: selectedPlan, period: .annual)
-
-        let monthlyPrice = store.product(for: monthlyID)?.price
-        let annualPrice = store.product(for: annualID)?.price
-
-        let monthly: Double
-        let annual: Double
-        if let monthlyPrice, let annualPrice {
-            monthly = NSDecimalNumber(decimal: monthlyPrice).doubleValue
-            annual = NSDecimalNumber(decimal: annualPrice).doubleValue
+    /// "Выгода X%" for a yearly option vs 12× its monthly counterpart.
+    private func savingsBadge(for option: PaywallOption) -> String? {
+        guard let monthlyID = option.monthlyForSavings else { return nil }
+        let annual = store.product(for: option.id)?.price
+        let monthly = store.product(for: monthlyID)?.price
+        let a: Double, m: Double
+        if let annual, let monthly {
+            a = NSDecimalNumber(decimal: annual).doubleValue
+            m = NSDecimalNumber(decimal: monthly).doubleValue
         } else {
-            switch selectedPlan {
-            case .premium: monthly = 4.99; annual = 39.99
-            case .family:  monthly = 9.99; annual = 79.99
-            case .max:     return nil
-            }
+            // Fallback figures matching priceText.
+            a = option.id == Constants.Store.familyAnnualID ? 79.99 : 39.99
+            m = option.id == Constants.Store.familyAnnualID ? 9.99 : 4.99
         }
-
-        guard monthly > 0 else { return nil }
-        let yearlyAtMonthlyRate = monthly * 12
-        guard yearlyAtMonthlyRate > 0 else { return nil }
-        let savingsPercent = Int(((yearlyAtMonthlyRate - annual) / yearlyAtMonthlyRate * 100).rounded())
-        guard savingsPercent > 0 else { return nil }
-        return "выгоднее на \(savingsPercent)%"
+        guard m > 0 else { return nil }
+        let pct = Int(((m * 12 - a) / (m * 12) * 100).rounded())
+        return pct > 0 ? "Выгода \(pct)%" : nil
     }
 }
 
 #Preview {
-    NavigationStack {
-        PremiumView()
-    }
+    PremiumView()
 }
