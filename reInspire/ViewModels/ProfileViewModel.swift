@@ -377,7 +377,10 @@ final class ProfileViewModel {
         isLoading = true
         defer { isLoading = false }
         do {
-            let path = "\(id.uuidString)/\(UUID().uuidString).jpg"
+            // Folder must be the lowercased user id: Swift's UUID.uuidString is
+            // uppercase but the storage RLS policy compares against
+            // auth.uid()::text (lowercase).
+            let path = "\(id.uuidString.lowercased())/\(UUID().uuidString.lowercased()).jpg"
             try await supabase.storage
                 .from(Constants.Storage.avatarsBucket)
                 .upload(path, data: jpeg, options: FileOptions(contentType: "image/jpeg"))
