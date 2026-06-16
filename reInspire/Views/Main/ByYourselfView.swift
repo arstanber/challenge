@@ -28,10 +28,15 @@ struct ByYourselfView: View {
     var workspaceId: UUID? = nil
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var hSize
     @State private var lines: [TaskLine] = [TaskLine()]
     @FocusState private var focused: Int?
     @State private var isSaving = false
     @State private var errorMessage: String?
+
+    /// The notepad font is smaller on iPad (regular width) so more lines fit
+    /// above the keyboard in landscape and a long line doesn't wrap/cramp.
+    private var noteFontSize: CGFloat { hSize == .regular ? 26 : 34 }
 
     private var hasContent: Bool {
         lines.contains { !$0.text.trimmingCharacters(in: .whitespaces).isEmpty }
@@ -74,7 +79,7 @@ struct ByYourselfView: View {
                                             VStack(alignment: .leading, spacing: 6) {
                                                 HStack(alignment: .center, spacing: 6) {
                                                     Text("\(i + 1).")
-                                                        .font(.system(size: 34, weight: .medium))
+                                                        .font(.system(size: noteFontSize, weight: .medium))
                                                         .foregroundColor(
                                                             lines[i].text.trimmingCharacters(in: .whitespaces).isEmpty
                                                                 ? BYColors.placeholderGray
@@ -86,12 +91,12 @@ struct ByYourselfView: View {
                                                     ZStack(alignment: .leading) {
                                                         if lines[i].text.isEmpty && i == 0 {
                                                             Text("Write a new task...")
-                                                                .font(.system(size: 34, weight: .medium))
+                                                                .font(.system(size: noteFontSize, weight: .medium))
                                                                 .foregroundColor(BYColors.placeholderGray)
                                                                 .allowsHitTesting(false)
                                                         }
                                                         TextField("", text: $lines[i].text)
-                                                            .font(.system(size: 34, weight: .medium))
+                                                            .font(.system(size: noteFontSize, weight: .medium))
                                                             .foregroundColor(.black)
                                                             .focused($focused, equals: i)
                                                             .submitLabel(i == lines.count - 1 ? .done : .next)
@@ -158,7 +163,9 @@ struct ByYourselfView: View {
                     }
                     .padding(.horizontal, 15)
                     .padding(.vertical, 12)
-                    .readableWidth()
+                    // Wider column on iPad so the notepad uses the space above
+                    // the keyboard instead of a thin centered strip.
+                    .readableWidth(hSize == .regular ? 920 : 560)
                 }
             }
             .toolbar {

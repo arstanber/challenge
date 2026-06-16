@@ -282,6 +282,25 @@ final class ActivityDetailViewModel {
         }
     }
 
+    /// Auto-complete a connector-tracked goal once today's live value reaches
+    /// the target (e.g. 10000 steps from Health, 1 game from Chess.com). Inserts
+    /// a plain check-in so it counts toward the day + streak, and finishes a
+    /// one-off goal. No-op if already done today or the target isn't met.
+    func autoCompleteIfGoalMet(connectorValue: Double) async {
+        guard let target = activity.goalTarget, target > 0,
+              connectorValue >= target, !isDoneToday else { return }
+        do {
+            let req = CreateReportRequest(activityId: activity.id)
+            try await supabase.from("reports").insert(req).execute()
+            if activity.frequency == .once { await markCompleted() }
+            await loadReports()
+            await TaskEngine.shared.noteReportChanged(activityId: activity.id)
+            onReportSubmitted?()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
     // MARK: - Calendar / streak helpers (habit detail)
 
     private let cal = Calendar.current

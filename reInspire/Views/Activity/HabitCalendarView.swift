@@ -327,6 +327,8 @@ struct HabitCalendarView: View {
         guard isGoal else { return }
         if let v = await ConnectorService.shared.todayValue(for: vm.activity) {
             liveToday = v
+            // Connector hit the target -> complete the goal automatically.
+            await vm.autoCompleteIfGoalMet(connectorValue: v)
         }
     }
 

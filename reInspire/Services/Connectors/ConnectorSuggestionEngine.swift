@@ -143,6 +143,10 @@ final class ConnectorSuggestionEngine {
         if has(["встреч", "созвон", "митинг", "meeting", "звонок", "call", "расписани", "календар", "calendar", "планир", "дедлайн", "deadline", "собеседован"]) {
             add(.appleCalendar)
         }
+        // Chess
+        if has(["шахмат", "chess", "парти", "chess.com"]) {
+            add(.chessCom)
+        }
         // Telegram bot reports
         if has(["telegram", "телеграм", "фото-отч", "фото отч", "боту"]) {
             add(.telegram)
