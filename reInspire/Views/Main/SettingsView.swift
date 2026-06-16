@@ -52,6 +52,7 @@ struct SettingsView: View {
     @State private var isExporting = false
     @State private var exportFile: ExportFile?
     @State private var exportFailed = false
+    @State private var showChangePassword = false
     @State private var showTelegramLink = false
     @State private var showConnectors = false
     @State private var showDuels = false
@@ -141,6 +142,9 @@ struct SettingsView: View {
         }
         .sheet(isPresented: $showProfile) {
             ProfileEditView().environment(auth)
+        }
+        .sheet(isPresented: $showChangePassword) {
+            ChangePasswordSheet()
         }
         .fullScreenCover(isPresented: $showHallOfFame) {
             ZStack(alignment: .topTrailing) {
@@ -468,6 +472,10 @@ struct SettingsView: View {
 
     private var accountSection: some View {
         SettingsSection(title: "Аккаунт") {
+            SettingsRow(icon: "key", title: "Сменить пароль", trailing: .chevron) {
+                Haptics.tap(); showChangePassword = true
+            }
+            SettingsDivider()
             SettingsRow(icon: "rectangle.portrait.and.arrow.right", title: "Выйти", destructive: true, trailing: .none) {
                 Haptics.warning(); showSignOut = true
             }
@@ -761,6 +769,63 @@ private struct ShareSheet: UIViewControllerRepresentable {
         UIActivityViewController(activityItems: items, applicationActivities: nil)
     }
     func updateUIViewController(_ controller: UIActivityViewController, context: Context) {}
+}
+
+// MARK: - Change password
+
+private struct ChangePasswordSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var password = ""
+    @State private var confirm = ""
+    @State private var saving = false
+    @State private var errorMessage: String?
+    @State private var saved = false
+
+    private var isValid: Bool { password.count >= 6 && password == confirm }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Новый пароль (от 6 символов)") {
+                    SecureField("Новый пароль", text: $password)
+                    SecureField("Повтори пароль", text: $confirm)
+                }
+                if let errorMessage {
+                    Section { Text(errorMessage).font(.caption).foregroundStyle(.red) }
+                }
+                if saved {
+                    Section { Label("Пароль изменён", systemImage: "checkmark.circle.fill").foregroundStyle(.green) }
+                }
+            }
+            .navigationTitle("Сменить пароль")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Отмена") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Сохранить") { Task { await save() } }
+                        .fontWeight(.semibold)
+                        .disabled(!isValid || saving)
+                        .overlay { if saving { ProgressView().scaleEffect(0.7) } }
+                }
+            }
+        }
+    }
+
+    private func save() async {
+        saving = true
+        errorMessage = nil
+        defer { saving = false }
+        do {
+            try await AuthService.shared.changePassword(to: password)
+            Haptics.success(); saved = true
+            try? await Task.sleep(nanoseconds: 700_000_000)
+            dismiss()
+        } catch {
+            errorMessage = "Не удалось изменить пароль. Попробуй ещё раз."
+        }
+    }
 }
 
 #Preview {

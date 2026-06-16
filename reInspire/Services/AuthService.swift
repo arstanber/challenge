@@ -93,6 +93,11 @@ final class AuthService {
         AnalyticsService.shared.track(.signedUp, ["method": "child_upgrade"])
     }
 
+    /// Change the signed-in user's password.
+    func changePassword(to newPassword: String) async throws {
+        try await supabase.auth.update(user: UserAttributes(password: newPassword))
+    }
+
     // MARK: - Session Restore
 
     /// Minimum time the branded loading screen stays up on launch.

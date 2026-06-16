@@ -9,16 +9,26 @@ struct LeaderboardEntry: Decodable, Identifiable {
     let rank: Int
     let userId: UUID
     let email: String
+    let displayName: String?
+    let avatarURL: String?
     let streakCurrent: Int
     let streakBest: Int
     let totalCompleted: Int
 
     var id: UUID { userId }
 
+    /// Friendly name: explicit display name, else the email local part.
+    var name: String {
+        if let displayName, !displayName.isEmpty { return displayName }
+        return email.components(separatedBy: "@").first ?? email
+    }
+
     enum CodingKeys: String, CodingKey {
         case rank
         case userId = "user_id"
         case email
+        case displayName = "display_name"
+        case avatarURL = "avatar_url"
         case streakCurrent = "streak_current"
         case streakBest = "streak_best"
         case totalCompleted = "total_completed"
@@ -245,7 +255,9 @@ private struct PodiumPillar: View {
     var body: some View {
         VStack(spacing: 6) {
             Text(medal).font(.system(size: 28))
-            Text(entry.email.components(separatedBy: "@").first ?? entry.email)
+            UserAvatarView(urlString: entry.avatarURL, label: entry.name, size: 40,
+                           tint: Color(hex: "FFB200"))
+            Text(entry.name)
                 .font(.manrope(.bold, size: 12))
                 .lineLimit(1)
                 .frame(maxWidth: 80)
@@ -279,18 +291,12 @@ private struct LeaderboardRow: View {
                 .frame(width: 36)
 
             // Avatar
-            Circle()
-                .fill(isMe ? Color(hex: "4580FF").gradient : Color.primary.opacity(0.08).gradient)
-                .frame(width: 38, height: 38)
-                .overlay {
-                    Text(String(entry.email.prefix(1)).uppercased())
-                        .font(.manrope(.bold, size: 16))
-                        .foregroundStyle(isMe ? .white : .primary.opacity(0.6))
-                }
+            UserAvatarView(urlString: entry.avatarURL, label: entry.name, size: 38,
+                           tint: isMe ? Color(hex: "4580FF") : .gray)
 
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
-                    Text(entry.email.components(separatedBy: "@").first ?? entry.email)
+                    Text(entry.name)
                         .font(.manrope(.bold, size: 15))
                     if isMe {
                         Text("Ты")

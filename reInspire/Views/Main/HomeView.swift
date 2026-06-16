@@ -684,7 +684,7 @@ private struct HomeHeader: View {
     @State private var flamePulse = false
 
     private var flameColor: Color {
-        if allDone { return Color(hex: "FF6A00") }   // vivid orange, not red
+        if allDone { return Color(hex: "FF9500") }   // system orange, never red
         if streak > 0 { return .orange }
         return .secondary
     }

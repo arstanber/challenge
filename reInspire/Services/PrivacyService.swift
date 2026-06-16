@@ -19,7 +19,6 @@ final class PrivacyService {
     private let exportTables: [(table: String, ownerColumn: String)] = [
         ("users", "id"),
         ("activities", "user_id"),
-        ("reports", "user_id"),
         ("streak_freezes", "user_id"),
     ]
 
@@ -46,6 +45,21 @@ final class PrivacyService {
                 .data
             let rows = (try? JSONSerialization.jsonObject(with: data)) ?? []
             payload[entry.table] = rows
+        }
+
+        // Reports have no user_id column -- they're owned via activity_id.
+        struct IdRow: Decodable { let id: UUID }
+        let activityIds: [IdRow] = try await supabase
+            .from("activities").select("id").eq("user_id", value: uid).execute().value
+        if activityIds.isEmpty {
+            payload["reports"] = []
+        } else {
+            let data = try await supabase
+                .from("reports").select()
+                .in("activity_id", values: activityIds.map { $0.id.uuidString })
+                .execute()
+                .data
+            payload["reports"] = (try? JSONSerialization.jsonObject(with: data)) ?? []
         }
 
         let json = try JSONSerialization.data(
