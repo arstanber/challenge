@@ -61,7 +61,8 @@ final class StoreService {
         case Constants.Store.familyMonthlyID,
              Constants.Store.familyAnnualID:
             return .family
-        case Constants.Store.maxMonthlyID:
+        case Constants.Store.maxMonthlyID,
+             Constants.Store.maxAnnualID:
             return .max
         default:
             return nil

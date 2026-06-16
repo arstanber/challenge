@@ -49,6 +49,8 @@ struct PremiumView: View {
             .init(id: Constants.Store.premiumAnnualID, title: "Год", period: "/год",
                   monthlyForSavings: Constants.Store.premiumMonthlyID),
             .init(id: Constants.Store.premiumMonthlyID, title: "Месяц", period: "/мес",
+                  monthlyForSavings: nil),
+            .init(id: Constants.Store.premiumForeverID, title: "Навсегда", period: "",
                   monthlyForSavings: nil)
         ]
     }
@@ -58,6 +60,15 @@ struct PremiumView: View {
             .init(id: Constants.Store.familyAnnualID, title: "Год", period: "/год",
                   monthlyForSavings: Constants.Store.familyMonthlyID),
             .init(id: Constants.Store.familyMonthlyID, title: "Месяц", period: "/мес",
+                  monthlyForSavings: nil)
+        ]
+    }
+
+    private var maxOptions: [PaywallOption] {
+        [
+            .init(id: Constants.Store.maxAnnualID, title: "Год", period: "/год",
+                  monthlyForSavings: Constants.Store.maxMonthlyID),
+            .init(id: Constants.Store.maxMonthlyID, title: "Месяц", period: "/мес",
                   monthlyForSavings: nil)
         ]
     }
@@ -83,6 +94,12 @@ struct PremiumView: View {
 
                         sectionLabel("reInspire Pro")
                         ForEach(proOptions) { optionRow($0) }
+
+                        sectionLabel("reInspire Max").padding(.top, 4)
+                        Text("Всё из Pro + максимум AI-проверок и коннектор Strava.")
+                            .font(.system(size: 14))
+                            .foregroundColor(PaywallStyle.subtitle)
+                        ForEach(maxOptions) { optionRow($0) }
 
                         sectionLabel("reInspire Family").padding(.top, 4)
                         Text("Премиум для всей семьи (до 5 человек).")
@@ -285,8 +302,11 @@ struct PremiumView: View {
         switch productID {
         case Constants.Store.premiumAnnualID:  return "$39.99"
         case Constants.Store.premiumMonthlyID: return "$4.99"
+        case Constants.Store.premiumForeverID: return "$99.99"
         case Constants.Store.familyAnnualID:   return "$79.99"
         case Constants.Store.familyMonthlyID:  return "$9.99"
+        case Constants.Store.maxAnnualID:      return "$129.99"
+        case Constants.Store.maxMonthlyID:     return "$14.99"
         default:                               return "--"
         }
     }

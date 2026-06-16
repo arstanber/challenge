@@ -36,17 +36,18 @@ enum Constants {
     }
 
     enum Store {
-        /// Must match the product IDs you create in App Store Connect.
-        static let premiumMonthlyID = "com.reinspire.premium.monthly"
-        static let premiumAnnualID  = "com.reinspire.premium.annual"
-        static let premiumForeverID = "com.reinspire.premium.forever"        // non-consumable (lifetime)
-        static let familyMonthlyID  = "com.reinspire.premium.family"         // #18
-        static let familyAnnualID   = "com.reinspire.premium.family.annual"
-        static let maxMonthlyID     = "com.reinspire.max.monthly"
+        /// Must match the product IDs created in App Store Connect exactly.
+        static let premiumMonthlyID = "reProMonthly"
+        static let premiumAnnualID  = "reProAnnually"
+        static let premiumForeverID = "reProLifetime"     // non-renewing lifetime
+        static let familyMonthlyID  = "reFamilyMonthly"
+        static let familyAnnualID   = "reFamilyAnnually"
+        static let maxMonthlyID     = "reMaxMonthly"
+        static let maxAnnualID      = "reMaxAnnually"
 
         static let allProductIDs: Set<String> = [
             premiumMonthlyID, premiumAnnualID, premiumForeverID,
-            familyMonthlyID, familyAnnualID, maxMonthlyID
+            familyMonthlyID, familyAnnualID, maxMonthlyID, maxAnnualID
         ]
 
         // Backward-compatible aliases (older call sites)
