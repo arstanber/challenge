@@ -12,16 +12,16 @@ enum Constants {
         static let streakMilestones = [7, 14, 30, 100]
         /// A day counts toward the global streak when the user completed at
         /// least this share of the recurring tasks scheduled for that day,
-        /// rounded DOWN (minimum 1). MUST match the server engine
-        /// (`compute_user_streak` / `day_qualifies`, migration
-        /// `20260616g_streak_75_floor.sql`); change them together.
-        static let streakDailyCompletionRatio = 0.75
+        /// rounded UP (minimum 1) -- i.e. "at least half". MUST match the server
+        /// engine (`compute_user_streak` / `day_qualifies`, migration
+        /// `20260616l_streak_half.sql`); change them together.
+        static let streakDailyCompletionRatio = 0.5
 
         /// Tasks the user must complete today for the day to count toward the
-        /// streak, given how many recurring tasks are scheduled today. Rounded
-        /// down so "most of your tasks" counts (2 tasks -> 1, 3 -> 2, 4 -> 3).
+        /// streak, given how many recurring tasks are scheduled today. Half,
+        /// rounded up (6 tasks -> 3, 5 -> 3, 4 -> 2, 3 -> 2, 2 -> 1).
         static func dailyStreakGoal(scheduledToday: Int) -> Int {
-            max(1, Int((streakDailyCompletionRatio * Double(scheduledToday)).rounded(.down)))
+            max(1, Int((streakDailyCompletionRatio * Double(scheduledToday)).rounded(.up)))
         }
     }
 
