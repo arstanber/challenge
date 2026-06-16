@@ -17,6 +17,23 @@ struct ProfileEditView: View {
 
     private var user: AppUser? { auth.currentUser }
 
+    /// Effective plan label: a paid plan shows its name; a free user on a trial
+    /// or referral PRO window shows Premium until it expires; otherwise Free.
+    private var planLabel: String {
+        guard let user else { return "--" }
+        if user.plan != .free { return user.plan.displayName }
+        if user.hasReferralPro {
+            if let until = user.proUntil {
+                let f = DateFormatter()
+                f.dateFormat = "d MMM"
+                f.locale = Locale(identifier: "ru_RU")
+                return "Premium до \(f.string(from: until))"
+            }
+            return "Premium"
+        }
+        return "Free"
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -139,9 +156,7 @@ struct ProfileEditView: View {
     private var accountSection: some View {
         Section("Аккаунт") {
             LabeledContent("Почта", value: user?.email ?? "--")
-            if let plan = user?.plan {
-                LabeledContent("Тариф", value: plan.displayName)
-            }
+            LabeledContent("Тариф", value: planLabel)
             Button(role: .destructive) {
                 Haptics.warning(); showSignOut = true
             } label: {

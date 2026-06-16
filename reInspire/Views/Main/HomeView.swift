@@ -557,7 +557,7 @@ struct HomeView: View {
     }
 
     private func proceedWithCompletion(_ activity: Activity) {
-        if requirePhoto {
+        if requirePhoto && activity.type.requiresPhoto {
             // Don't mark done yet — wait for photo submission
             lastPhotoTask = activity
             taskToComplete = activity

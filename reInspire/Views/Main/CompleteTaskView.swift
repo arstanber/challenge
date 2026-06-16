@@ -65,7 +65,7 @@ struct CompleteTaskView: View {
     private var cameraView: some View {
         ZStack {
             if camera.isAvailable {
-                CameraPreview(session: camera.session).ignoresSafeArea()
+                CameraPreview(camera: camera).ignoresSafeArea()
             } else if camera.permissionDenied {
                 unavailableView(
                     icon: "lock.fill",

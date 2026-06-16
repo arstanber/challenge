@@ -55,34 +55,41 @@ struct WeekOnUsView: View {
                 .allowsHitTesting(false)
 
             VStack(alignment: .leading, spacing: 0) {
-                Text("reInspire.")
-                    .font(.system(size: WOUStyle.headerSize, weight: .medium))
-                    .foregroundColor(.black)
-                    .lineSpacing(2)
-                    .padding(.bottom, 12)
-                    .appearEffect(delay: 0.05)
+                // Scrolls if the copy is taller than the screen, so nothing is
+                // ever clipped on shorter devices.
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text("reInspire.")
+                            .font(.system(size: WOUStyle.headerSize, weight: .medium))
+                            .foregroundColor(.black)
+                            .lineSpacing(2)
+                            .padding(.bottom, 12)
+                            .appearEffect(delay: 0.05)
 
-                Text("Week on us.")
-                    .font(.manrope(.semiBold, size: WOUStyle.titleSize))
-                    .foregroundColor(.black)
-                    .padding(.bottom, 10)
-                    .appearEffect(delay: 0.15)
-                    .shimmer(delay: 0.8)
+                        Text("Week on us.")
+                            .font(.manrope(.semiBold, size: WOUStyle.titleSize))
+                            .foregroundColor(.black)
+                            .padding(.bottom, 10)
+                            .appearEffect(delay: 0.15)
+                            .shimmer(delay: 0.8)
 
-                Text(bodyText)
-                    .font(.manrope(.semiBold, size: WOUStyle.bodySize))
-                    .foregroundColor(WOUStyle.bodyGray)
-                    .lineSpacing(4)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.bottom, 8)
-                    .appearEffect(delay: 0.25)
+                        Text(bodyText)
+                            .font(.manrope(.semiBold, size: WOUStyle.bodySize))
+                            .foregroundColor(WOUStyle.bodyGray)
+                            .lineSpacing(4)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.bottom, 8)
+                            .appearEffect(delay: 0.25)
 
-                Text("No credit card required. Just enjoy!")
-                    .font(.manrope(.semiBold, size: WOUStyle.boldLineSize))
-                    .foregroundColor(.black)
-                    .appearEffect(delay: 0.35)
-
-                Spacer()
+                        Text("No credit card required. Just enjoy!")
+                            .font(.manrope(.semiBold, size: WOUStyle.boldLineSize))
+                            .foregroundColor(.black)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .appearEffect(delay: 0.35)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, WOUStyle.topPad)
+                }
 
                 VStack(spacing: 16) {
                     Text("By Arslan (dev) and his team\nResearch and best moments")
@@ -90,6 +97,7 @@ struct WeekOnUsView: View {
                         .foregroundColor(.black)
                         .multilineTextAlignment(.center)
                         .lineSpacing(4)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     LiquidGlassButton(title: "Sounds good!") {
                         Haptics.success()
@@ -97,11 +105,11 @@ struct WeekOnUsView: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
+                .padding(.top, 16)
                 .padding(.bottom, OBStyle.ctaBottomPad)
                 .appearEffect(delay: 0.45)
             }
             .padding(.horizontal, WOUStyle.hPad)
-            .padding(.top, WOUStyle.topPad)
             .readableWidth(560)
         }
         .multilineTextAlignment(.leading)

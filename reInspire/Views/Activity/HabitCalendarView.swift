@@ -43,7 +43,7 @@ struct HabitCalendarView: View {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 28) {
                     header.appearEffect(delay: 0.05)
-                    if requirePhoto { photoRequirementBanner.appearEffect(delay: 0.1) }
+                    if needsPhoto { photoRequirementBanner.appearEffect(delay: 0.1) }
                     statsRow.appearEffect(delay: 0.15)
                     monthCalendar.appearEffect(delay: 0.25)
                 }
@@ -330,6 +330,13 @@ struct HabitCalendarView: View {
         }
     }
 
+    /// Photo is required only for photo-verified task types (challenge /
+    /// assignment) AND when the global setting is on. Goals/tasks/habits never
+    /// need a photo, so the banner and camera step don't apply to them.
+    private var needsPhoto: Bool {
+        requirePhoto && vm.activity.type.requiresPhoto
+    }
+
     // Photo requirement shown each time you open the task.
     private var photoRequirementBanner: some View {
         let line: String = {
@@ -360,7 +367,7 @@ struct HabitCalendarView: View {
         VStack(spacing: 10) {
             Button {
                 Haptics.tap()
-                if !vm.isDoneToday && requirePhoto {
+                if !vm.isDoneToday && needsPhoto {
                     showCamera = true
                 } else {
                     Task {
