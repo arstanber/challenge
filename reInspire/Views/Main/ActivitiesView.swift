@@ -259,7 +259,7 @@ struct GlobalStreakBanner: View {
                         Capsule().fill(Color(.systemGray5)).frame(height: 4)
                         Capsule()
                             .fill(vm.todayCount >= minPerDay ? Color.orange : Color.orange.opacity(0.5))
-                            .frame(width: geo.size.width * Swift.min(Double(vm.todayCount) / Double(minPerDay), 1.0), height: 4)
+                            .frame(width: geo.size.width * Swift.min(Double(vm.todayCount) / Double(Swift.max(minPerDay, 1)), 1.0), height: 4)
                     }
                 }
                 .frame(height: 4)

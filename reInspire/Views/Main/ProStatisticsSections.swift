@@ -49,7 +49,7 @@ struct ProStatisticsSections: View {
                     VStack(spacing: 6) {
                         RoundedRectangle(cornerRadius: 5)
                             .fill(blue.opacity(0.85))
-                            .frame(height: max(6, CGFloat(stats.weekdayAverages[i] / maxVal) * 90))
+                            .frame(height: max(6, CGFloat((i < stats.weekdayAverages.count ? stats.weekdayAverages[i] : 0) / maxVal) * 90))
                         Text(names[i])
                             .font(.manrope(.medium, size: 11))
                             .foregroundStyle(.secondary)
