@@ -61,6 +61,20 @@ serve(async (req) => {
   }
 
   try {
+    // Require a genuine authenticated user. Default JWT verification also
+    // accepts the bare anon key, which would let anyone trigger pushes to an
+    // arbitrary user_id -- so verify there is a real user behind the token.
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const authClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+    const { data: { user: caller }, error: authErr } = await authClient.auth.getUser();
+    if (authErr || !caller) {
+      return json({ error: "Unauthorized" }, 401);
+    }
+
     const keyId      = Deno.env.get("APNS_KEY_ID");
     const teamId     = Deno.env.get("APNS_TEAM_ID");
     const bundleId   = Deno.env.get("APNS_BUNDLE_ID");

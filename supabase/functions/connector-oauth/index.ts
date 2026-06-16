@@ -104,7 +104,7 @@ async function saveToken(userId: string, provider: string, tok: any) {
     : tok.expires_at
     ? new Date(Number(tok.expires_at) * 1000).toISOString()
     : null;
-  await admin().from("connector_tokens").upsert({
+  const { error } = await admin().from("connector_tokens").upsert({
     user_id: userId,
     provider,
     access_token: tok.access_token,
@@ -113,6 +113,8 @@ async function saveToken(userId: string, provider: string, tok: any) {
     scope: tok.scope ?? null,
     updated_at: new Date().toISOString(),
   });
+  // Surface a failed write -- otherwise the caller "succeeds" with no token saved.
+  if (error) throw new Error(`saveToken(${provider}) failed: ${error.message}`);
 }
 
 async function getValidToken(userId: string, provider: string): Promise<string | null> {
@@ -144,7 +146,9 @@ async function fetchToday(provider: string, metric: string, token: string): Prom
       const acts = await res.json();
       if (!Array.isArray(acts)) return 0;
       if (metric === "distance") return acts.reduce((s, a) => s + (a.distance ?? 0), 0);
-      if (metric === "activeEnergy") return acts.reduce((s, a) => s + (a.calories ?? a.kilojoules ?? 0), 0);
+      // Strava returns kilojoules (energy output) for rides; convert to kcal
+      // to match the documented metric (1 kcal = 4.184 kJ).
+      if (metric === "activeEnergy") return acts.reduce((s, a) => s + (a.calories ?? (a.kilojoules ? a.kilojoules / 4.184 : 0)), 0);
       if (metric === "exerciseMinutes") return acts.reduce((s, a) => s + (a.moving_time ?? 0), 0) / 60;
       return acts.length; // steps not available from Strava
     }

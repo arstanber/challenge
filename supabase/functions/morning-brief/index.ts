@@ -13,8 +13,12 @@ serve(async (req) => {
 
   try {
     const { streakCurrent, todayTasks } = await req.json();
+    // Guard against a missing / non-array body so .slice/.includes can't throw.
+    const tasks: string[] = Array.isArray(todayTasks)
+      ? todayTasks.filter((t: unknown): t is string => typeof t === "string")
+      : [];
 
-    const taskList = (todayTasks as string[]).slice(0, 5).join(", ") || "no tasks set yet";
+    const taskList = tasks.slice(0, 5).join(", ") || "no tasks set yet";
     const streakText = streakCurrent > 0 ? `They're on a ${streakCurrent}-day streak.` : "They don't have a streak yet.";
 
     const prompt = `You are an enthusiastic productivity coach for a habit-tracking app called "reInspire".
@@ -43,10 +47,10 @@ Respond ONLY with valid JSON in this exact format (no markdown):
     const cleaned = raw.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
     const parsed = JSON.parse(cleaned);
 
-    parsed.topTasks = (parsed.topTasks as string[])
-      .filter((t: string) => todayTasks.includes(t))
+    parsed.topTasks = (Array.isArray(parsed.topTasks) ? parsed.topTasks as string[] : [])
+      .filter((t: string) => tasks.includes(t))
       .slice(0, 3);
-    if (parsed.topTasks.length === 0) parsed.topTasks = (todayTasks as string[]).slice(0, 3);
+    if (parsed.topTasks.length === 0) parsed.topTasks = tasks.slice(0, 3);
 
     return new Response(JSON.stringify({ ...parsed, remaining: rateResult.remaining }), {
       headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
