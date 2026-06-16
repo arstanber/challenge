@@ -205,7 +205,7 @@ struct OAuthConfig {
                     URLQueryItem(name: "response_type", value: "code")
                 ]
             )
-        case .appleHealth, .appleFitness, .appleCalendar, .telegram, .appleClock:
+        case .appleHealth, .appleFitness, .appleCalendar, .telegram, .appleClock, .appleShortcuts:
             return OAuthConfig(clientId: "", authorizeURL: "", scope: "")
         }
     }

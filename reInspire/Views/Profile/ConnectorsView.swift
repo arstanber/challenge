@@ -7,6 +7,7 @@ struct ConnectorsView: View {
     @State private var auth = AuthService.shared
     @State private var showTelegramLink = false
     @State private var showPremium = false
+    @State private var showClockSettings = false
     @State private var errorMessage: String?
 
     private var plan: UserPlan { auth.currentUser?.plan ?? .free }
@@ -38,6 +39,9 @@ struct ConnectorsView: View {
         }
         .sheet(isPresented: $showPremium) {
             NavigationStack { PremiumView() }
+        }
+        .sheet(isPresented: $showClockSettings) {
+            ClockReminderSheet(service: service)
         }
         .alert("Ошибка", isPresented: .init(
             get: { errorMessage != nil },
@@ -97,6 +101,13 @@ struct ConnectorsView: View {
 
         if connector == .telegram {
             showTelegramLink = true
+            return
+        }
+
+        // The alarm opens a settings sheet (enable + pick the time) instead of
+        // a one-shot connect toggle.
+        if connector == .appleClock {
+            showClockSettings = true
             return
         }
 
@@ -219,6 +230,70 @@ private struct ConnectorRow: View {
             Image(systemName: "chevron.right")
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(.tertiary)
+        }
+    }
+}
+
+// MARK: - Clock reminder settings
+
+private struct ClockReminderSheet: View {
+    let service: ConnectorService
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var enabled = false
+    @State private var time = Date()
+    @State private var saving = false
+    @State private var errorMessage: String?
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Toggle("Ежедневное напоминание", isOn: $enabled)
+                    if enabled {
+                        DatePicker("Время", selection: $time, displayedComponents: .hourAndMinute)
+                    }
+                } footer: {
+                    Text("В выбранное время придёт уведомление со списком задач на день. iOS не даёт ставить системный будильник из приложения, поэтому это локальное напоминание.")
+                }
+                if let errorMessage {
+                    Section { Text(errorMessage).font(.caption).foregroundStyle(.red) }
+                }
+            }
+            .navigationTitle("Будильник")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Отмена") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Готово") { Task { await save() } }
+                        .fontWeight(.semibold)
+                        .disabled(saving)
+                }
+            }
+            .onAppear {
+                enabled = service.isConnected(.appleClock)
+                time = service.clockReminderTime
+            }
+        }
+    }
+
+    private func save() async {
+        saving = true
+        defer { saving = false }
+        do {
+            if enabled {
+                try await service.enableClock(at: time)
+            } else {
+                service.disableClock()
+            }
+            Haptics.success()
+            dismiss()
+        } catch ConnectorError.authorizationDenied {
+            errorMessage = "Разреши уведомления в настройках, чтобы получать напоминание."
+        } catch {
+            errorMessage = error.localizedDescription
         }
     }
 }

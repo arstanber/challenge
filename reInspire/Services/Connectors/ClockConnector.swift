@@ -11,19 +11,35 @@ private let logger = Logger(subsystem: "com.reinspire", category: "ClockConnecto
 final class ClockConnector {
     static let notificationId = "clock-connector-morning"
     private static let defaultsKey = "clock_connector_enabled_v1"
+    private static let hourKey = "clock_connector_hour_v1"
+    private static let minuteKey = "clock_connector_minute_v1"
 
     /// Whether the morning reminder is currently enabled (persisted).
     var isEnabled: Bool {
         UserDefaults.standard.bool(forKey: Self.defaultsKey)
     }
 
-    /// Requests notification permission and schedules the daily 08:00 reminder.
-    func enable() async throws {
+    /// Chosen reminder time (defaults to 08:00). Persisted across launches.
+    var reminderHour: Int {
+        UserDefaults.standard.object(forKey: Self.hourKey) as? Int ?? 8
+    }
+    var reminderMinute: Int {
+        UserDefaults.standard.object(forKey: Self.minuteKey) as? Int ?? 0
+    }
+
+    /// Requests notification permission and schedules the daily reminder at the
+    /// given time (defaults to the saved/8:00 time when `date` is nil).
+    func enable(at date: Date? = nil) async throws {
         let granted = try await UNUserNotificationCenter.current()
             .requestAuthorization(options: [.alert, .badge, .sound])
         guard granted else { throw ConnectorError.authorizationDenied }
 
-        scheduleMorningReminder()
+        if let date {
+            let comps = Calendar.current.dateComponents([.hour, .minute], from: date)
+            UserDefaults.standard.set(comps.hour ?? 8, forKey: Self.hourKey)
+            UserDefaults.standard.set(comps.minute ?? 0, forKey: Self.minuteKey)
+        }
+        scheduleMorningReminder(hour: reminderHour, minute: reminderMinute)
         UserDefaults.standard.set(true, forKey: Self.defaultsKey)
     }
 
@@ -33,7 +49,7 @@ final class ClockConnector {
         UserDefaults.standard.set(false, forKey: Self.defaultsKey)
     }
 
-    /// Schedules (or refreshes) the repeating 08:00 reminder using today's pending task count.
+    /// Schedules (or refreshes) the repeating reminder using today's pending task count.
     func scheduleMorningReminder(hour: Int = 8, minute: Int = 0) {
         let center = UNUserNotificationCenter.current()
         center.removePendingNotificationRequests(withIdentifiers: [Self.notificationId])

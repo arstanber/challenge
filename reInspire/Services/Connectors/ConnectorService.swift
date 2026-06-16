@@ -1,5 +1,9 @@
 import Foundation
 import Observation
+import EventKit
+#if canImport(UIKit)
+import UIKit
+#endif
 
 /// Facade over every data source. Views talk only to this.
 ///
@@ -25,9 +29,41 @@ final class ConnectorService {
 
     private init() { load() }
 
+    /// Reports the REAL state, not just a stored flag, so a connector the user
+    /// never set up (or revoked in iOS Settings) is never shown as connected.
     func isConnected(_ c: DataConnector) -> Bool {
-        if c == .telegram { return TelegramService.shared.isLinked }
-        return connected.contains(c)
+        switch c {
+        case .telegram:      return TelegramService.shared.isLinked
+        case .appleClock:    return clock.isEnabled
+        case .appleCalendar: return connected.contains(c) && Self.isCalendarAuthorized
+        default:             return connected.contains(c)
+        }
+    }
+
+    private static var isCalendarAuthorized: Bool {
+        EKEventStore.authorizationStatus(for: .event) == .fullAccess
+    }
+
+    // MARK: - Clock reminder (configurable time)
+
+    /// Current reminder time as a Date today (for the time picker).
+    var clockReminderTime: Date {
+        Calendar.current.date(
+            bySettingHour: clock.reminderHour, minute: clock.reminderMinute, second: 0, of: Date()
+        ) ?? Date()
+    }
+
+    /// Enable/refresh the morning reminder at the chosen time.
+    func enableClock(at date: Date) async throws {
+        try await clock.enable(at: date)
+        connected.insert(.appleClock)
+        save()
+    }
+
+    func disableClock() {
+        clock.disable()
+        connected.remove(.appleClock)
+        save()
     }
 
     /// Connect a source. Throws `ConnectorError` (incl. user-cancelled / not-configured /
@@ -37,11 +73,12 @@ final class ConnectorService {
         guard c.isUnlocked(for: plan) else { throw ConnectorError.requiresMax }
 
         switch c.kind {
-        case .health:   try await health.requestAuthorization()
-        case .oauth:    try await oauth.connect(c)
-        case .calendar: try await calendar.requestAuthorization()
-        case .clock:    try await clock.enable()
-        case .telegram: return // handled via TelegramLinkView; nothing to do here.
+        case .health:    try await health.requestAuthorization()
+        case .oauth:     try await oauth.connect(c)
+        case .calendar:  try await calendar.requestAuthorization()
+        case .clock:     try await clock.enable()
+        case .shortcuts: openShortcutsApp()
+        case .telegram:  return // handled via TelegramLinkView; nothing to do here.
         }
         connected.insert(c)
         save()
@@ -52,10 +89,20 @@ final class ConnectorService {
         case .oauth:    await oauth.disconnect(c)
         case .clock:    clock.disable()
         case .telegram: return // handled via TelegramLinkView.
-        case .health, .calendar: break
+        case .health, .calendar, .shortcuts: break
         }
         connected.remove(c)
         save()
+    }
+
+    /// Opens the system Shortcuts app so the user can build automations on top
+    /// of reInspire's App Intents (see AppIntents.swift).
+    private func openShortcutsApp() {
+        #if canImport(UIKit)
+        if let url = URL(string: "shortcuts://") {
+            UIApplication.shared.open(url)
+        }
+        #endif
     }
 
     /// Best available "today" value for the metric a task tracks, across connected sources.

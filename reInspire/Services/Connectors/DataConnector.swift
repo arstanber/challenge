@@ -8,6 +8,7 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
     case appleCalendar
     case telegram
     case appleClock
+    case appleShortcuts
     // Max
     case strava
     case whoop
@@ -15,7 +16,7 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
 
     var id: String { rawValue }
 
-    enum Kind { case health, oauth, calendar, telegram, clock }
+    enum Kind { case health, oauth, calendar, telegram, clock, shortcuts }
 
     /// Apple Health / Fitness are read on-device via HealthKit; Apple Calendar via EventKit;
     /// Telegram wraps `TelegramService`; the alarm clock is a local notification; the rest
@@ -26,6 +27,7 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
         case .appleCalendar:                                               return .calendar
         case .telegram:                                                    return .telegram
         case .appleClock:                                                  return .clock
+        case .appleShortcuts:                                              return .shortcuts
         case .strava, .whoop, .notion:                                     return .oauth
         }
     }
@@ -33,7 +35,7 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
     /// Plan tier required to connect this source.
     var requiredPlan: UserPlan {
         switch self {
-        case .appleHealth, .appleFitness, .appleCalendar, .telegram, .appleClock:
+        case .appleHealth, .appleFitness, .appleCalendar, .telegram, .appleClock, .appleShortcuts:
             return .free
         case .strava, .whoop, .notion:
             return .max
@@ -63,6 +65,7 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
         case .appleCalendar: return "Календарь Apple"
         case .telegram:      return "Telegram"
         case .appleClock:    return "Будильник"
+        case .appleShortcuts: return "Команды"
         case .strava:        return "Strava"
         case .whoop:         return "Whoop"
         case .notion:        return "Notion"
@@ -76,7 +79,8 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
         case .appleFitness:  return "Кольца активности и тренировки из Apple Фитнес"
         case .appleCalendar: return "Учитывает события из календаря при планировании задач"
         case .telegram:      return "Создавайте задачи и отправляйте фото-отчёты боту"
-        case .appleClock:    return "Утреннее напоминание со списком задач на день"
+        case .appleClock:    return "Ежедневное напоминание со списком задач в выбранное время"
+        case .appleShortcuts: return "Запускайте задачи и автоматизации через приложение «Команды» и Siri"
         case .strava:        return "Пробежки и тренировки из Strava засчитываются автоматически"
         case .whoop:         return "Восстановление и нагрузка из Whoop"
         case .notion:        return "Отмечайте задачи прямо в своих страницах Notion"
@@ -90,6 +94,7 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
         case .appleCalendar: return "calendar"
         case .telegram:      return "paperplane.fill"
         case .appleClock:    return "alarm.fill"
+        case .appleShortcuts: return "square.stack.3d.up.fill"
         case .strava:        return "figure.outdoor.cycle"
         case .whoop:         return "waveform.path.ecg"
         case .notion:        return "doc.text.fill"
@@ -103,6 +108,7 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
         case .appleCalendar: return Color(hex: "FF3B30")
         case .telegram:      return Color(hex: "29A9EA")
         case .appleClock:    return Color(hex: "FF9F0A")
+        case .appleShortcuts: return Color(hex: "5E5CE6")
         case .strava:        return Color(hex: "FC4C02")
         case .whoop:         return Color(hex: "D5212B")
         case .notion:        return Color(hex: "000000")
