@@ -47,6 +47,11 @@ struct SettingsView: View {
     @State private var showAppIcon = false
     @State private var showHallOfFame = false
     @State private var showSignOut = false
+    @State private var showDeleteAccount = false
+    @State private var isDeletingAccount = false
+    @State private var isExporting = false
+    @State private var exportFile: ExportFile?
+    @State private var exportFailed = false
     @State private var showTelegramLink = false
     @State private var showConnectors = false
     @State private var showDuels = false
@@ -92,6 +97,7 @@ struct SettingsView: View {
                     syncSection
                     connectionsSection
                     infoSection
+                    privacySection
                     accountSection
                     footer
                 }
@@ -159,6 +165,34 @@ struct SettingsView: View {
                 Haptics.warning(); dismiss(); AuthService.shared.signOut()
             }
             Button("Отмена", role: .cancel) {}
+        }
+        .confirmationDialog(
+            "Удалить аккаунт?",
+            isPresented: $showDeleteAccount,
+            titleVisibility: .visible
+        ) {
+            Button("Удалить навсегда", role: .destructive) { deleteAccount() }
+            Button("Отмена", role: .cancel) {}
+        } message: {
+            Text("Все ваши привычки, отчёты и профиль будут удалены без возможности восстановления.")
+        }
+        .sheet(item: $exportFile) { file in
+            ShareSheet(items: [file.url])
+        }
+        .alert("Не удалось выгрузить данные", isPresented: $exportFailed) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Попробуйте ещё раз позже.")
+        }
+    }
+
+    private func deleteAccount() {
+        guard !isDeletingAccount else { return }
+        isDeletingAccount = true
+        Task {
+            let ok = await PrivacyService.shared.deleteAccount()
+            isDeletingAccount = false
+            if ok { dismiss() }  // signOut already cleared the session -> RootView returns to onboarding
         }
     }
 
@@ -410,10 +444,45 @@ struct SettingsView: View {
         }
     }
 
+    private var privacySection: some View {
+        SettingsSection(title: "Конфиденциальность и данные") {
+            SettingsLinkRow(icon: "checkmark.shield", title: "Политика конфиденциальности",
+                            url: URL(string: "https://thechallenges.app/privacy.html")!)
+            SettingsDivider()
+            SettingsRow(icon: "square.and.arrow.down",
+                        title: "Экспорт моих данных",
+                        trailing: isExporting ? .none : .chevron) {
+                Haptics.tap(); exportData()
+            }
+            SettingsDivider()
+            SettingsRow(icon: "trash", title: "Удалить аккаунт", destructive: true, trailing: .none) {
+                Haptics.warning(); showDeleteAccount = true
+            }
+        }
+        .overlay(alignment: .center) {
+            if isExporting || isDeletingAccount {
+                ProgressView().padding(.top, 40)
+            }
+        }
+    }
+
     private var accountSection: some View {
         SettingsSection(title: "Аккаунт") {
             SettingsRow(icon: "rectangle.portrait.and.arrow.right", title: "Выйти", destructive: true, trailing: .none) {
                 Haptics.warning(); showSignOut = true
+            }
+        }
+    }
+
+    private func exportData() {
+        guard !isExporting else { return }
+        isExporting = true
+        Task {
+            defer { isExporting = false }
+            do {
+                exportFile = ExportFile(url: try await PrivacyService.shared.exportData())
+            } catch {
+                exportFailed = true
             }
         }
     }
@@ -675,6 +744,23 @@ private struct RowIcon: View {
             .foregroundStyle(destructive ? Color.red : .secondary)
             .frame(width: 26, alignment: .center)
     }
+}
+
+// MARK: - Data export
+
+/// Wraps the export file URL so it can drive a `.sheet(item:)`.
+private struct ExportFile: Identifiable {
+    let url: URL
+    var id: String { url.path }
+}
+
+/// Minimal share-sheet bridge for handing a generated file to the system.
+private struct ShareSheet: UIViewControllerRepresentable {
+    let items: [Any]
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: items, applicationActivities: nil)
+    }
+    func updateUIViewController(_ controller: UIActivityViewController, context: Context) {}
 }
 
 #Preview {
