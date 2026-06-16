@@ -119,7 +119,7 @@ final class ConnectorSuggestionEngine {
         }
         // Gym / workouts
         if has(["трениров", "зал", "качал", "workout", "gym", "отжим", "подтяг", "присед", "планк", "йог", "yoga", "растяж", "stretch", "спорт", "фитнес", "fitness", "кардио", "табата", "кроссфит", "crossfit"]) {
-            add(.appleFitness, .appleHealth, .whoop)
+            add(.appleFitness, .appleHealth, .strava)
         }
         // Body metrics / nutrition / water
         if has(["калори", "calor", "похуд", "взвес", "вес тела", "weight", "питани", "диет", "diet", "вода", "воды", "стакан", "water", "пульс", "давлени"]) {
@@ -127,7 +127,7 @@ final class ConnectorSuggestionEngine {
         }
         // Sleep & recovery
         if has(["сон", "спать", "выспат", "sleep", "восстановлен", "recovery", "медитац", "meditat", "дыхатель", "breath"]) {
-            add(.appleHealth, .whoop)
+            add(.appleHealth)
         }
         // Early wake-up / morning routine
         if has(["проснуться", "подъём", "подъем", "встать в", "вставать", "будильник", "wake", "режим дня", "утренн"]) {
@@ -136,10 +136,6 @@ final class ConnectorSuggestionEngine {
         // Meetings & planning
         if has(["встреч", "созвон", "митинг", "meeting", "звонок", "call", "расписани", "календар", "calendar", "планир", "дедлайн", "deadline", "собеседован"]) {
             add(.appleCalendar)
-        }
-        // Writing / notes / study
-        if has(["заметк", "конспект", "дневник", "журнал", "писать", "написать", "статью", "блог", "notion", "докум", "реферат", "диплом", "курсов", "эссе", "учеб", "study", "учить", "экзамен", "лекци"]) {
-            add(.notion)
         }
         // Telegram bot reports
         if has(["telegram", "телеграм", "фото-отч", "фото отч", "боту"]) {
@@ -150,11 +146,10 @@ final class ConnectorSuggestionEngine {
         if result.isEmpty, let category = category?.uppercased() {
             switch category {
             case "SPORT":         add(.appleFitness, .appleHealth, .strava)
-            case "HEALTH":        add(.appleHealth, .whoop)
+            case "HEALTH":        add(.appleHealth)
             case "FOOD":          add(.appleHealth)
-            case "STUDY":         add(.notion)
             case "WORK":          add(.appleCalendar)
-            case "MENTAL HEALTH": add(.appleHealth, .whoop)
+            case "MENTAL HEALTH": add(.appleHealth)
             default: break
             }
         }

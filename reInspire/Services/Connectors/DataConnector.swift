@@ -12,9 +12,6 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
     case chessCom
     // Max
     case strava
-    case whoop
-    case notion
-    case spotify
 
     var id: String { rawValue }
 
@@ -31,7 +28,7 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
         case .appleClock:                                                  return .clock
         case .appleShortcuts:                                              return .shortcuts
         case .chessCom:                                                    return .username
-        case .strava, .whoop, .notion, .spotify:                           return .oauth
+        case .strava:                                                      return .oauth
         }
     }
 
@@ -40,22 +37,15 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .appleHealth, .appleFitness, .appleCalendar, .telegram, .appleClock, .appleShortcuts, .chessCom:
             return .free
-        case .strava, .whoop, .notion, .spotify:
+        case .strava:
             return .max
         }
     }
 
-    /// False while the OAuth app registration is missing (placeholder client
-    /// ID in `OAuthSecrets`) -- such connectors are hidden from the UI
-    /// instead of failing with a config error on tap.
-    var isConfigured: Bool {
-        switch self {
-        case .whoop:   return !OAuthSecrets.whoop.hasPrefix("<")
-        case .notion:  return !OAuthSecrets.notion.hasPrefix("<")
-        case .spotify: return !OAuthSecrets.spotify.hasPrefix("<")
-        default:       return true
-        }
-    }
+    /// False while an OAuth app registration is missing (placeholder client ID
+    /// in `OAuthSecrets`) -- such connectors are hidden from the UI instead of
+    /// failing with a config error on tap. All current connectors are ready.
+    var isConfigured: Bool { true }
 
     /// Whether a user on `plan` can connect this source.
     func isUnlocked(for plan: UserPlan) -> Bool {
@@ -72,9 +62,6 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
         case .appleShortcuts: return "Команды"
         case .chessCom:      return "Chess.com"
         case .strava:        return "Strava"
-        case .whoop:         return "Whoop"
-        case .notion:        return "Notion"
-        case .spotify:       return "Spotify"
         }
     }
 
@@ -89,9 +76,6 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
         case .appleShortcuts: return "Запускайте задачи и автоматизации через приложение «Команды» и Siri"
         case .chessCom:      return "Засчитывает сыгранные за день партии на Chess.com"
         case .strava:        return "Пробежки и тренировки из Strava засчитываются автоматически"
-        case .whoop:         return "Восстановление и нагрузка из Whoop"
-        case .notion:        return "Отмечайте задачи прямо в своих страницах Notion"
-        case .spotify:       return "Считает прослушанные за сегодня треки в Spotify"
         }
     }
 
@@ -105,9 +89,6 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
         case .appleShortcuts: return "square.stack.3d.up.fill"
         case .chessCom:      return "checkerboard.rectangle"
         case .strava:        return "figure.outdoor.cycle"
-        case .whoop:         return "waveform.path.ecg"
-        case .notion:        return "doc.text.fill"
-        case .spotify:       return "music.note"
         }
     }
 
@@ -121,9 +102,6 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
         case .appleShortcuts: return Color(hex: "5E5CE6")
         case .chessCom:      return Color(hex: "769656")
         case .strava:        return Color(hex: "FC4C02")
-        case .whoop:         return Color(hex: "D5212B")
-        case .notion:        return Color(hex: "000000")
-        case .spotify:       return Color(hex: "1DB954")
         }
     }
 }

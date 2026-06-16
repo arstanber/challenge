@@ -24,7 +24,7 @@ enum UserPlan: String, Codable, Comparable {
         }
     }
 
-    /// Max-tier connectors: Strava, Whoop, Notion.
+    /// Max-tier connectors: Strava.
     var hasMaxConnectors: Bool { self == .max }
 }
 

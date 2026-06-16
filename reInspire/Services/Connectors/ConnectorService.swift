@@ -11,8 +11,9 @@ import UIKit
 /// - Apple Calendar → `CalendarConnector` (EventKit, on-device).
 /// - Apple "smart alarm" → `ClockConnector` (local notifications).
 /// - Telegram → wraps `TelegramService`'s existing link state; no separate connect flow.
-/// - Strava / Whoop / Notion / Google Calendar/Docs/Drive/Gmail → `OAuthConnector` (OAuth2 via
-///   the `connector-oauth` Supabase Edge Function, which holds the client secrets and tokens).
+/// - Strava → `OAuthConnector` (OAuth2 via the `connector-oauth` Supabase Edge
+///   Function, which holds the client secrets and tokens).
+/// - Chess.com → `ChessConnector` (public API by username, on-device, no OAuth).
 @MainActor
 @Observable
 final class ConnectorService {

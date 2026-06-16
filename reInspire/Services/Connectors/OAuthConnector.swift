@@ -4,7 +4,7 @@ import CryptoKit
 import AuthenticationServices
 import Supabase
 
-/// OAuth2 web-API connectors (Strava, Whoop, Notion, Google Calendar/Docs/Drive/Gmail).
+/// OAuth2 web-API connectors (Strava).
 ///
 /// Flow:
 /// 1. `ASWebAuthenticationSession` opens the provider's consent page.
@@ -164,7 +164,7 @@ private extension Data {
 // MARK: - Provider configuration
 
 struct OAuthConfig {
-    /// Default callback used by Strava/Whoop/Notion -- the app's custom `reinspire://` scheme.
+    /// Default callback used by Strava -- the app's custom `reinspire://` scheme.
     static let defaultCallbackScheme = "reinspire"
     static let defaultRedirectURI = "reinspire://oauth-callback"
 
@@ -189,31 +189,6 @@ struct OAuthConfig {
                 scope: "activity:read_all",
                 extraAuthParams: [URLQueryItem(name: "approval_prompt", value: "auto")]
             )
-        case .whoop:
-            return OAuthConfig(
-                clientId: OAuthSecrets.whoop,
-                authorizeURL: "https://api.prod.whoop.com/oauth/oauth2/auth",
-                scope: "read:workout read:cycles read:recovery offline"
-            )
-        case .notion:
-            return OAuthConfig(
-                clientId: OAuthSecrets.notion,
-                authorizeURL: "https://api.notion.com/v1/oauth/authorize",
-                scope: "",
-                extraAuthParams: [
-                    URLQueryItem(name: "owner", value: "user"),
-                    URLQueryItem(name: "response_type", value: "code")
-                ]
-            )
-        case .spotify:
-            return OAuthConfig(
-                clientId: OAuthSecrets.spotify,
-                authorizeURL: "https://accounts.spotify.com/authorize",
-                scope: "user-read-recently-played",
-                usesPKCE: true,
-                callbackScheme: "reinspire",
-                redirectURI: "reinspire://spotify-callback"
-            )
         case .appleHealth, .appleFitness, .appleCalendar, .telegram, .appleClock,
              .appleShortcuts, .chessCom:
             return OAuthConfig(clientId: "", authorizeURL: "", scope: "")
@@ -225,11 +200,6 @@ struct OAuthConfig {
 /// Supabase Edge Function environment — never in the app. Fill these after registering each app.
 enum OAuthSecrets {
     static let strava = "256944"
-    static let whoop  = "<WHOOP_CLIENT_ID>"
-    static let notion = "37cd872b-594c-813a-afff-003799004c78"
-    /// Spotify uses Authorization Code + PKCE (public client, no secret). Paste
-    /// the client id from your Spotify developer app to light the connector up.
-    static let spotify = "<SPOTIFY_CLIENT_ID>"
 
     /// Same OAuth client used for "Sign in with Google" (`GIDClientID` in Info.plist).
     /// Google's installed-app flow needs no client secret -- PKCE covers it.
