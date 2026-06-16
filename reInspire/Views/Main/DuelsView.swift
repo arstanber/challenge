@@ -16,6 +16,7 @@ struct DuelsView: View {
 
     @State private var showCreate = false
     @State private var showJoin = false
+    @State private var showNearby = false
     @State private var joinCode = ""
     @State private var createdCode: CreatedCode?
 
@@ -54,6 +55,12 @@ struct DuelsView: View {
                     }
                     Button {
                         Haptics.tap()
+                        showNearby = true
+                    } label: {
+                        Label("Соединить рядом (потрясти телефоны)", systemImage: "wave.3.right")
+                    }
+                    Button {
+                        Haptics.tap()
                         showJoin = true
                     } label: {
                         Label("Ввести код", systemImage: "keyboard")
@@ -65,11 +72,12 @@ struct DuelsView: View {
         }
         .task { await service.load() }
         .refreshable { await service.load() }
-        .confirmationDialog("Длительность дуэли", isPresented: $showCreate, titleVisibility: .visible) {
-            Button("3 дня") { createDuel(days: 3) }
-            Button("7 дней") { createDuel(days: 7) }
-            Button("14 дней") { createDuel(days: 14) }
-            Button("Отмена", role: .cancel) {}
+        .sheet(isPresented: $showCreate) {
+            DuelCreateSheet { days in createDuel(days: days) }
+                .presentationDetents([.medium])
+        }
+        .sheet(isPresented: $showNearby) {
+            DuelNearbyConnectView { await service.load() }
         }
         .alert("Код дуэли", isPresented: $showJoin) {
             TextField("ABC123", text: $joinCode)
@@ -106,7 +114,7 @@ struct DuelsView: View {
                 .font(.system(size: 44))
             Text("Вызови друга на дуэль")
                 .font(.headline)
-            Text("Каждый день оба закрывают хотя бы одну задачу. Кто пропустил больше дней -- проиграл. Себе пропуск простить можно, другу -- нет.")
+            Text("Соревнуйтесь, кто выполнит больше дел за время дуэли. Кто закрыл больше задач -- тот и победил. Себя обмануть легко, друга -- нет.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -155,7 +163,7 @@ private struct DuelRowView: View {
             }
             Spacer()
             if duel.status == .active || duel.status == .finished {
-                Text("\(duel.myDone(myId).count) : \(duel.theirDone(myId).count)")
+                Text("\(duel.myTasks(myId)) : \(duel.theirTasks(myId))")
                     .font(.system(size: 17, weight: .bold, design: .rounded))
                     .foregroundStyle(scoreColor)
             }
@@ -200,8 +208,8 @@ private struct DuelRowView: View {
     }
 
     private var scoreColor: Color {
-        let mine = duel.myDone(myId).count
-        let theirs = duel.theirDone(myId).count
+        let mine = duel.myTasks(myId)
+        let theirs = duel.theirTasks(myId)
         if mine > theirs { return .green }
         if mine < theirs { return .red }
         return .secondary
@@ -215,7 +223,7 @@ private struct DuelInviteSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     private var shareText: String {
-        "Вызываю тебя на дуэль в reInspire ⚔️ Каждый день закрываем по задаче -- кто сорвётся, тот проиграл. Код: \(code). Скачай: https://thechallenges.app"
+        "Вызываю тебя на дуэль в reInspire ⚔️ Кто выполнит больше дел, тот и победил. Код: \(code). Скачай: https://thechallenges.app"
     }
 
     var body: some View {
@@ -256,6 +264,59 @@ private struct DuelInviteSheet: View {
     }
 }
 
+// MARK: - Create sheet (length picker)
+
+private struct DuelCreateSheet: View {
+    let onCreate: (Int) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var days = 7
+
+    private let quick = [7, 14, 30, 60]
+
+    var body: some View {
+        VStack(spacing: 20) {
+            Text("⚔️").font(.system(size: 48))
+            Text("Длительность дуэли").font(.title3.bold())
+            Text("Соревнуйтесь, кто за это время выполнит больше дел.")
+                .font(.subheadline).foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+
+            Stepper("Дней: \(days)", value: $days, in: 3...90)
+                .padding(.horizontal, 8)
+
+            HStack(spacing: 8) {
+                ForEach(quick, id: \.self) { d in
+                    Button {
+                        Haptics.selection(); days = d
+                    } label: {
+                        Text("\(d)")
+                            .font(.system(size: 15, weight: .semibold))
+                            .frame(maxWidth: .infinity).frame(height: 38)
+                            .background(Capsule().fill(days == d
+                                ? Color(hex: "0048E2") : Color(hex: "0048E2").opacity(0.12)))
+                            .foregroundStyle(days == d ? .white : Color(hex: "0048E2"))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            Button {
+                onCreate(days); dismiss()
+            } label: {
+                Text("Бросить вызов")
+                    .fontWeight(.semibold)
+                    .frame(maxWidth: .infinity).frame(height: 50)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(Color(hex: "0048E2"))
+
+            Button("Отмена") { dismiss() }
+                .foregroundStyle(.secondary)
+        }
+        .padding(24)
+    }
+}
+
 // MARK: - Detail
 
 struct DuelDetailView: View {
@@ -290,12 +351,12 @@ struct DuelDetailView: View {
 
     private var scoreHeader: some View {
         HStack(spacing: 18) {
-            sideColumn(name: "Ты", score: current.myDone(myId).count, highlight: true)
+            sideColumn(name: "Ты", score: current.myTasks(myId), highlight: true)
             Text("VS")
                 .font(.system(size: 15, weight: .heavy, design: .rounded))
                 .foregroundStyle(.secondary)
             sideColumn(name: current.opponentName(for: myId),
-                       score: current.theirDone(myId).count, highlight: false)
+                       score: current.theirTasks(myId), highlight: false)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 18)
@@ -353,6 +414,9 @@ struct DuelDetailView: View {
     /// missed day immediately -- that visibility is the whole mechanic.
     private var daysGrid: some View {
         VStack(alignment: .leading, spacing: 14) {
+            Text("Дни с активностью")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.tertiary)
             dayRow(label: "Ты", done: Set(current.myDone(myId)))
             dayRow(label: current.opponentName(for: myId), done: Set(current.theirDone(myId)))
         }
@@ -401,7 +465,7 @@ struct DuelDetailView: View {
             switch current.status {
             case .active:
                 if let left = current.daysLeft {
-                    Text(left == 1 ? "Последний день -- не сорвись" : "Осталось дней: \(left). День засчитывается за хотя бы одну закрытую задачу.")
+                    Text(left == 1 ? "Последний день -- не сорвись" : "Осталось дней: \(left). Побеждает тот, кто выполнил больше дел.")
                 }
             case .finished:
                 switch current.didWin(myId) {

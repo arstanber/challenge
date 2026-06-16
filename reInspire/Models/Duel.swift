@@ -25,6 +25,10 @@ struct Duel: Codable, Identifiable, Hashable {
     let opponentEmail: String?
     let challengerDone: [String]
     let opponentDone: [String]
+    /// Total tasks completed over the window per side -- the winner is whoever
+    /// has more (default 0 for older payloads before the v2 scoring migration).
+    let challengerTasks: Int
+    let opponentTasks: Int
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -40,6 +44,27 @@ struct Duel: Codable, Identifiable, Hashable {
         case opponentEmail = "opponent_email"
         case challengerDone = "challenger_done"
         case opponentDone = "opponent_done"
+        case challengerTasks = "challenger_tasks"
+        case opponentTasks = "opponent_tasks"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        challengerId = try c.decode(UUID.self, forKey: .challengerId)
+        opponentId = try c.decodeIfPresent(UUID.self, forKey: .opponentId)
+        inviteCode = try c.decode(String.self, forKey: .inviteCode)
+        days = try c.decode(Int.self, forKey: .days)
+        status = try c.decode(Status.self, forKey: .status)
+        startsOn = try c.decodeIfPresent(String.self, forKey: .startsOn)
+        endsOn = try c.decodeIfPresent(String.self, forKey: .endsOn)
+        winnerId = try c.decodeIfPresent(UUID.self, forKey: .winnerId)
+        challengerEmail = try c.decodeIfPresent(String.self, forKey: .challengerEmail)
+        opponentEmail = try c.decodeIfPresent(String.self, forKey: .opponentEmail)
+        challengerDone = try c.decodeIfPresent([String].self, forKey: .challengerDone) ?? []
+        opponentDone = try c.decodeIfPresent([String].self, forKey: .opponentDone) ?? []
+        challengerTasks = try c.decodeIfPresent(Int.self, forKey: .challengerTasks) ?? 0
+        opponentTasks = try c.decodeIfPresent(Int.self, forKey: .opponentTasks) ?? 0
     }
 
     // MARK: Day helpers
@@ -92,6 +117,15 @@ struct Duel: Codable, Identifiable, Hashable {
 
     func theirDone(_ userId: UUID?) -> [String] {
         isChallenger(userId) ? opponentDone : challengerDone
+    }
+
+    /// Total tasks completed (the score that decides the duel).
+    func myTasks(_ userId: UUID?) -> Int {
+        isChallenger(userId) ? challengerTasks : opponentTasks
+    }
+
+    func theirTasks(_ userId: UUID?) -> Int {
+        isChallenger(userId) ? opponentTasks : challengerTasks
     }
 
     /// Opponent display name from my point of view ("arslan" from

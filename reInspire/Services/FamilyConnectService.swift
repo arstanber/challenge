@@ -24,8 +24,16 @@ final class FamilyConnectService: NSObject {
     private(set) var didShareCode = false
 
     // serviceType: 1-15 chars, lowercase ASCII letters / digits / hyphens.
-    private let serviceType = "chlg-fam"
+    // Family pairing and duel pairing use distinct types so the two flows never
+    // cross-connect when both are searching nearby at once.
+    private let serviceType: String
     private let myPeerID = MCPeerID(displayName: UIDevice.current.name)
+
+    /// `serviceType` defaults to the family channel; duels pass "chlg-duel".
+    init(serviceType: String = "chlg-fam") {
+        self.serviceType = serviceType
+        super.init()
+    }
     private var session: MCSession?
     private var advertiser: MCNearbyServiceAdvertiser?
     private var browser: MCNearbyServiceBrowser?
