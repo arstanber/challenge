@@ -55,6 +55,7 @@ struct SettingsView: View {
     @State private var showFamily = false
     @State private var showStatistics = false
     @State private var showLocations = false
+    @State private var showProfile = false
 
     private let blue = Color(hex: "0A84FF")
 
@@ -79,6 +80,7 @@ struct SettingsView: View {
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 26) {
+                    profileCard
                     // Upsell only makes sense for free users; isPremium also
                     // covers temporary referral PRO (pro_until).
                     if auth.currentUser?.isPremium != true {
@@ -131,6 +133,9 @@ struct SettingsView: View {
         .sheet(isPresented: $showLocations) {
             LocationsSettingsView()
         }
+        .sheet(isPresented: $showProfile) {
+            ProfileEditView().environment(auth)
+        }
         .fullScreenCover(isPresented: $showHallOfFame) {
             ZStack(alignment: .topTrailing) {
                 GamificationView()
@@ -179,6 +184,37 @@ struct SettingsView: View {
         .padding(.top, 16)
         .padding(.bottom, 10)
         .background(.ultraThinMaterial)
+    }
+
+    // MARK: Profile card
+
+    private var profileCard: some View {
+        Button { Haptics.tap(); showProfile = true } label: {
+            HStack(spacing: 14) {
+                UserAvatarView(
+                    urlString: auth.currentUser?.avatarURL,
+                    label: auth.currentUser?.displayLabel ?? "?",
+                    size: 56
+                )
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(auth.currentUser?.displayLabel ?? "Профиль")
+                        .font(.system(size: 19, weight: .semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                    Text("Имя, фото и аккаунт")
+                        .font(.system(size: 14))
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(18)
+            .background(RoundedRectangle(cornerRadius: 26, style: .continuous)
+                .fill(Color(.secondarySystemBackground)))
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: Premium card

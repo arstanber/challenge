@@ -27,6 +27,7 @@ enum Constants {
 
     enum Storage {
         static let reportsBucket = "reports"
+        static let avatarsBucket = "avatars"
     }
 
     enum Telegram {

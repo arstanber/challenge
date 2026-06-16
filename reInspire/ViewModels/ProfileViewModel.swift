@@ -1,6 +1,7 @@
 import Foundation
 import Supabase
 import PostgREST
+import Storage
 import Observation
 
 @Observable
@@ -248,6 +249,56 @@ final class ProfileViewModel {
             await loadProfile()
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    // MARK: - Profile editing (display name + avatar)
+
+    /// Update the signed-in user's display name. Empty clears it (falls back to
+    /// the email local part via `displayLabel`).
+    func updateDisplayName(_ name: String) async {
+        guard let id = authService.currentUser?.id else { return }
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            try await supabase
+                .from("users")
+                .update(["display_name": trimmed.isEmpty ? nil : trimmed])
+                .eq("id", value: id.uuidString)
+                .execute()
+            authService.currentUser?.displayName = trimmed.isEmpty ? nil : trimmed
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    /// Upload a new avatar (JPEG data) to the avatars bucket and store its public
+    /// URL on the users row. Returns true on success.
+    @discardableResult
+    func uploadAvatar(_ jpeg: Data) async -> Bool {
+        guard let id = authService.currentUser?.id else { return false }
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            let path = "\(id.uuidString)/\(UUID().uuidString).jpg"
+            try await supabase.storage
+                .from(Constants.Storage.avatarsBucket)
+                .upload(path, data: jpeg, options: FileOptions(contentType: "image/jpeg"))
+            let url = try supabase.storage
+                .from(Constants.Storage.avatarsBucket)
+                .getPublicURL(path: path)
+                .absoluteString
+            try await supabase
+                .from("users")
+                .update(["avatar_url": url])
+                .eq("id", value: id.uuidString)
+                .execute()
+            authService.currentUser?.avatarURL = url
+            return true
+        } catch {
+            errorMessage = error.localizedDescription
+            return false
         }
     }
 
