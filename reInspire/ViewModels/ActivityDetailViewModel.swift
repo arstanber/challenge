@@ -79,6 +79,20 @@ final class ActivityDetailViewModel {
         lastAIExplanation = nil
         defer { isSubmittingReport = false; submissionStage = .idle }
 
+        // Offline: stash the photo and accept the task now -- it uploads and gets
+        // AI-verified automatically on the next reconnect.
+        if !NetworkMonitor.shared.isOnline {
+            PendingPhotoStore.shared.enqueue(image: image, activity: activity, isExcuse: isExcuse, comment: comment)
+            TaskEngine.shared.markDoneLocally(activity.id)
+            if activity.frequency == .once { await markCompleted() }
+            lastAIResult = .notApplicable
+            lastAIExplanation = "Нет интернета -- проверим фото, как только появится сеть."
+            LiveActivityService.shared.resolveVerifying(taskId: activity.id, approved: true)
+            onReportSubmitted?()
+            await TaskEngine.shared.noteReportChanged(activityId: activity.id)
+            return
+        }
+
         do {
             // 1. Upload photo (downscaled to ~1280px -- huge upload/latency win)
             guard let jpeg = image.compressedForUpload() else { return }
@@ -159,7 +173,7 @@ final class ActivityDetailViewModel {
 
                 switch resultEnum {
                 case .approved:
-                    if activity.frequency == .once { try await markCompleted() }
+                    if activity.frequency == .once { await markCompleted() }
                     onReportSubmitted?()
                 case .excused:
                     // Excuse accepted — activity stays active, streak not counted but not penalised
@@ -180,7 +194,7 @@ final class ActivityDetailViewModel {
                 // Verification unavailable (offline / monthly limit reached) — don't hard-block:
                 // accept the photo so the user can still complete the task.
                 lastAIResult = .notApplicable
-                if activity.frequency == .once { try await markCompleted() }
+                if activity.frequency == .once { await markCompleted() }
                 onReportSubmitted?()
                 LiveActivityService.shared.resolveVerifying(taskId: activity.id, approved: true)
                 await TaskEngine.shared.noteReportChanged(activityId: activity.id)
@@ -196,6 +210,13 @@ final class ActivityDetailViewModel {
         isSubmittingReport = true
         errorMessage = nil
         defer { isSubmittingReport = false }
+        // Offline: tick now and let TaskEngine replay the check-in on reconnect.
+        if !NetworkMonitor.shared.isOnline {
+            await TaskEngine.shared.markDone(activity)
+            if activity.frequency == .once { await markCompleted() }
+            onReportSubmitted?()
+            return
+        }
         do {
             let req = CreateReportRequest(activityId: activity.id)
             let report: Report = try await supabase
@@ -206,7 +227,7 @@ final class ActivityDetailViewModel {
                 .execute()
                 .value
             reports.insert(report, at: 0)
-            if activity.frequency == .once { try await markCompleted() }
+            if activity.frequency == .once { await markCompleted() }
             onReportSubmitted?()
             await TaskEngine.shared.noteReportChanged(activityId: activity.id)
         } catch {
@@ -252,7 +273,7 @@ final class ActivityDetailViewModel {
             activity.goalProgress = newProgress
 
             if let target = activity.goalTarget, newProgress >= target {
-                try await markCompleted()
+                await markCompleted()
             }
             onReportSubmitted?()
             await TaskEngine.shared.noteReportChanged(activityId: activity.id)
@@ -392,12 +413,10 @@ final class ActivityDetailViewModel {
 
     // MARK: - Helpers
 
-    private func markCompleted() async throws {
-        try await supabase
-            .from("activities")
-            .update(["status": "completed"])
-            .eq("id", value: activity.id.uuidString)
-            .execute()
+    private func markCompleted() async {
         activity.status = .completed
+        await SyncService.shared.perform(
+            .updateActivity(id: activity.id, fields: ["status": .string("completed")])
+        )
     }
 }

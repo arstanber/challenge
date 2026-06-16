@@ -151,6 +151,11 @@ struct Activity: Codable, Identifiable {
 }
 
 struct CreateActivityRequest: Codable {
+    /// Client-generated primary key. Sending it (instead of relying on the
+    /// server default) lets a creation be applied optimistically and replayed
+    /// from the offline queue without an id round-trip, and keeps later
+    /// edits/deletes of an offline-created row referring to the same row.
+    var id: UUID = UUID()
     var userId: UUID
     var assignedBy: UUID?
     var title: String
@@ -169,6 +174,7 @@ struct CreateActivityRequest: Codable {
     var scheduleDays: [Int]? = nil
 
     enum CodingKeys: String, CodingKey {
+        case id
         case userId = "user_id"
         case assignedBy = "assigned_by"
         case title, description, type, condition, frequency, deadline
@@ -180,5 +186,38 @@ struct CreateActivityRequest: Codable {
         case parentId = "parent_id"
         case category
         case scheduleDays = "schedule_days"
+    }
+}
+
+extension Activity {
+    /// Build the in-memory row a create request produces, so a new activity can
+    /// be shown (and cached) instantly without waiting for the insert to return.
+    /// Server-maintained columns start at their zero values.
+    init(from req: CreateActivityRequest, createdAt: Date = Date()) {
+        self.init(
+            id: req.id,
+            userId: req.userId,
+            assignedBy: req.assignedBy,
+            title: req.title,
+            description: req.description,
+            type: req.type,
+            condition: req.condition,
+            frequency: req.frequency,
+            deadline: req.deadline,
+            reminderTime: req.reminderTime,
+            status: .active,
+            streakCurrent: 0,
+            streakBest: 0,
+            goalProgress: 0,
+            goalTarget: req.goalTarget,
+            createdAt: createdAt,
+            planId: req.planId,
+            planTitle: req.planTitle,
+            workspaceId: req.workspaceId,
+            parentId: req.parentId,
+            sortOrder: 0,
+            category: req.category,
+            scheduleDays: req.scheduleDays
+        )
     }
 }

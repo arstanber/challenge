@@ -172,6 +172,13 @@ final class TaskEngine {
         Self.persist(id, key: Self.doneKey)
     }
 
+    /// Drop an optimistic tick that turned out not to count (e.g. a deferred
+    /// photo verification later came back rejected).
+    func clearOptimisticDone(_ id: UUID) {
+        optimisticDoneIds.remove(id)
+        Self.remove(id, key: Self.doneKey)
+    }
+
     /// Tell the engine a report for this activity was inserted/updated/deleted
     /// outside `markDone` (photo flow, undo, goal progress).
     func noteReportChanged(activityId: UUID) async {
@@ -326,6 +333,7 @@ final class TaskEngine {
             activityStreaks = Dictionary(
                 uniqueKeysWithValues: payload.activities.map { ($0.id, (current: $0.streakCurrent, best: $0.streakBest)) }
             )
+            saveStreakCache()
             // Anyone with streak history is past their first report -- they
             // must never see the first-win activation card.
             if payload.globalBest > 0 || payload.todayCount > 0 {
@@ -333,8 +341,52 @@ final class TaskEngine {
             }
         } catch {
             logger.error("refresh_my_streaks failed, using offline fallback: \(error)")
+            hydrateStreaksFromCache()
             await computeStreaksFallback()
         }
+    }
+
+    // MARK: - Streak disk cache (offline cold-start)
+
+    /// Last server-confirmed streak values, persisted so a cold launch with no
+    /// network paints the real numbers instead of zeros. Display-only -- the
+    /// server engine stays authoritative and overwrites these on refresh.
+    private struct StreakSnapshot: Codable {
+        struct Pair: Codable { var current: Int; var best: Int }
+        var globalCurrent: Int
+        var globalBest: Int
+        var todayCount: Int
+        var freezesAvailable: Int
+        var activities: [UUID: Pair]
+    }
+
+    private var streakCacheKey: String? {
+        AuthService.shared.currentUser.map { "streaks_\($0.id.uuidString)" }
+    }
+
+    private func saveStreakCache() {
+        guard let key = streakCacheKey else { return }
+        let snap = StreakSnapshot(
+            globalCurrent: globalStreakCurrent,
+            globalBest: globalStreakBest,
+            todayCount: serverTodayCount,
+            freezesAvailable: freezesAvailable,
+            activities: activityStreaks.mapValues { .init(current: $0.current, best: $0.best) }
+        )
+        DiskCache.save(snap, key: key)
+    }
+
+    /// Seed the published streak fields from disk on a cold, offline start.
+    /// Never marks `streaksLoaded` -- the freeze wallet still waits for the
+    /// server so it can't be spent against a stale balance.
+    func hydrateStreaksFromCache() {
+        guard !streaksLoaded, let key = streakCacheKey,
+              let snap = DiskCache.load(StreakSnapshot.self, key: key) else { return }
+        globalStreakCurrent = snap.globalCurrent
+        globalStreakBest = snap.globalBest
+        serverTodayCount = snap.todayCount
+        freezesAvailable = snap.freezesAvailable
+        activityStreaks = snap.activities.mapValues { (current: $0.current, best: $0.best) }
     }
 
     /// Spends a freeze on yesterday (default) and refreshes streaks. Returns

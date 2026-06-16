@@ -16,6 +16,7 @@ struct MainTabView: View {
 
     var body: some View {
         HomeView()
+            .overlay(alignment: .top) { OfflineBanner() }
             // Warm the AI-quota cache so canUse/remaining reflect the server state
             .task { await RateLimiterService.shared.fetchUsage() }
             .task { checkPlanCelebration() }

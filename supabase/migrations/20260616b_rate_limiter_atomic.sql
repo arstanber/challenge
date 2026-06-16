@@ -1,11 +1,12 @@
 -- Fix a quota-bypass race in check_and_increment_usage. The previous version
--- read the count, checked it against the limit, then incremented in separate
--- statements -- so two concurrent requests could both pass the check at
--- count = limit - 1 and both increment, exceeding the monthly quota.
+-- (20260611_plan_limits.sql) read the count, checked it against the limit, then
+-- incremented in separate statements -- so two concurrent requests could both
+-- pass the check at count = limit - 1 and both increment, exceeding the quota.
 --
 -- Replace with a single atomic upsert whose ON CONFLICT update only fires while
 -- the row is still under the limit (the unique row lock serializes concurrent
--- callers). Behaviour is otherwise identical to 20260606_rate_limiter.sql.
+-- callers). Limits are kept IDENTICAL to 20260611_plan_limits.sql (the current
+-- tiers) -- MUST mirror AIFeature.limit(for:) in the app; change them together.
 
 create or replace function check_and_increment_usage(
   p_user_id uuid,
@@ -30,13 +31,13 @@ begin
   -- 2. Determine monthly limit for this feature + plan
   v_limit := case p_feature
     when 'verify-report' then
-      case v_plan when 'free' then 5 when 'premium' then 15 when 'family' then 20 when 'max' then 30 else 0 end
+      case v_plan when 'free' then 5 when 'premium' then 30 when 'family' then 30 when 'max' then 100 else 0 end
     when 'parse-tasks-group' then   -- parse-tasks + parse-schedule + categorize share one bucket
-      case v_plan when 'free' then 1 when 'premium' then 5  when 'family' then 8  when 'max' then 10 else 0 end
+      case v_plan when 'free' then 1 when 'premium' then 10 when 'family' then 10 when 'max' then 30 else 0 end
     when 'coach-group' then         -- morning-brief + analyze-failure + split-goal share one bucket
-      case v_plan when 'free' then 1 when 'premium' then 5  when 'family' then 8  when 'max' then 12 else 0 end
+      case v_plan when 'free' then 1 when 'premium' then 10 when 'family' then 10 when 'max' then 30 else 0 end
     when 'plan-goal' then
-      case v_plan when 'free' then 3 when 'premium' then 10 when 'family' then 10 when 'max' then 20 else 0 end
+      case v_plan when 'free' then 3 when 'premium' then 15 when 'family' then 15 when 'max' then 50 else 0 end
     else 0
   end;
 

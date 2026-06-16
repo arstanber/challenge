@@ -411,6 +411,7 @@ struct HomeView: View {
             }
         }
         .task {
+            vm.startSyncObserver()
             await vm.loadActivities()
             NotificationService.shared.clearLegacyMotivationPlan()
             await syncAllNotifications()

@@ -37,6 +37,9 @@ struct ReInspireApp: App {
                 .environment(authService)
                 .task {
                     CloudSyncService.shared.start()
+                    NetworkMonitor.shared.start()
+                    // Flush anything queued during a previous offline session.
+                    await SyncService.shared.syncNow()
                     // Refresh the APNs token for already-granted users; the
                     // permission PROMPT is asked contextually on the push
                     // onboarding page, not on cold start.

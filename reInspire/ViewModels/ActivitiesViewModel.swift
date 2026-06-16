@@ -61,6 +61,7 @@ final class ActivitiesViewModel {
 
     private let authService = AuthService.shared
     private let calendar = Calendar.current
+    private var syncObserverTask: Task<Void, Never>?
 
     var activeCount: Int { myActivities.filter { $0.status == .active }.count }
     var canCreateMore: Bool {
@@ -137,10 +138,28 @@ final class ActivitiesViewModel {
 
     // MARK: - Load
 
+    /// Observe the reconnect drain so a just-flushed offline queue refreshes the
+    /// lists. Idempotent -- safe to call from every `.task`.
+    func startSyncObserver() {
+        guard syncObserverTask == nil else { return }
+        syncObserverTask = Task { [weak self] in
+            let stream = NotificationCenter.default.notifications(named: .offlineSyncCompleted).map { _ in () }
+            for await _ in stream {
+                await self?.loadActivities()
+            }
+        }
+    }
+
     func loadActivities() async {
         guard let user = authService.currentUser else { return }
-        // Paint cached tasks instantly; the network refresh below replaces them.
+        // Paint cached tasks (and last-known streaks) instantly; the network
+        // refresh below replaces them.
         hydrateFromCache()
+        engine.hydrateStreaksFromCache()
+        applyEngineStreaks()
+        // Flush any writes/photos queued offline so the fetch below reads the
+        // authoritative state. No-op (and no reload feedback) when nothing is queued.
+        await SyncService.shared.syncNow()
         isLoading = true
         errorMessage = nil
         do {
@@ -412,33 +431,22 @@ final class ActivitiesViewModel {
     /// `activity_deletions` before the activity (and its reports) are removed.
     func deleteActivity(_ activity: Activity, reason: String) async {
         let trimmedReason = reason.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedReason.isEmpty else { return }
+        guard !trimmedReason.isEmpty, let userId = authService.currentUser?.id else { return }
 
-        do {
-            if let userId = authService.currentUser?.id {
-                try await supabase
-                    .from("activity_deletions")
-                    .insert([
-                        "user_id": userId.uuidString,
-                        "activity_id": activity.id.uuidString,
-                        "title": activity.title,
-                        "type": activity.type.rawValue,
-                        "reason": trimmedReason,
-                    ])
-                    .execute()
-            }
-            try await supabase
-                .from("activities")
-                .delete()
-                .eq("id", value: activity.id.uuidString)
-                .execute()
-            myActivities.removeAll { $0.id == activity.id }
-            parentActivities.removeAll { $0.id == activity.id }
-            NotificationService.shared.cancelReminder(for: activity.id)
-            await recalculateGlobalStreak()
-        } catch {
-            errorMessage = error.localizedDescription
-        }
+        // Optimistic removal; the delete (with its audit row) is pushed or queued.
+        myActivities.removeAll { $0.id == activity.id }
+        parentActivities.removeAll { $0.id == activity.id }
+        NotificationService.shared.cancelReminder(for: activity.id)
+        persistCache()
+        let log = ActivityDeletionLog(
+            userId: userId,
+            activityId: activity.id,
+            title: activity.title,
+            type: activity.type.rawValue,
+            reason: trimmedReason
+        )
+        await SyncService.shared.perform(.deleteActivity(id: activity.id, log: log))
+        await recalculateGlobalStreak()
     }
 
     // MARK: - Reorder (drag & drop)
@@ -477,15 +485,9 @@ final class ActivitiesViewModel {
         let ordered = myActivities
         for (idx, activity) in ordered.enumerated() where activity.sortOrder != idx {
             myActivities[idx].sortOrder = idx
-            do {
-                try await supabase
-                    .from("activities")
-                    .update(["sort_order": idx])
-                    .eq("id", value: activity.id.uuidString)
-                    .execute()
-            } catch {
-                logger.error("persistOrder failed for \(activity.title): \(error)")
-            }
+            await SyncService.shared.perform(
+                .updateActivity(id: activity.id, fields: ["sort_order": .int(idx)])
+            )
         }
         persistCache()
     }
@@ -493,23 +495,17 @@ final class ActivitiesViewModel {
     func markCompleted(_ activity: Activity) async {
         // Track as "done today" locally so the day-progress ring counts it
         engine.markDoneLocally(activity.id)
-        do {
-            try await supabase
-                .from("activities")
-                .update(["status": "completed"])
-                .eq("id", value: activity.id.uuidString)
-                .execute()
-            if let idx = myActivities.firstIndex(where: { $0.id == activity.id }) {
-                myActivities[idx].status = .completed
-            }
-            // If this was a subtask, check if all siblings are done → auto-complete parent
-            if let parentId = activity.parentId {
-                await checkAndCompleteParent(parentId: parentId)
-            }
-            publishWidgetSnapshot()
-        } catch {
-            errorMessage = error.localizedDescription
+        if let idx = myActivities.firstIndex(where: { $0.id == activity.id }) {
+            myActivities[idx].status = .completed
         }
+        await SyncService.shared.perform(
+            .updateActivity(id: activity.id, fields: ["status": .string("completed")])
+        )
+        // If this was a subtask, check if all siblings are done → auto-complete parent
+        if let parentId = activity.parentId {
+            await checkAndCompleteParent(parentId: parentId)
+        }
+        publishWidgetSnapshot()
     }
 
     // MARK: - Move to tomorrow
@@ -518,20 +514,13 @@ final class ActivitiesViewModel {
         let cal = Calendar.current
         let tomorrow = cal.date(byAdding: .day, value: 1, to: cal.startOfDay(for: Date()))!
         let target = cal.date(bySettingHour: 12, minute: 0, second: 0, of: tomorrow) ?? tomorrow
-        let formatter = ISO8601DateFormatter()
-        do {
-            try await supabase
-                .from("activities")
-                .update(["deadline": formatter.string(from: target)])
-                .eq("id", value: activity.id.uuidString)
-                .execute()
-            if let idx = myActivities.firstIndex(where: { $0.id == activity.id }) {
-                myActivities[idx].deadline = target
-            }
-            persistCache()
-        } catch {
-            errorMessage = error.localizedDescription
+        if let idx = myActivities.firstIndex(where: { $0.id == activity.id }) {
+            myActivities[idx].deadline = target
         }
+        persistCache()
+        await SyncService.shared.perform(
+            .updateActivity(id: activity.id, fields: ["deadline": .date(target)])
+        )
     }
 
     // MARK: - Duplicate
@@ -552,19 +541,10 @@ final class ActivitiesViewModel {
             workspaceId: activity.workspaceId,
             parentId: activity.parentId
         )
-        do {
-            let created: Activity = try await supabase
-                .from("activities")
-                .insert(req)
-                .select()
-                .single()
-                .execute()
-                .value
-            myActivities.insert(created, at: 0)
-            persistCache()
-        } catch {
-            errorMessage = error.localizedDescription
-        }
+        // Optimistic insert with the client id, then push (or queue) the write.
+        myActivities.insert(Activity(from: req), at: 0)
+        persistCache()
+        await SyncService.shared.perform(.createActivity(req))
     }
 
     /// Create a brand-new activity (used by the habit template picker / editor
@@ -596,22 +576,14 @@ final class ActivitiesViewModel {
             parentId: nil,
             scheduleDays: scheduleDays
         )
-        do {
-            let created: Activity = try await supabase
-                .from("activities")
-                .insert(req)
-                .select()
-                .single()
-                .execute()
-                .value
-            myActivities.insert(created, at: 0)
-            persistCache()
-            ConnectorSuggestionEngine.shared.taskCreated(title: created.title, description: created.description)
-            return created
-        } catch {
-            errorMessage = error.localizedDescription
-            return nil
-        }
+        // Build the row locally from the client id so the caller (first-win card,
+        // template picker) can open the photo flow immediately, online or not.
+        let created = Activity(from: req)
+        myActivities.insert(created, at: 0)
+        persistCache()
+        await SyncService.shared.perform(.createActivity(req))
+        ConnectorSuggestionEngine.shared.taskCreated(title: created.title, description: created.description)
+        return created
     }
 
     /// Creates a single one-off subtask under a parent goal. Mirrors
@@ -634,19 +606,9 @@ final class ActivitiesViewModel {
             workspaceId: parent.workspaceId,
             parentId: parent.id
         )
-        do {
-            let created: Activity = try await supabase
-                .from("activities")
-                .insert(req)
-                .select()
-                .single()
-                .execute()
-                .value
-            myActivities.append(created)
-            persistCache()
-        } catch {
-            errorMessage = error.localizedDescription
-        }
+        myActivities.append(Activity(from: req))
+        persistCache()
+        await SyncService.shared.perform(.createActivity(req))
     }
 
     // MARK: - Edit
@@ -659,60 +621,30 @@ final class ActivitiesViewModel {
         reminderTime: Date?,
         scheduleDays: [Int]? = nil
     ) async {
-        struct UpdateRequest: Encodable {
-            let title: String
-            let frequency: String
-            let deadline: Date?
-            let reminderTime: Date?
-            let scheduleDays: [Int]?
-            enum CodingKeys: String, CodingKey {
-                case title, frequency, deadline
-                case reminderTime = "reminder_time"
-                case scheduleDays = "schedule_days"
-            }
-            // Custom encode so schedule_days is sent as explicit null when nil --
-            // switching weekly -> daily must clear stale days in the DB
-            // (synthesized Codable would omit the key entirely).
-            func encode(to encoder: Encoder) throws {
-                var c = encoder.container(keyedBy: CodingKeys.self)
-                try c.encode(title, forKey: .title)
-                try c.encode(frequency, forKey: .frequency)
-                try c.encode(deadline, forKey: .deadline)
-                try c.encode(reminderTime, forKey: .reminderTime)
-                try c.encode(scheduleDays, forKey: .scheduleDays)
-            }
-        }
         // Only weekly tasks carry specific days; daily/once clear them.
+        // Date/day fields are sent as explicit null when absent (switching
+        // weekly -> daily must clear stale days, not omit the column).
         let days = frequency == .weekly ? scheduleDays : nil
-        let req = UpdateRequest(
-            title: title.trimmingCharacters(in: .whitespaces),
-            frequency: frequency.rawValue,
-            deadline: deadline,
-            reminderTime: reminderTime,
-            scheduleDays: days
-        )
-        do {
-            try await supabase
-                .from("activities")
-                .update(req)
-                .eq("id", value: activity.id.uuidString)
-                .execute()
-            if let idx = myActivities.firstIndex(where: { $0.id == activity.id }) {
-                myActivities[idx].title = req.title
-                myActivities[idx].frequency = frequency
-                myActivities[idx].deadline = deadline
-                myActivities[idx].reminderTime = reminderTime
-                myActivities[idx].scheduleDays = days
-            }
-            // Refresh reminder
+        let trimmedTitle = title.trimmingCharacters(in: .whitespaces)
+        let fields: [String: JSONValue] = [
+            "title": .string(trimmedTitle),
+            "frequency": .string(frequency.rawValue),
+            "deadline": .date(deadline),
+            "reminder_time": .date(reminderTime),
+            "schedule_days": days.map { JSONValue.intArray($0) } ?? .null,
+        ]
+        if let idx = myActivities.firstIndex(where: { $0.id == activity.id }) {
+            myActivities[idx].title = trimmedTitle
+            myActivities[idx].frequency = frequency
+            myActivities[idx].deadline = deadline
+            myActivities[idx].reminderTime = reminderTime
+            myActivities[idx].scheduleDays = days
+            // Refresh reminder from the updated row.
             NotificationService.shared.cancelReminder(for: activity.id)
-            if let idx = myActivities.firstIndex(where: { $0.id == activity.id }) {
-                NotificationService.shared.scheduleLocalReminder(for: myActivities[idx])
-            }
-            persistCache()
-        } catch {
-            errorMessage = error.localizedDescription
+            NotificationService.shared.scheduleLocalReminder(for: myActivities[idx])
         }
+        persistCache()
+        await SyncService.shared.perform(.updateActivity(id: activity.id, fields: fields))
     }
 
     // MARK: - Day progress (for the header ring)
@@ -742,17 +674,11 @@ final class ActivitiesViewModel {
         let allDone = onceSiblings.allSatisfy { $0.status == .completed }
         guard allDone else { return }
 
-        do {
-            try await supabase
-                .from("activities")
-                .update(["status": "completed"])
-                .eq("id", value: parentId.uuidString)
-                .execute()
-            if let idx = myActivities.firstIndex(where: { $0.id == parentId }) {
-                myActivities[idx].status = .completed
-            }
-        } catch {
-            logger.error("Auto-complete parent error: \(error)")
+        if let idx = myActivities.firstIndex(where: { $0.id == parentId }) {
+            myActivities[idx].status = .completed
         }
+        await SyncService.shared.perform(
+            .updateActivity(id: parentId, fields: ["status": .string("completed")])
+        )
     }
 }
