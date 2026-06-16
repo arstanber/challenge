@@ -127,7 +127,7 @@ struct Activity: Codable, Identifiable {
 
     var progressFraction: Double {
         guard let target = goalTarget, target > 0 else { return 0 }
-        return min(goalProgress / target, 1.0)
+        return max(0, min(goalProgress / target, 1.0))
     }
 
     var isFromParent: Bool { assignedBy != nil }

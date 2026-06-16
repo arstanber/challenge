@@ -48,6 +48,9 @@ struct Duel: Codable, Identifiable, Hashable {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
         f.locale = Locale(identifier: "en_US_POSIX")
+        // Day labels are opaque server buckets -- parse/format in UTC so the
+        // same label maps to the same day regardless of device timezone.
+        f.timeZone = TimeZone(secondsFromGMT: 0)
         return f
     }()
 
@@ -57,7 +60,8 @@ struct Duel: Codable, Identifiable, Hashable {
     /// All day labels of the window, in order.
     var windowDays: [String] {
         guard let start = startDate else { return [] }
-        let cal = Calendar.current
+        var cal = Calendar.current
+        cal.timeZone = TimeZone(secondsFromGMT: 0)!
         return (0..<days).compactMap { offset in
             cal.date(byAdding: .day, value: offset, to: start).map(Self.dayFormatter.string(from:))
         }
