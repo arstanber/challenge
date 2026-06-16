@@ -103,6 +103,10 @@ struct Activity: Codable, Identifiable {
     /// ISO weekdays (1 = Monday ... 7 = Sunday) the activity is scheduled on.
     /// nil/empty = every day. Matches Postgres extract(isodow).
     var scheduleDays: [Int]?
+    /// Data source bound to this task at creation, auto-counting its progress.
+    var connector: DataConnector?
+    /// Which metric the bound connector reads for this task (steps, games, ...).
+    var connectorMetric: ConnectorMetric?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -123,6 +127,8 @@ struct Activity: Codable, Identifiable {
         case sortOrder = "sort_order"
         case category
         case scheduleDays = "schedule_days"
+        case connector
+        case connectorMetric = "connector_metric"
     }
 
     var progressFraction: Double {
@@ -172,6 +178,8 @@ struct CreateActivityRequest: Codable {
     var parentId: UUID?
     var category: String? = nil
     var scheduleDays: [Int]? = nil
+    var connector: DataConnector? = nil
+    var connectorMetric: ConnectorMetric? = nil
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -186,6 +194,8 @@ struct CreateActivityRequest: Codable {
         case parentId = "parent_id"
         case category
         case scheduleDays = "schedule_days"
+        case connector
+        case connectorMetric = "connector_metric"
     }
 }
 
@@ -217,7 +227,9 @@ extension Activity {
             parentId: req.parentId,
             sortOrder: 0,
             category: req.category,
-            scheduleDays: req.scheduleDays
+            scheduleDays: req.scheduleDays,
+            connector: req.connector,
+            connectorMetric: req.connectorMetric
         )
     }
 }

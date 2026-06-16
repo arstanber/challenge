@@ -129,6 +129,12 @@ final class ConnectorService {
     /// Best available "today" value for the metric a task tracks, across connected sources.
     /// Apple Health wins when present; otherwise the first connected OAuth source that returns data.
     func todayValue(for activity: Activity) async -> Double? {
+        // A task bound to a connector at creation reads exactly that source.
+        if let bound = activity.connector {
+            let metric = activity.connectorMetric ?? ConnectorMetric.infer(from: activity)
+            return await boundValue(bound, metric: metric)
+        }
+
         let metric = ConnectorMetric.infer(from: activity)
         if connected.contains(.appleHealth) || connected.contains(.appleFitness) {
             if let v = try? await health.todayValue(metric) { return v }
@@ -142,6 +148,24 @@ final class ConnectorService {
             if games > 0 { return Double(games) }
         }
         return nil
+    }
+
+    /// Today's value from one specific connector, or nil if it isn't connected
+    /// or can't report this metric.
+    private func boundValue(_ c: DataConnector, metric: ConnectorMetric) async -> Double? {
+        guard isConnected(c) else { return nil }
+        switch c {
+        case .appleHealth, .appleFitness:
+            return try? await health.todayValue(metric)
+        case .strava:
+            return try? await oauth.todayValue(provider: c, metric: metric)
+        case .appleCalendar:
+            return await todayCalendarEventsCount().map(Double.init)
+        case .chessCom:
+            return Double(await chess.gamesToday())
+        case .telegram, .appleClock, .appleShortcuts:
+            return nil
+        }
     }
 
     /// Number of events on the user's Apple calendars today, if connected.

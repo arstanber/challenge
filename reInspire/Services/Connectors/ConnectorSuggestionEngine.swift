@@ -40,6 +40,12 @@ final class ConnectorSuggestionEngine {
         tasksCreated([(title, description, category)])
     }
 
+    /// Surface a connector the user explicitly bound to a task at creation,
+    /// so the same sheet offers to connect it (skipped if already connected).
+    func suggestExplicit(_ connector: DataConnector, taskTitle: String) {
+        queue(connectors: [connector], titles: [taskTitle])
+    }
+
     /// Batch variant for the AI planner: one suggestion covering the whole plan.
     func tasksCreated(_ tasks: [(title: String, description: String, category: String?)]) {
         var matched: [DataConnector] = []

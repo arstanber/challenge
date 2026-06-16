@@ -8,7 +8,10 @@ import Observation
 final class CreateActivityViewModel {
     var title = ""
     var description = ""
-    var type: ActivityType = .challenge
+    var type: ActivityType = .challenge {
+        // Auto-verification lives on goal tasks; leaving .goal drops the binding.
+        didSet { if type != .goal { selectedCapability = nil } }
+    }
     var condition = ""
     var frequency: ActivityFrequency = .daily
     /// ISO weekdays (1=Mon..7=Sun) for weekly activities; empty = every day.
@@ -22,6 +25,10 @@ final class CreateActivityViewModel {
         return Calendar.current.date(from: comps) ?? Date()
     }()
     var goalTarget: String = ""
+    /// Live text in the connector picker, e.g. "chess.com".
+    var connectorQuery: String = ""
+    /// Capability the user picked from the connector picker (binds the task).
+    private(set) var selectedCapability: ConnectorCapability?
     var assignToChildId: UUID?
     /// When non-empty, the activity is created once for each of these children
     /// (parent "assign to all kids" flow). Takes precedence over assignToChildId.
@@ -40,11 +47,41 @@ final class CreateActivityViewModel {
     var isValid: Bool {
         guard !title.trimmingCharacters(in: .whitespaces).isEmpty else { return false }
         if type.hasAIVerification && condition.trimmingCharacters(in: .whitespaces).isEmpty { return false }
+        // A connector-bound task needs a positive target to count against.
+        if selectedCapability != nil, !((Double(goalTarget) ?? 0) > 0) { return false }
         return true
     }
 
-    var showConditionField: Bool { type.hasAIVerification }
+    var showConditionField: Bool { type.hasAIVerification && selectedCapability == nil }
     var showGoalTarget: Bool { type == .goal }
+
+    // MARK: - Connector capability picker
+
+    /// Capabilities matching the current query (full list when query is empty).
+    var capabilityResults: [ConnectorCapability] {
+        ConnectorCapability.search(connectorQuery)
+    }
+
+    /// Unit for the goal-target field once a capability is bound (e.g. "партий").
+    var goalTargetUnit: String? { selectedCapability?.unit }
+
+    /// Bind a capability: the task becomes an auto-tracked goal with a prefilled
+    /// target and title (title only when the user hasn't typed their own).
+    func selectCapability(_ capability: ConnectorCapability) {
+        selectedCapability = capability
+        type = .goal
+        if (Double(goalTarget) ?? 0) <= 0 {
+            goalTarget = String(Int(capability.defaultTarget))
+        }
+        if title.trimmingCharacters(in: .whitespaces).isEmpty {
+            title = capability.taskTitle(target: Double(goalTarget) ?? capability.defaultTarget)
+        }
+        connectorQuery = ""
+    }
+
+    func clearCapability() {
+        selectedCapability = nil
+    }
 
     func create() async {
         guard isValid, let user = authService.currentUser else { return }
@@ -79,7 +116,9 @@ final class CreateActivityViewModel {
                     workspaceId: workspaceId,
                     parentId: parentId,
                     category: category,
-                    scheduleDays: resolvedScheduleDays
+                    scheduleDays: resolvedScheduleDays,
+                    connector: isAssignment ? nil : selectedCapability?.connector,
+                    connectorMetric: isAssignment ? nil : selectedCapability?.metric
                 )
                 let created: Activity = try await supabase
                     .from("activities")
@@ -102,6 +141,12 @@ final class CreateActivityViewModel {
                         data: ["activity_id": created.id.uuidString]
                     )
                     AnalyticsService.shared.track(.activityCreated, ["type": "assigned_to_child"])
+                } else if let capability = selectedCapability {
+                    // Offer to connect the source the user explicitly bound.
+                    ConnectorSuggestionEngine.shared.suggestExplicit(
+                        capability.connector,
+                        taskTitle: created.title
+                    )
                 } else {
                     ConnectorSuggestionEngine.shared.taskCreated(
                         title: created.title,
