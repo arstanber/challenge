@@ -27,11 +27,25 @@ final class FamilyConnectService: NSObject {
     // Family pairing and duel pairing use distinct types so the two flows never
     // cross-connect when both are searching nearby at once.
     private let serviceType: String
-    private let myPeerID = MCPeerID(displayName: UIDevice.current.name)
+    /// Per-instance random token. iOS 16+ returns a generic model name from
+    /// UIDevice.current.name ("iPad"/"iPhone"), so two devices would share a
+    /// peer id and the displayName tiebreak would make BOTH sides invite at
+    /// once -- the connection then flaps and fails. The token makes the peer id
+    /// unique and gives a deterministic single inviter (lower token invites).
+    private let myToken: String
+    /// Human-readable name advertised for status text (the peer id carries the
+    /// token suffix and isn't shown directly).
+    private let myName: String
+    private let myPeerID: MCPeerID
 
     /// `serviceType` defaults to the family channel; duels pass "chlg-duel".
     init(serviceType: String = "chlg-fam") {
         self.serviceType = serviceType
+        let token = UUID().uuidString
+        self.myToken = token
+        let base = UIDevice.current.name
+        self.myName = base
+        self.myPeerID = MCPeerID(displayName: String("\(base)-\(token.prefix(4))".prefix(63)))
         super.init()
     }
     private var session: MCSession?
@@ -57,7 +71,7 @@ final class FamilyConnectService: NSObject {
         session.delegate = self
         self.session = session
 
-        let info = ["has": code == nil ? "0" : "1"]
+        let info = ["has": code == nil ? "0" : "1", "tok": myToken, "name": myName]
         let advertiser = MCNearbyServiceAdvertiser(peer: myPeerID, discoveryInfo: info, serviceType: serviceType)
         advertiser.delegate = self
         advertiser.startAdvertisingPeer()
@@ -121,10 +135,12 @@ extension FamilyConnectService: MCNearbyServiceBrowserDelegate {
     func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID,
                  withDiscoveryInfo info: [String: String]?) {
         guard let session else { return }
-        let name = peerID.displayName
+        let name = info?["name"] ?? peerID.displayName
         setOnMain { s in s.phase = .connecting; s.peerName = name }
-        // Deterministic tiebreak so only one side sends the invite.
-        if myPeerID.displayName <= peerID.displayName {
+        // Deterministic tiebreak on the per-instance token so EXACTLY one side
+        // invites -- displayName alone is identical on two same-model devices.
+        let peerToken = info?["tok"] ?? peerID.displayName
+        if myToken < peerToken {
             browser.invitePeer(peerID, to: session, withContext: nil, timeout: 15)
         }
     }
