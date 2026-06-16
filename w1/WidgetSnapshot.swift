@@ -110,20 +110,18 @@ struct WidgetStarBackground: View {
         ZStack {
             Color(.systemBackground)
             GeometryReader { geo in
-                // Oversized star anchored to the bottom-trailing corner so the
-                // whole burst stays recognizable on any widget aspect ratio and
-                // bleeds off the edge for a backdrop feel; the top-left stays
-                // clean for titles.
+                // Large centered star sized to 1.25x the widget height so the
+                // whole burst fills the background and bleeds off the top/bottom
+                // edges; nudged up slightly so the dense burst settles low.
                 Image("star2")
                     .resizable()
                     .renderingMode(.template)
                     .aspectRatio(contentMode: .fit)
-                    .frame(height: geo.size.height * 1.35)
+                    .frame(height: geo.size.height * 1.25)
                     .foregroundStyle(Color.primary)
-                    .opacity(0.13)
-                    .frame(width: geo.size.width,
-                           height: geo.size.height,
-                           alignment: .bottomTrailing)
+                    .opacity(0.30)
+                    .frame(width: geo.size.width, height: geo.size.height)
+                    .offset(y: -geo.size.height * 0.045)
                     .clipped()
             }
             .allowsHitTesting(false)
