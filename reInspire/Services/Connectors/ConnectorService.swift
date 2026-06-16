@@ -25,6 +25,7 @@ final class ConnectorService {
     private let oauth = OAuthConnector()
     private let calendar = CalendarConnector()
     private let clock = ClockConnector()
+    private let chess = ChessConnector()
     private let defaultsKey = "connected_connectors_v1"
 
     private init() { load() }
@@ -35,9 +36,26 @@ final class ConnectorService {
         switch c {
         case .telegram:      return TelegramService.shared.isLinked
         case .appleClock:    return clock.isEnabled
+        case .chessCom:      return chess.isConnected
         case .appleCalendar: return connected.contains(c) && Self.isCalendarAuthorized
         default:             return connected.contains(c)
         }
+    }
+
+    /// The stored Chess.com username (for prefilling the connect sheet).
+    var chessUsername: String? { chess.username }
+
+    /// Connect Chess.com by validating + storing a username (no OAuth).
+    func connectChess(username: String) async throws {
+        try await chess.connect(username: username)
+        connected.insert(.chessCom)
+        save()
+    }
+
+    func disconnectChess() {
+        chess.disconnect()
+        connected.remove(.chessCom)
+        save()
     }
 
     private static var isCalendarAuthorized: Bool {
@@ -78,6 +96,7 @@ final class ConnectorService {
         case .calendar:  try await calendar.requestAuthorization()
         case .clock:     try await clock.enable()
         case .shortcuts: openShortcutsApp()
+        case .username:  return // Chess.com etc. connect via their own sheet.
         case .telegram:  return // handled via TelegramLinkView; nothing to do here.
         }
         connected.insert(c)
@@ -88,6 +107,7 @@ final class ConnectorService {
         switch c.kind {
         case .oauth:    await oauth.disconnect(c)
         case .clock:    clock.disable()
+        case .username: chess.disconnect()
         case .telegram: return // handled via TelegramLinkView.
         case .health, .calendar, .shortcuts: break
         }
@@ -114,6 +134,11 @@ final class ConnectorService {
         }
         for c in connected where c.kind == .oauth {
             if let v = try? await oauth.todayValue(provider: c, metric: metric), v > 0 { return v }
+        }
+        // Chess.com games count toward "items today" tasks.
+        if metric == .itemsToday && chess.isConnected {
+            let games = await chess.gamesToday()
+            if games > 0 { return Double(games) }
         }
         return nil
     }

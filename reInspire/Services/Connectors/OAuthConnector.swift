@@ -205,7 +205,17 @@ struct OAuthConfig {
                     URLQueryItem(name: "response_type", value: "code")
                 ]
             )
-        case .appleHealth, .appleFitness, .appleCalendar, .telegram, .appleClock, .appleShortcuts:
+        case .spotify:
+            return OAuthConfig(
+                clientId: OAuthSecrets.spotify,
+                authorizeURL: "https://accounts.spotify.com/authorize",
+                scope: "user-read-recently-played",
+                usesPKCE: true,
+                callbackScheme: "reinspire",
+                redirectURI: "reinspire://spotify-callback"
+            )
+        case .appleHealth, .appleFitness, .appleCalendar, .telegram, .appleClock,
+             .appleShortcuts, .chessCom:
             return OAuthConfig(clientId: "", authorizeURL: "", scope: "")
         }
     }
@@ -217,6 +227,9 @@ enum OAuthSecrets {
     static let strava = "256944"
     static let whoop  = "<WHOOP_CLIENT_ID>"
     static let notion = "37cd872b-594c-813a-afff-003799004c78"
+    /// Spotify uses Authorization Code + PKCE (public client, no secret). Paste
+    /// the client id from your Spotify developer app to light the connector up.
+    static let spotify = "<SPOTIFY_CLIENT_ID>"
 
     /// Same OAuth client used for "Sign in with Google" (`GIDClientID` in Info.plist).
     /// Google's installed-app flow needs no client secret -- PKCE covers it.

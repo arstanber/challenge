@@ -8,6 +8,7 @@ struct ConnectorsView: View {
     @State private var showTelegramLink = false
     @State private var showPremium = false
     @State private var showClockSettings = false
+    @State private var showChessSettings = false
     @State private var errorMessage: String?
 
     private var plan: UserPlan { auth.currentUser?.plan ?? .free }
@@ -42,6 +43,9 @@ struct ConnectorsView: View {
         }
         .sheet(isPresented: $showClockSettings) {
             ClockReminderSheet(service: service)
+        }
+        .sheet(isPresented: $showChessSettings) {
+            ChessUsernameSheet(service: service)
         }
         .alert("Ошибка", isPresented: .init(
             get: { errorMessage != nil },
@@ -108,6 +112,12 @@ struct ConnectorsView: View {
         // a one-shot connect toggle.
         if connector == .appleClock {
             showClockSettings = true
+            return
+        }
+
+        // Chess.com connects by username (public API, no OAuth).
+        if connector == .chessCom {
+            showChessSettings = true
             return
         }
 
@@ -292,6 +302,71 @@ private struct ClockReminderSheet: View {
             dismiss()
         } catch ConnectorError.authorizationDenied {
             errorMessage = "Разреши уведомления в настройках, чтобы получать напоминание."
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+}
+
+// MARK: - Chess.com username settings
+
+private struct ChessUsernameSheet: View {
+    let service: ConnectorService
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var username = ""
+    @State private var saving = false
+    @State private var errorMessage: String?
+
+    private var isConnected: Bool { service.isConnected(.chessCom) }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    TextField("Имя пользователя Chess.com", text: $username)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                } footer: {
+                    Text("Введи свой ник на Chess.com. Мы будем считать сыгранные за день партии через публичный API -- авторизация не нужна.")
+                }
+                if let errorMessage {
+                    Section { Text(errorMessage).font(.caption).foregroundStyle(.red) }
+                }
+                if isConnected {
+                    Section {
+                        Button(role: .destructive) {
+                            service.disconnectChess(); Haptics.tap(); dismiss()
+                        } label: {
+                            Text("Отключить")
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Chess.com")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Отмена") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Подключить") { Task { await save() } }
+                        .fontWeight(.semibold)
+                        .disabled(saving || username.trimmingCharacters(in: .whitespaces).isEmpty)
+                        .overlay { if saving { ProgressView().scaleEffect(0.7) } }
+                }
+            }
+            .onAppear { username = service.chessUsername ?? "" }
+        }
+    }
+
+    private func save() async {
+        saving = true
+        defer { saving = false }
+        do {
+            try await service.connectChess(username: username)
+            Haptics.success()
+            dismiss()
         } catch {
             errorMessage = error.localizedDescription
         }

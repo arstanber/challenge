@@ -40,6 +40,9 @@ function providerConfig(provider: string): ProviderCfg {
       return { tokenURL: "https://diauth.garmin.com/di-oauth2-service/oauth/token", clientId: env("GARMIN_CLIENT_ID"), clientSecret: env("GARMIN_CLIENT_SECRET"), basicAuth: true };
     case "notion":
       return { tokenURL: "https://api.notion.com/v1/oauth/token", clientId: env("NOTION_CLIENT_ID"), clientSecret: env("NOTION_CLIENT_SECRET"), basicAuth: true };
+    case "spotify":
+      // Authorization Code + PKCE (public client) -- no secret on either side.
+      return { tokenURL: "https://accounts.spotify.com/api/token", clientId: env("SPOTIFY_CLIENT_ID"), clientSecret: "", basicAuth: false, pkce: true };
     case "google_calendar":
     case "google_docs":
     case "google_drive":
@@ -227,6 +230,12 @@ async function fetchToday(provider: string, metric: string, token: string): Prom
       const res = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent("newer_than:1d")}`, { headers: bearer });
       const d = await res.json();
       return d.resultSizeEstimate ?? (Array.isArray(d.messages) ? d.messages.length : 0);
+    }
+    case "spotify": {
+      // Tracks played since midnight. Spotify's `after` cursor is Unix ms.
+      const res = await fetch(`https://api.spotify.com/v1/me/player/recently-played?limit=50&after=${startEpoch * 1000}`, { headers: bearer });
+      const d = await res.json();
+      return Array.isArray(d.items) ? d.items.length : 0;
     }
     case "notion": {
       const res = await fetch("https://api.notion.com/v1/search", {

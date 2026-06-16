@@ -9,14 +9,16 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
     case telegram
     case appleClock
     case appleShortcuts
+    case chessCom
     // Max
     case strava
     case whoop
     case notion
+    case spotify
 
     var id: String { rawValue }
 
-    enum Kind { case health, oauth, calendar, telegram, clock, shortcuts }
+    enum Kind { case health, oauth, calendar, telegram, clock, shortcuts, username }
 
     /// Apple Health / Fitness are read on-device via HealthKit; Apple Calendar via EventKit;
     /// Telegram wraps `TelegramService`; the alarm clock is a local notification; the rest
@@ -28,16 +30,17 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
         case .telegram:                                                    return .telegram
         case .appleClock:                                                  return .clock
         case .appleShortcuts:                                              return .shortcuts
-        case .strava, .whoop, .notion:                                     return .oauth
+        case .chessCom:                                                    return .username
+        case .strava, .whoop, .notion, .spotify:                           return .oauth
         }
     }
 
     /// Plan tier required to connect this source.
     var requiredPlan: UserPlan {
         switch self {
-        case .appleHealth, .appleFitness, .appleCalendar, .telegram, .appleClock, .appleShortcuts:
+        case .appleHealth, .appleFitness, .appleCalendar, .telegram, .appleClock, .appleShortcuts, .chessCom:
             return .free
-        case .strava, .whoop, .notion:
+        case .strava, .whoop, .notion, .spotify:
             return .max
         }
     }
@@ -47,9 +50,10 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
     /// instead of failing with a config error on tap.
     var isConfigured: Bool {
         switch self {
-        case .whoop:  return !OAuthSecrets.whoop.hasPrefix("<")
-        case .notion: return !OAuthSecrets.notion.hasPrefix("<")
-        default:      return true
+        case .whoop:   return !OAuthSecrets.whoop.hasPrefix("<")
+        case .notion:  return !OAuthSecrets.notion.hasPrefix("<")
+        case .spotify: return !OAuthSecrets.spotify.hasPrefix("<")
+        default:       return true
         }
     }
 
@@ -66,9 +70,11 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
         case .telegram:      return "Telegram"
         case .appleClock:    return "Будильник"
         case .appleShortcuts: return "Команды"
+        case .chessCom:      return "Chess.com"
         case .strava:        return "Strava"
         case .whoop:         return "Whoop"
         case .notion:        return "Notion"
+        case .spotify:       return "Spotify"
         }
     }
 
@@ -81,9 +87,11 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
         case .telegram:      return "Создавайте задачи и отправляйте фото-отчёты боту"
         case .appleClock:    return "Ежедневное напоминание со списком задач в выбранное время"
         case .appleShortcuts: return "Запускайте задачи и автоматизации через приложение «Команды» и Siri"
+        case .chessCom:      return "Засчитывает сыгранные за день партии на Chess.com"
         case .strava:        return "Пробежки и тренировки из Strava засчитываются автоматически"
         case .whoop:         return "Восстановление и нагрузка из Whoop"
         case .notion:        return "Отмечайте задачи прямо в своих страницах Notion"
+        case .spotify:       return "Считает прослушанные за сегодня треки в Spotify"
         }
     }
 
@@ -95,9 +103,11 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
         case .telegram:      return "paperplane.fill"
         case .appleClock:    return "alarm.fill"
         case .appleShortcuts: return "square.stack.3d.up.fill"
+        case .chessCom:      return "checkerboard.rectangle"
         case .strava:        return "figure.outdoor.cycle"
         case .whoop:         return "waveform.path.ecg"
         case .notion:        return "doc.text.fill"
+        case .spotify:       return "music.note"
         }
     }
 
@@ -109,9 +119,11 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
         case .telegram:      return Color(hex: "29A9EA")
         case .appleClock:    return Color(hex: "FF9F0A")
         case .appleShortcuts: return Color(hex: "5E5CE6")
+        case .chessCom:      return Color(hex: "769656")
         case .strava:        return Color(hex: "FC4C02")
         case .whoop:         return Color(hex: "D5212B")
         case .notion:        return Color(hex: "000000")
+        case .spotify:       return Color(hex: "1DB954")
         }
     }
 }
