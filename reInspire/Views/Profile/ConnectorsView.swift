@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Full "Connectors" screen: free data sources everyone can use, plus a Max-only
-/// section (Strava, Whoop, Notion, Google Docs/Drive, Gmail) gated behind a paywall.
+/// section (Strava, Whoop, Notion) gated behind a paywall.
 struct ConnectorsView: View {
     @State private var service = ConnectorService.shared
     @State private var auth = AuthService.shared

@@ -135,19 +135,11 @@ final class ConnectorSuggestionEngine {
         }
         // Meetings & planning
         if has(["встреч", "созвон", "митинг", "meeting", "звонок", "call", "расписани", "календар", "calendar", "планир", "дедлайн", "deadline", "собеседован"]) {
-            add(.appleCalendar, .googleCalendar)
+            add(.appleCalendar)
         }
         // Writing / notes / study
         if has(["заметк", "конспект", "дневник", "журнал", "писать", "написать", "статью", "блог", "notion", "докум", "реферат", "диплом", "курсов", "эссе", "учеб", "study", "учить", "экзамен", "лекци"]) {
-            add(.notion, .googleDocs)
-        }
-        // Email
-        if has(["почт", "письм", "email", "e-mail", "inbox", "gmail", "рассылк"]) {
-            add(.gmail)
-        }
-        // Files & backups
-        if has(["файл", "диск", "drive", "бэкап", "backup", "архив"]) {
-            add(.googleDrive)
+            add(.notion)
         }
         // Telegram bot reports
         if has(["telegram", "телеграм", "фото-отч", "фото отч", "боту"]) {
@@ -160,8 +152,8 @@ final class ConnectorSuggestionEngine {
             case "SPORT":         add(.appleFitness, .appleHealth, .strava)
             case "HEALTH":        add(.appleHealth, .whoop)
             case "FOOD":          add(.appleHealth)
-            case "STUDY":         add(.notion, .googleDocs)
-            case "WORK":          add(.appleCalendar, .googleCalendar, .gmail)
+            case "STUDY":         add(.notion)
+            case "WORK":          add(.appleCalendar)
             case "MENTAL HEALTH": add(.appleHealth, .whoop)
             default: break
             }

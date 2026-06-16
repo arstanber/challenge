@@ -59,7 +59,7 @@ private enum PaywallPlan: String, CaseIterable, Identifiable {
                 "Всё из Premium",
                 "100 AI-проверок фото в месяц",
                 "Расширенные лимиты AI-коуча и планера",
-                "Коннекторы Max: Strava, Whoop, Notion, Google Docs, Google Drive, Gmail",
+                "Коннекторы Max: Strava, Whoop, Notion",
                 "Приоритетная обработка"
             ]
         }

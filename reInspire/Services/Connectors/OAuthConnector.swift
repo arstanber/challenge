@@ -205,58 +205,6 @@ struct OAuthConfig {
                     URLQueryItem(name: "response_type", value: "code")
                 ]
             )
-        case .googleCalendar:
-            return OAuthConfig(
-                clientId: OAuthSecrets.google,
-                authorizeURL: "https://accounts.google.com/o/oauth2/v2/auth",
-                scope: "https://www.googleapis.com/auth/calendar.readonly",
-                extraAuthParams: [
-                    URLQueryItem(name: "access_type", value: "offline"),
-                    URLQueryItem(name: "prompt", value: "consent")
-                ],
-                usesPKCE: true,
-                callbackScheme: OAuthSecrets.googleReversedClientId,
-                redirectURI: "\(OAuthSecrets.googleReversedClientId):/oauth2redirect"
-            )
-        case .googleDocs:
-            return OAuthConfig(
-                clientId: OAuthSecrets.google,
-                authorizeURL: "https://accounts.google.com/o/oauth2/v2/auth",
-                scope: "https://www.googleapis.com/auth/drive.readonly",
-                extraAuthParams: [
-                    URLQueryItem(name: "access_type", value: "offline"),
-                    URLQueryItem(name: "prompt", value: "consent")
-                ],
-                usesPKCE: true,
-                callbackScheme: OAuthSecrets.googleReversedClientId,
-                redirectURI: "\(OAuthSecrets.googleReversedClientId):/oauth2redirect"
-            )
-        case .googleDrive:
-            return OAuthConfig(
-                clientId: OAuthSecrets.google,
-                authorizeURL: "https://accounts.google.com/o/oauth2/v2/auth",
-                scope: "https://www.googleapis.com/auth/drive.readonly",
-                extraAuthParams: [
-                    URLQueryItem(name: "access_type", value: "offline"),
-                    URLQueryItem(name: "prompt", value: "consent")
-                ],
-                usesPKCE: true,
-                callbackScheme: OAuthSecrets.googleReversedClientId,
-                redirectURI: "\(OAuthSecrets.googleReversedClientId):/oauth2redirect"
-            )
-        case .gmail:
-            return OAuthConfig(
-                clientId: OAuthSecrets.google,
-                authorizeURL: "https://accounts.google.com/o/oauth2/v2/auth",
-                scope: "https://www.googleapis.com/auth/gmail.readonly",
-                extraAuthParams: [
-                    URLQueryItem(name: "access_type", value: "offline"),
-                    URLQueryItem(name: "prompt", value: "consent")
-                ],
-                usesPKCE: true,
-                callbackScheme: OAuthSecrets.googleReversedClientId,
-                redirectURI: "\(OAuthSecrets.googleReversedClientId):/oauth2redirect"
-            )
         case .appleHealth, .appleFitness, .appleCalendar, .telegram, .appleClock:
             return OAuthConfig(clientId: "", authorizeURL: "", scope: "")
         }
