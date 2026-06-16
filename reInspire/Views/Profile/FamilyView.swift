@@ -12,6 +12,11 @@ struct FamilyView: View {
     @State private var showCreateChild = false
     @State private var showNearby = false
     @State private var assignTaskMember: FamilyMember?
+    @State private var showAssignAll = false
+
+    // Child code-gated leave
+    @State private var showLeaveCodeEntry = false
+    @State private var leaveCode = ""
 
     private var role: UserRole { vm.user?.role ?? .individual }
 
@@ -35,6 +40,10 @@ struct FamilyView: View {
             CreateActivityView(presetChildId: member.childUserId,
                                presetChildName: member.childUser?.displayLabel)
         }
+        .sheet(isPresented: $showAssignAll) {
+            CreateActivityView(presetChildIds: vm.kidUserIds,
+                               presetChildName: "всех детей")
+        }
         .sheet(item: Binding(get: { vm.lastCreatedChild }, set: { vm.lastCreatedChild = $0 })) { child in
             ChildCreatedSheet(child: child)
         }
@@ -57,6 +66,20 @@ struct FamilyView: View {
                 memberToRemove = nil
             }
             Button("Отмена", role: .cancel) { memberToRemove = nil }
+        }
+        .alert("Подтверди выход", isPresented: $showLeaveCodeEntry) {
+            TextField("Код от родителя", text: $leaveCode)
+                .keyboardType(.numberPad)
+            Button("Выйти", role: .destructive) {
+                let code = leaveCode
+                leaveCode = ""
+                Task {
+                    if await vm.leaveFamilyWithCode(code) { Haptics.success() }
+                }
+            }
+            Button("Отмена", role: .cancel) { leaveCode = "" }
+        } message: {
+            Text("Родитель получил код. Введи его, чтобы выйти из семьи.")
         }
     }
 
@@ -117,7 +140,14 @@ struct FamilyView: View {
             } label: {
                 Label("Создать аккаунт ребёнку", systemImage: "person.badge.plus")
             }
-            Text("Заведи ребёнку логин и PIN -- он войдёт на своём телефоне этими данными.")
+            if !vm.kids.isEmpty {
+                Button {
+                    Haptics.tap(); showAssignAll = true
+                } label: {
+                    Label("Дать задание всем детям", systemImage: "checklist")
+                }
+            }
+            Text("Заведи ребёнку логин и PIN -- он войдёт на своём телефоне этими данными. Можно дать задание одному ребёнку (свайп влево по нему) или сразу всем.")
                 .font(.caption).foregroundStyle(.secondary)
         }
 
@@ -164,8 +194,9 @@ struct FamilyView: View {
     @ViewBuilder private var childSection: some View {
         Section {
             HStack(spacing: 12) {
-                Circle().fill(.purple.opacity(0.2)).frame(width: 40, height: 40)
-                    .overlay { Image(systemName: "person.3.fill").foregroundStyle(.purple) }
+                UserAvatarView(urlString: vm.user?.avatarURL,
+                               label: vm.user?.displayLabel ?? "Ты",
+                               size: 40, tint: .purple)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(vm.user?.displayLabel ?? "Ты")
                         .font(.subheadline.bold())
@@ -174,11 +205,53 @@ struct FamilyView: View {
                 }
             }
         }
-        Section {
-            Button(role: .destructive) { Haptics.warning(); showLeave = true } label: {
-                Text("Покинуть семью")
+
+        if !vm.memberParents.isEmpty {
+            Section("Родители") {
+                ForEach(vm.memberParents) { member in childMemberRow(member) }
             }
         }
+        Section("Дети (\(vm.memberKids.count))") {
+            if vm.memberKids.isEmpty {
+                Text("Других детей пока нет.")
+                    .font(.subheadline).foregroundStyle(.secondary)
+            } else {
+                ForEach(vm.memberKids) { member in childMemberRow(member) }
+            }
+        }
+
+        Section {
+            Button(role: .destructive) {
+                Haptics.warning()
+                Task { if await vm.requestLeaveCode() { showLeaveCodeEntry = true } }
+            } label: {
+                HStack {
+                    Text("Покинуть семью")
+                    if vm.isLoading { Spacer(); ProgressView().scaleEffect(0.7) }
+                }
+            }
+            .disabled(vm.isLoading)
+            Text("Выйти из семьи можно только с кодом, который придёт родителю. Запроси код и попроси его у родителя.")
+                .font(.caption).foregroundStyle(.secondary)
+        }
+    }
+
+    /// Read-only roster row for the child's view of the family.
+    private func childMemberRow(_ member: AppUser) -> some View {
+        let role = member.familyRole ?? .child
+        return HStack(spacing: 12) {
+            UserAvatarView(urlString: member.avatarURL, label: member.displayLabel,
+                           size: 36, tint: .purple)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(member.displayLabel).font(.subheadline.bold())
+                Text(role.title).font(.caption).foregroundStyle(.secondary)
+            }
+            Spacer()
+            if member.id == vm.user?.id {
+                Text("ты").font(.caption2.bold()).foregroundStyle(.purple)
+            }
+        }
+        .padding(.vertical, 2)
     }
 
     // MARK: Individual (setup)

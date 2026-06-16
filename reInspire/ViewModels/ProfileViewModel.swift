@@ -9,6 +9,9 @@ import Observation
 final class ProfileViewModel {
     var family: Family?
     var children: [FamilyMember] = []
+    /// All members of the caller's family (used by the child view to see who is
+    /// in the family). Populated for any family member, parent or child.
+    var familyMembers: [AppUser] = []
     var isLoading = false
     var errorMessage: String?
     var totalCompleted: Int = 0
@@ -36,6 +39,14 @@ final class ProfileViewModel {
     var moms: [FamilyMember] { children.filter { $0.childUser?.familyRole == .mom } }
     var dads: [FamilyMember] { children.filter { $0.childUser?.familyRole == .dad } }
     var kids: [FamilyMember] { children.filter { ($0.childUser?.familyRole ?? .child) == .child } }
+
+    /// child_user_ids of every kid in the family -- target list for the parent's
+    /// "assign to all children" flow.
+    var kidUserIds: [UUID] { kids.map(\.childUserId) }
+
+    // Family members grouped by role for the child-side roster.
+    var memberParents: [AppUser] { familyMembers.filter { ($0.familyRole ?? .child) != .child } }
+    var memberKids: [AppUser] { familyMembers.filter { ($0.familyRole ?? .child) == .child } }
 
     func loadProfile() async {
         guard let user = authService.currentUser else { return }
@@ -65,6 +76,19 @@ final class ProfileViewModel {
                     .eq("family_id", value: familyId.uuidString)
                     .execute()
                     .value
+            }
+
+            // Every family member (parent or child) can read the roster of who
+            // is in the family (RLS: "Family members read each other").
+            if let familyId = user.familyId {
+                familyMembers = try await supabase
+                    .from("users")
+                    .select()
+                    .eq("family_id", value: familyId.uuidString)
+                    .execute()
+                    .value
+            } else {
+                familyMembers = []
             }
         } catch {
             errorMessage = error.localizedDescription
@@ -147,11 +171,56 @@ final class ProfileViewModel {
             authService.currentUser?.familyId = nil
             family = nil
             children = []
+            familyMembers = []
         } catch {
             errorMessage = error.localizedDescription
         }
         isLoading = false
         _ = user
+    }
+
+    /// Whether the "code sent to parent" hint should show after a request.
+    var leaveCodeRequested = false
+
+    /// A child asks to leave: the server generates a code and pushes it to the
+    /// parent (never to the child). The child then confirms with the code.
+    @discardableResult
+    func requestLeaveCode() async -> Bool {
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+        do {
+            try await supabase.functions.invoke("family-leave-request")
+            leaveCodeRequested = true
+            return true
+        } catch {
+            errorMessage = "Не удалось отправить запрос. Попробуй ещё раз."
+            return false
+        }
+    }
+
+    /// A child confirms leaving with the code their parent received.
+    @discardableResult
+    func leaveFamilyWithCode(_ code: String) async -> Bool {
+        let trimmed = code.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return false }
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+        do {
+            try await supabase.rpc("leave_family_with_code", params: ["p_code": trimmed]).execute()
+            authService.currentUser?.role = .individual
+            authService.currentUser?.familyId = nil
+            authService.currentUser?.familyRole = nil
+            family = nil
+            children = []
+            familyMembers = []
+            leaveCodeRequested = false
+            return true
+        } catch {
+            errorMessage = "Неверный код. Попроси код у родителя."
+            return false
+        }
     }
 
     /// A parent removes one child from the family.

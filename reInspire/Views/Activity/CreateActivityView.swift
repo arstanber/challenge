@@ -6,6 +6,9 @@ struct CreateActivityView: View {
 
     /// When set, this activity is assigned to the given child (parent flow).
     var presetChildId: UUID?
+    /// When set, the activity is assigned to every listed child at once
+    /// (parent "assign to all kids" flow). Takes precedence over presetChildId.
+    var presetChildIds: [UUID]?
     var presetChildName: String?
 
     var body: some View {
@@ -99,7 +102,10 @@ struct CreateActivityView: View {
             .hapticFeedback(.selection, trigger: vm.reminderEnabled)
             .navigationTitle(presetChildName == nil ? "New activity" : "Новое задание")
             .navigationBarTitleDisplayMode(.inline)
-            .onAppear { if let id = presetChildId { vm.assignToChildId = id } }
+            .onAppear {
+                if let ids = presetChildIds { vm.assignToChildIds = ids }
+                else if let id = presetChildId { vm.assignToChildId = id }
+            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { Haptics.tap(); dismiss() }

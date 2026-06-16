@@ -23,6 +23,9 @@ final class CreateActivityViewModel {
     }()
     var goalTarget: String = ""
     var assignToChildId: UUID?
+    /// When non-empty, the activity is created once for each of these children
+    /// (parent "assign to all kids" flow). Takes precedence over assignToChildId.
+    var assignToChildIds: [UUID] = []
     var workspaceId: UUID?
     var parentId: UUID?
     var category: String?
@@ -48,55 +51,69 @@ final class CreateActivityViewModel {
         isLoading = true
         errorMessage = nil
 
-        let request = CreateActivityRequest(
-            userId: assignToChildId ?? user.id,
-            assignedBy: assignToChildId != nil ? user.id : nil,
-            title: title.trimmingCharacters(in: .whitespaces),
-            description: description.trimmingCharacters(in: .whitespaces),
-            type: type,
-            condition: showConditionField ? condition.trimmingCharacters(in: .whitespaces) : nil,
-            frequency: frequency,
-            deadline: hasDeadline ? deadline : nil,
-            reminderTime: reminderEnabled ? reminderTime : nil,
-            goalTarget: showGoalTarget ? Double(goalTarget) : nil,
-            workspaceId: workspaceId,
-            parentId: parentId,
-            category: category,
-            scheduleDays: frequency == .weekly && !scheduleDays.isEmpty && scheduleDays.count < 7
-                ? scheduleDays.sorted()
-                : nil
-        )
+        // Resolve who this task is for. A child-assignment list wins over a
+        // single child id; with neither, the task is the user's own.
+        let childTargets: [UUID] = assignToChildIds.isEmpty
+            ? (assignToChildId.map { [$0] } ?? [])
+            : assignToChildIds
+        let isAssignment = !childTargets.isEmpty
+        let targets: [UUID] = isAssignment ? childTargets : [user.id]
+
+        let resolvedScheduleDays = frequency == .weekly && !scheduleDays.isEmpty && scheduleDays.count < 7
+            ? scheduleDays.sorted()
+            : nil
 
         do {
-            let created: Activity = try await supabase
-                .from("activities")
-                .insert(request)
-                .select()
-                .single()
-                .execute()
-                .value
-            if reminderEnabled {
-                notifications.scheduleLocalReminder(for: created)
-            }
-            // Parent assigned this to a child -- push them so it lands instantly.
-            if let childId = assignToChildId {
-                await notifications.sendPush(
-                    toUserId: childId,
-                    title: "Новое задание 🎯",
-                    body: "Родитель добавил: «\(created.title)»",
-                    data: ["activity_id": created.id.uuidString]
+            for target in targets {
+                let request = CreateActivityRequest(
+                    userId: target,
+                    assignedBy: isAssignment ? user.id : nil,
+                    title: title.trimmingCharacters(in: .whitespaces),
+                    description: description.trimmingCharacters(in: .whitespaces),
+                    type: type,
+                    condition: showConditionField ? condition.trimmingCharacters(in: .whitespaces) : nil,
+                    frequency: frequency,
+                    deadline: hasDeadline ? deadline : nil,
+                    reminderTime: reminderEnabled ? reminderTime : nil,
+                    goalTarget: showGoalTarget ? Double(goalTarget) : nil,
+                    workspaceId: workspaceId,
+                    parentId: parentId,
+                    category: category,
+                    scheduleDays: resolvedScheduleDays
                 )
-                AnalyticsService.shared.track(.activityCreated, ["type": "assigned_to_child"])
+                let created: Activity = try await supabase
+                    .from("activities")
+                    .insert(request)
+                    .select()
+                    .single()
+                    .execute()
+                    .value
+                // Only schedule a local reminder for the user's own tasks --
+                // a child's reminders live on the child's device.
+                if reminderEnabled && !isAssignment {
+                    notifications.scheduleLocalReminder(for: created)
+                }
+                // Parent assigned this to a child -- push them so it lands instantly.
+                if isAssignment {
+                    await notifications.sendPush(
+                        toUserId: target,
+                        title: "Новое задание 🎯",
+                        body: "Родитель добавил: «\(created.title)»",
+                        data: ["activity_id": created.id.uuidString]
+                    )
+                    AnalyticsService.shared.track(.activityCreated, ["type": "assigned_to_child"])
+                } else {
+                    ConnectorSuggestionEngine.shared.taskCreated(
+                        title: created.title,
+                        description: created.description,
+                        category: category
+                    )
+                }
             }
             AnalyticsService.shared.track(.activityCreated, [
                 "type": type.rawValue,
                 "frequency": frequency.rawValue
             ])
-            ConnectorSuggestionEngine.shared.taskCreated(
-                title: created.title,
-                description: created.description,
-                category: category
-            )
             didCreate = true
         } catch {
             errorMessage = error.localizedDescription
