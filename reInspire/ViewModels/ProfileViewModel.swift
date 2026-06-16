@@ -190,7 +190,8 @@ final class ProfileViewModel {
         errorMessage = nil
         defer { isLoading = false }
         do {
-            try await supabase.functions.invoke("family-leave-request")
+            struct Ack: Decodable { let ok: Bool? }
+            let _: Ack = try await supabase.functions.invoke("family-leave-request")
             leaveCodeRequested = true
             return true
         } catch {
@@ -287,6 +288,32 @@ final class ProfileViewModel {
             return true
         } catch {
             errorMessage = "Не удалось создать аккаунт ребёнка"
+            return false
+        }
+    }
+
+    /// A parent changes a child's login email + password.
+    @discardableResult
+    func setChildCredentials(childId: UUID, email: String, password: String) async -> Bool {
+        struct Req: Encodable {
+            let child_id: String
+            let email: String
+            let password: String
+        }
+        struct Ack: Decodable { let ok: Bool? }
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+        do {
+            let _: Ack = try await supabase.functions.invoke("set-child-credentials",
+                options: FunctionInvokeOptions(body: Req(
+                    child_id: childId.uuidString,
+                    email: email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+                    password: password)))
+            await loadProfile()
+            return true
+        } catch {
+            errorMessage = "Не удалось изменить вход ребёнка"
             return false
         }
     }

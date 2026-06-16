@@ -73,6 +73,9 @@ struct AppUser: Codable, Identifiable {
     var isChildAccount: Bool?
     /// Short code a child account signs in with (only readable by the parent).
     var childLoginCode: String?
+    /// True once a child account has replaced its synthetic email/PIN with a
+    /// real email + password. Forced on first sign-in for child accounts.
+    var childCredentialsSet: Bool?
     // Referral program (20260612c_referrals.sql)
     var referralCode: String?
     var referredBy: UUID?
@@ -96,9 +99,16 @@ struct AppUser: Codable, Identifiable {
         case familyRole = "family_role"
         case isChildAccount = "is_child_account"
         case childLoginCode = "child_login_code"
+        case childCredentialsSet = "child_credentials_set"
     }
 
     var isParent: Bool { role == .parent }
+
+    /// A child account that has not yet set a real email + password. The app
+    /// blocks them on a registration screen until they do.
+    var needsChildCredentials: Bool {
+        (isChildAccount ?? false) && !(childCredentialsSet ?? false)
+    }
 
     /// Best human-readable label: explicit name, else the local part of the email.
     var displayLabel: String {

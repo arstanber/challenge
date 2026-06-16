@@ -12,6 +12,7 @@ struct FamilyView: View {
     @State private var showCreateChild = false
     @State private var showNearby = false
     @State private var assignTaskMember: FamilyMember?
+    @State private var credentialsMember: FamilyMember?
     @State private var showAssignAll = false
 
     // Child code-gated leave
@@ -43,6 +44,9 @@ struct FamilyView: View {
         .sheet(isPresented: $showAssignAll) {
             CreateActivityView(presetChildIds: vm.kidUserIds,
                                presetChildName: "всех детей")
+        }
+        .sheet(item: $credentialsMember) { member in
+            ChildCredentialsSheet(vm: vm, member: member)
         }
         .sheet(item: Binding(get: { vm.lastCreatedChild }, set: { vm.lastCreatedChild = $0 })) { child in
             ChildCreatedSheet(child: child)
@@ -172,6 +176,9 @@ struct FamilyView: View {
                                 Button { assignTaskMember = member } label: {
                                     Label("Задание", systemImage: "plus.circle")
                                 }.tint(.purple)
+                                Button { credentialsMember = member } label: {
+                                    Label("Вход", systemImage: "key")
+                                }.tint(.blue)
                             }
                         }
                         .swipeActions {
@@ -437,6 +444,62 @@ private struct ChildCreatedSheet: View {
         }
         .padding()
         .background(RoundedRectangle(cornerRadius: 14).fill(Color.purple.opacity(0.08)))
+    }
+}
+
+// MARK: - Change child credentials (parent)
+
+private struct ChildCredentialsSheet: View {
+    @Bindable var vm: ProfileViewModel
+    let member: FamilyMember
+    @Environment(\.dismiss) private var dismiss
+    @State private var email = ""
+    @State private var password = ""
+
+    private var isValid: Bool {
+        email.contains("@") && email.contains(".") && password.count >= 6
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Text("Измени почту и пароль для \(member.childUser?.displayLabel ?? "ребёнка"). Этими данными ребёнок входит в приложение.")
+                        .font(.subheadline).foregroundStyle(.secondary)
+                }
+                Section("Почта") {
+                    TextField("you@example.com", text: $email)
+                        .keyboardType(.emailAddress)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                }
+                Section("Новый пароль (от 6 символов)") {
+                    SecureField("Пароль", text: $password)
+                }
+                if let error = vm.errorMessage {
+                    Section { Text(error).font(.caption).foregroundStyle(.red) }
+                }
+            }
+            .navigationTitle("Вход ребёнка")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Отмена") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Сохранить") {
+                        Task {
+                            let ok = await vm.setChildCredentials(
+                                childId: member.childUserId, email: email, password: password)
+                            if ok { Haptics.success(); dismiss() }
+                        }
+                    }
+                    .fontWeight(.semibold)
+                    .disabled(!isValid || vm.isLoading)
+                    .overlay { if vm.isLoading { ProgressView().scaleEffect(0.7) } }
+                }
+            }
+        }
     }
 }
 

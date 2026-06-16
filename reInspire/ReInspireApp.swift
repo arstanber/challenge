@@ -65,7 +65,10 @@ struct RootView: View {
             if authService.isRestoring {
                 LoadingView()
             } else if authService.isAuthenticated {
-                if authService.needsWelcomeIntro {
+                if authService.currentUser?.needsChildCredentials == true {
+                    // A PIN child must register a real email + password first.
+                    ChildSetCredentialsView()
+                } else if authService.needsWelcomeIntro {
                     // One-time "Week on us" trial intro right after registration.
                     WeekOnUsView { authService.needsWelcomeIntro = false }
                 } else {

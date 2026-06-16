@@ -77,6 +77,22 @@ final class AuthService {
         }
     }
 
+    /// A signed-in child sets their own real email + password (forced on first
+    /// sign-in). Goes through the `set-child-credentials` edge function, which
+    /// updates the auth user with the admin API (no email confirmation needed),
+    /// then we re-pull the profile so `needsChildCredentials` clears.
+    func setOwnChildCredentials(email: String, password: String) async throws {
+        struct Req: Encodable { let email: String; let password: String }
+        struct Ack: Decodable { let ok: Bool? }
+        let normalized = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let _: Ack = try await supabase.functions.invoke(
+            "set-child-credentials",
+            options: FunctionInvokeOptions(body: Req(email: normalized, password: password))
+        )
+        await refreshProfile()
+        AnalyticsService.shared.track(.signedUp, ["method": "child_upgrade"])
+    }
+
     // MARK: - Session Restore
 
     /// Minimum time the branded loading screen stays up on launch.
