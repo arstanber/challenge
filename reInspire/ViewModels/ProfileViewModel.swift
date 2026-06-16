@@ -12,6 +12,21 @@ final class ProfileViewModel {
     /// All members of the caller's family (used by the child view to see who is
     /// in the family). Populated for any family member, parent or child.
     var familyMembers: [AppUser] = []
+
+    /// Pending child leave-request codes (parent view), so the parent can read
+    /// the code in-app even if the push didn't arrive.
+    struct LeaveRequest: Decodable, Identifiable {
+        let childUserId: UUID
+        let childName: String
+        let code: String
+        var id: UUID { childUserId }
+        enum CodingKeys: String, CodingKey {
+            case childUserId = "child_user_id"
+            case childName = "child_name"
+            case code
+        }
+    }
+    var leaveRequests: [LeaveRequest] = []
     var isLoading = false
     var errorMessage: String?
     var totalCompleted: Int = 0
@@ -76,6 +91,10 @@ final class ProfileViewModel {
                     .eq("family_id", value: familyId.uuidString)
                     .execute()
                     .value
+
+                // Pending leave codes the parent can read in-app.
+                leaveRequests = (try? await supabase.rpc("get_family_leave_requests")
+                    .execute().value) ?? []
             }
 
             // Every family member (parent or child) can read the roster of who

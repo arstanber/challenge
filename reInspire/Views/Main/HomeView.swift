@@ -229,7 +229,9 @@ struct HomeView: View {
     @ViewBuilder private var mainCards: some View {
         ForEach(Array(mainRows.enumerated()), id: \.element.task.id) { idx, row in
             if row.isDone {
-                DoneTaskCard(task: row.task) { detailActivity = row.task }
+                DoneTaskCard(task: row.task,
+                             onOpen: { detailActivity = row.task },
+                             onUndo: { Task { await vm.undoHabitToday(row.task) } })
                     .appearEffect(delay: 0.1 + Double(idx) * 0.05)
             } else {
                 taskCard(row.task)
@@ -247,7 +249,9 @@ struct HomeView: View {
 
     @ViewBuilder private var doneCards: some View {
         ForEach(Array(bottomDoneTasks.enumerated()), id: \.element.id) { idx, task in
-            DoneTaskCard(task: task) { detailActivity = task }
+            DoneTaskCard(task: task,
+                         onOpen: { detailActivity = task },
+                         onUndo: { Task { await vm.undoHabitToday(task) } })
                 .appearEffect(delay: 0.2 + Double(idx) * 0.05)
         }
     }
@@ -310,7 +314,10 @@ struct HomeView: View {
                         .onAppear(perform: trackFirstWinShownOnce)
                     }
 
-                    if vm.yesterdayFreezable && vm.freezesAvailable > 0 {
+                    // Only offer a freeze when the streak is actually broken
+                    // (current == 0). If today already counts, the run isn't
+                    // interrupted, so "Серия прервалась?" would be misleading.
+                    if vm.globalStreakCurrent == 0 && vm.yesterdayFreezable && vm.freezesAvailable > 0 {
                         FreezeYesterdayBanner(remaining: vm.freezesAvailable) {
                             Haptics.medium()
                             Task {
@@ -677,7 +684,7 @@ private struct HomeHeader: View {
     @State private var flamePulse = false
 
     private var flameColor: Color {
-        if allDone { return .red }
+        if allDone { return Color(hex: "FF6A00") }   // vivid orange, not red
         if streak > 0 { return .orange }
         return .secondary
     }
@@ -928,6 +935,7 @@ private struct TaskCardView: View {
 private struct DoneTaskCard: View {
     let task: Activity
     let onOpen: () -> Void
+    var onUndo: () -> Void = {}
 
     var body: some View {
         HStack(spacing: 14) {
@@ -951,13 +959,18 @@ private struct DoneTaskCard: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            ZStack {
-                Circle().fill(Color(hex: "2FB873"))
-                Image(systemName: "checkmark")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(.white)
+            Button {
+                Haptics.tap(); onUndo()
+            } label: {
+                ZStack {
+                    Circle().fill(Color(hex: "2FB873"))
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .frame(width: 48, height: 48)
             }
-            .frame(width: 48, height: 48)
+            .buttonStyle(.plain)
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 18)

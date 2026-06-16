@@ -281,8 +281,19 @@ private struct DuelCreateSheet: View {
                 .font(.subheadline).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
-            Stepper("Дней: \(days)", value: $days, in: 3...90)
-                .padding(.horizontal, 8)
+            HStack(spacing: 12) {
+                Text("Дней:").font(.headline)
+                Spacer()
+                TextField("7", value: $days, format: .number)
+                    .keyboardType(.numberPad)
+                    .multilineTextAlignment(.center)
+                    .frame(width: 64)
+                    .padding(.vertical, 8)
+                    .background(RoundedRectangle(cornerRadius: 10).fill(Color(.secondarySystemBackground)))
+                    .onChange(of: days) { _, v in days = min(90, max(3, v)) }
+                Stepper("", value: $days, in: 3...90).labelsHidden()
+            }
+            .padding(.horizontal, 8)
 
             HStack(spacing: 8) {
                 ForEach(quick, id: \.self) { d in

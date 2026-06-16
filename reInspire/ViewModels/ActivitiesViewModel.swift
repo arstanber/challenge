@@ -245,6 +245,26 @@ final class ActivitiesViewModel {
         publishWidgetSnapshot()
     }
 
+    /// Undo today's completion of a recurring task (tap a done card to uncheck).
+    /// Deletes today's reports and clears the engine's done-state, then refreshes.
+    func undoHabitToday(_ activity: Activity) async {
+        let start = calendar.startOfDay(for: Date())
+        let iso = ISO8601DateFormatter()
+        do {
+            try await supabase
+                .from("reports")
+                .delete()
+                .eq("activity_id", value: activity.id.uuidString)
+                .gte("created_at", value: iso.string(from: start))
+                .execute()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        await engine.undoToday(activityId: activity.id)
+        applyEngineStreaks()
+        publishWidgetSnapshot()
+    }
+
     /// Mark a task done for today locally (after a photo report was already saved elsewhere),
     /// without inserting a second report. Hides it from today's list / counts the ring.
     func markDoneLocally(_ activity: Activity) {

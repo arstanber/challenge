@@ -54,12 +54,11 @@ final class ClockConnector {
         let center = UNUserNotificationCenter.current()
         center.removePendingNotificationRequests(withIdentifiers: [Self.notificationId])
 
-        let count = TaskEngine.shared.pendingTodayCount
+        // A repeating notification can't recompute its body each day, so we
+        // keep it count-free -- a baked-in number would go stale/wrong.
         let content = UNMutableNotificationContent()
         content.title = "Доброе утро!"
-        content.body = count > 0
-            ? "Сегодня \(count) задач(и) -- начни с первой"
-            : "Сегодня нет задач -- отличный день для отдыха"
+        content.body = "Загляни в свои задачи на сегодня и начни с первой 💪"
         content.sound = .default
 
         var comps = DateComponents()

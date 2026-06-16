@@ -155,6 +155,27 @@ struct FamilyView: View {
                 .font(.caption).foregroundStyle(.secondary)
         }
 
+        if !vm.leaveRequests.isEmpty {
+            Section("Запросы на выход") {
+                ForEach(vm.leaveRequests) { req in
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(req.childName).font(.subheadline.bold())
+                            Text("хочет выйти из семьи")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Text(req.code)
+                            .font(.title3.bold().monospaced())
+                            .foregroundStyle(.orange)
+                            .onTapGesture { UIPasteboard.general.string = req.code; Haptics.success() }
+                    }
+                }
+                Text("Сообщи код ребёнку, только если согласен отпустить его из семьи.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+        }
+
         roleGroup(title: "Мамы", members: vm.moms)
         roleGroup(title: "Папы", members: vm.dads)
         roleGroup(title: "Дети (\(vm.kids.count))", members: vm.kids, isKids: true)
