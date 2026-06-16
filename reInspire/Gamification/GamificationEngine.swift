@@ -74,8 +74,10 @@ final class GamificationEngine {
     /// truth (frozen days actually protect the streak); fall back to the local
     /// estimate only when the server wallet has not loaded yet.
     var freezeBalance: Int {
-        let server = TaskEngine.shared.freezesAvailable
-        return server > 0 ? server : earnedFreezes
+        // Trust the server wallet once it has loaded -- including a real 0
+        // (all freezes spent). Fall back to the local estimate only before the
+        // first successful refresh.
+        TaskEngine.shared.streaksLoaded ? TaskEngine.shared.freezesAvailable : earnedFreezes
     }
 
     // MARK: - Themes (#5)

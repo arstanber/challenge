@@ -82,13 +82,20 @@ final class CloudSyncService {
 
     private func pullAll() {
         isApplyingRemote = true
-        defer { isApplyingRemote = false }
         for key in Self.syncedKeys {
             guard let remote = store.object(forKey: key) else { continue }
             let local = defaults.object(forKey: key)
             if local == nil || !isEqualPlist(remote, local!) {
                 defaults.set(remote, forKey: key)
             }
+        }
+        // Clear the flag only after the didChangeNotification(s) posted by the
+        // defaults.set calls above have drained to the async observer. A
+        // synchronous defer would reset it first, so every pull would be
+        // misread as a local edit and bounce straight back as a push.
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
+            isApplyingRemote = false
         }
     }
 

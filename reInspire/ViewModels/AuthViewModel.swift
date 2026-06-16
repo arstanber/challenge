@@ -3,6 +3,7 @@ import AuthenticationServices
 import Observation
 
 @Observable
+@MainActor
 final class AuthViewModel {
     var email = ""
     var password = ""

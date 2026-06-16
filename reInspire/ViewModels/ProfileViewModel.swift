@@ -4,6 +4,7 @@ import PostgREST
 import Observation
 
 @Observable
+@MainActor
 final class ProfileViewModel {
     var family: Family?
     var children: [FamilyMember] = []

@@ -39,6 +39,7 @@ struct QuestInput {
 }
 
 @Observable
+@MainActor
 final class QuestEngine {
     static let shared = QuestEngine()
 

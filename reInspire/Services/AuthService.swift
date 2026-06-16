@@ -193,7 +193,10 @@ final class AuthService {
                 try await loadUserProfile(id: session.user.id)
                 needsWelcomeIntro = false
                 AnalyticsService.shared.track(.signedIn, ["method": "apple"])
-            } catch {
+            } catch let pgErr as PostgrestError where pgErr.code == "PGRST116" {
+                // PGRST116 = .single() returned no rows => brand-new user.
+                // Any other error (network, etc.) propagates instead of
+                // spuriously creating a duplicate profile.
                 let email = credential.email ?? session.user.email ?? ""
                 let profile = AppUserInsert(
                     id: session.user.id,
@@ -233,7 +236,10 @@ final class AuthService {
                 try await loadUserProfile(id: session.user.id)
                 needsWelcomeIntro = false
                 AnalyticsService.shared.track(.signedIn, ["method": "google"])
-            } catch {
+            } catch let pgErr as PostgrestError where pgErr.code == "PGRST116" {
+                // PGRST116 = .single() returned no rows => brand-new user.
+                // Any other error (network, etc.) propagates instead of
+                // spuriously creating a duplicate profile.
                 let email = tokens.email.isEmpty ? (session.user.email ?? "") : tokens.email
                 let profile = AppUserInsert(
                     id: session.user.id,

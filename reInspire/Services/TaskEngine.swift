@@ -40,6 +40,9 @@ final class TaskEngine {
     private(set) var freezesAvailable = 0
     /// True when yesterday is missed, unfrozen, and the user has balance.
     private(set) var yesterdayFreezable = false
+    /// True once a server streak refresh has succeeded -- lets readers tell
+    /// "wallet not loaded yet" apart from "loaded, balance is 0".
+    private(set) var streaksLoaded = false
     /// Per-activity streaks from the last `refresh_my_streaks` call.
     private(set) var activityStreaks: [UUID: (current: Int, best: Int)] = [:]
 
@@ -319,6 +322,7 @@ final class TaskEngine {
             serverTodayCount = payload.todayCount
             freezesAvailable = payload.freezesAvailable ?? 0
             yesterdayFreezable = payload.yesterdayFreezable ?? false
+            streaksLoaded = true
             activityStreaks = Dictionary(
                 uniqueKeysWithValues: payload.activities.map { ($0.id, (current: $0.streakCurrent, best: $0.streakBest)) }
             )

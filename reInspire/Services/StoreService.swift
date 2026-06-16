@@ -8,6 +8,7 @@ import os.log
 private let storeLogger = Logger(subsystem: "com.reinspire", category: "StoreService")
 
 @Observable
+@MainActor
 final class StoreService {
     static let shared = StoreService()
 

@@ -7,7 +7,9 @@ struct CameraView: UIViewControllerRepresentable {
 
     func makeUIViewController(context: Context) -> UIImagePickerController {
         let picker = UIImagePickerController()
-        picker.sourceType = .camera
+        // .camera is unavailable on the simulator and camera-less devices;
+        // selecting it there crashes. Fall back to the photo library.
+        picker.sourceType = UIImagePickerController.isSourceTypeAvailable(.camera) ? .camera : .photoLibrary
         picker.delegate = context.coordinator
         picker.allowsEditing = false
         return picker

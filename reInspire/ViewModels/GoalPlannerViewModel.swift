@@ -8,6 +8,7 @@ import os.log
 private let logger = Logger(subsystem: "com.reinspire", category: "GoalPlannerViewModel")
 
 @Observable
+@MainActor
 final class GoalPlannerViewModel {
 
     // MARK: - Step

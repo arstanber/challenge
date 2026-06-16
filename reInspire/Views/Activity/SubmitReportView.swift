@@ -263,7 +263,10 @@ struct SubmitReportView: View {
         case .challenge, .assignment:
             return capturedImage == nil
         case .goal:
-            return progressValue.isEmpty || Double(progressValue) == nil
+            // Reject empty, non-numeric, and negative values -- a negative
+            // progress entry would corrupt goal tracking.
+            guard let v = Double(progressValue) else { return true }
+            return v < 0
         case .task, .habit:
             return false
         }

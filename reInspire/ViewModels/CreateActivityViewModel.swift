@@ -4,6 +4,7 @@ import PostgREST
 import Observation
 
 @Observable
+@MainActor
 final class CreateActivityViewModel {
     var title = ""
     var description = ""

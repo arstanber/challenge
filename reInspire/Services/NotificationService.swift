@@ -9,6 +9,7 @@ import os.log
 private let notifLogger = Logger(subsystem: "com.reinspire", category: "NotificationService")
 
 @Observable
+@MainActor
 final class NotificationService: NSObject {
     static let shared = NotificationService()
 

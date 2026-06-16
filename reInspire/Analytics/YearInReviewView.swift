@@ -65,8 +65,9 @@ final class YearInReviewViewModel {
             let dates = reports.map { $0.createdAt }
             stats = compute(dates: dates, completed: completed, topCategory: topCategory, year: year)
         } catch {
+            // Leave stats nil so the view shows an error state instead of a
+            // misleading all-zeros card.
             errorMessage = error.localizedDescription
-            stats = emptyStats(year: year)
         }
         isLoading = false
     }
@@ -130,6 +131,25 @@ struct YearInReviewView: View {
 
             if vm.isLoading {
                 ProgressView().tint(.white)
+            } else if vm.stats == nil, let error = vm.errorMessage {
+                VStack(spacing: 12) {
+                    Image(systemName: "exclamationmark.triangle")
+                        .font(.system(size: 40))
+                        .foregroundStyle(.white.opacity(0.7))
+                    Text("Не удалось загрузить итоги")
+                        .font(.manrope(.bold, size: 16))
+                        .foregroundStyle(.white)
+                    Text(error)
+                        .font(.manrope(.medium, size: 14))
+                        .foregroundStyle(.white.opacity(0.7))
+                        .multilineTextAlignment(.center)
+                    Button("Попробовать снова") { Task { await vm.load() } }
+                        .font(.manrope(.bold, size: 14))
+                        .foregroundColor(Color(hex: "4580FF"))
+                        .padding(.horizontal, 20).padding(.vertical, 10)
+                        .background(Capsule().fill(.white))
+                }
+                .padding(30)
             } else if let stats = vm.stats {
                 VStack(spacing: 0) {
                     HStack {
