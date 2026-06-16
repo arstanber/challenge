@@ -46,11 +46,13 @@
 	<key>NSHealthShareUsageDescription</key>
 	<string>reInspire reads steps, energy, exercise minutes and distance from Apple Health to automatically track your goals.</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>reInspire соединяет два телефона рядом, чтобы добавить ребёнка в семью, когда вы трясёте устройства.</string>
+	<string>reInspire соединяет два телефона рядом, когда вы трясёте устройства -- чтобы добавить ребёнка в семью или начать дуэль с другом.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_chlg-fam._tcp</string>
 		<string>_chlg-fam._udp</string>
+		<string>_chlg-duel._tcp</string>
+		<string>_chlg-duel._udp</string>
 	</array>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>reInspire uses your location in the background to remind you about activities when you arrive at a place, like the gym.</string>
