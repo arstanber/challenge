@@ -92,6 +92,7 @@ struct SettingsView: View {
                     if auth.currentUser?.isPremium != true {
                         premiumCard
                     }
+                    subscriptionSection
                     personalSection
                     globalSection
                     habitsSection
@@ -293,6 +294,21 @@ struct SettingsView: View {
     }
 
     // MARK: Sections
+
+    // Always visible -- the premium upsell card above is hidden once the user
+    // has PRO (incl. the welcome trial), but subscribers still need a way to
+    // open the plans / restore purchases. Title reflects current entitlement.
+    private var subscriptionSection: some View {
+        SettingsSection(title: "Подписка") {
+            SettingsRow(
+                icon: "crown",
+                title: auth.currentUser?.isPremium == true ? "Управление подпиской" : "Оформить подписку",
+                trailing: .chevron
+            ) {
+                Haptics.tap(); showPremium = true
+            }
+        }
+    }
 
     private var personalSection: some View {
         SettingsSection(title: "Личное") {

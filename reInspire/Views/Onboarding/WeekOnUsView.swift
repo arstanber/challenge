@@ -5,11 +5,11 @@ private enum WOUStyle {
     static let accentBlue = Color(red: 0.333, green: 0.541, blue: 0.941).opacity(0.30)
     static let bodyGray   = Color(red: 0.459, green: 0.459, blue: 0.459)
 
-    static let headerSize:   CGFloat = 24
-    static let titleSize:    CGFloat = 24
-    static let bodySize:     CGFloat = 20
-    static let boldLineSize: CGFloat = 24
-    static let footerSize:   CGFloat = 20
+    static let headerSize:   CGFloat = 22
+    static let titleSize:    CGFloat = 22
+    static let bodySize:     CGFloat = 17
+    static let boldLineSize: CGFloat = 20
+    static let footerSize:   CGFloat = 15
 
     static let hPad:   CGFloat = 20
     static let topPad: CGFloat = 60
@@ -54,60 +54,63 @@ struct WeekOnUsView: View {
                 .opacity(0.25)
                 .allowsHitTesting(false)
 
-            VStack(alignment: .leading, spacing: 0) {
-                // Scrolls if the copy is taller than the screen, so nothing is
-                // ever clipped on shorter devices.
-                ScrollView(showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text("reInspire.")
-                            .font(.system(size: WOUStyle.headerSize, weight: .medium))
-                            .foregroundColor(.black)
-                            .lineSpacing(2)
-                            .padding(.bottom, 12)
-                            .appearEffect(delay: 0.05)
+            // Single scroll column: copy flows top-to-bottom with the footer
+            // following the text directly. Avoids the previous layout where a
+            // full-height ScrollView shoved the footer to the bottom and left a
+            // large empty gap in the middle. Each Text is width-capped so long
+            // lines wrap instead of overflowing the screen edges.
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("reInspire.")
+                        .font(.system(size: WOUStyle.headerSize, weight: .medium))
+                        .foregroundColor(.black)
+                        .lineSpacing(2)
+                        .padding(.bottom, 12)
+                        .appearEffect(delay: 0.05)
 
-                        Text("Week on us.")
-                            .font(.manrope(.semiBold, size: WOUStyle.titleSize))
-                            .foregroundColor(.black)
-                            .padding(.bottom, 10)
-                            .appearEffect(delay: 0.15)
-                            .shimmer(delay: 0.8)
+                    Text("Week on us.")
+                        .font(.manrope(.semiBold, size: WOUStyle.titleSize))
+                        .foregroundColor(.black)
+                        .padding(.bottom, 10)
+                        .appearEffect(delay: 0.15)
+                        .shimmer(delay: 0.8)
 
-                        Text(bodyText)
-                            .font(.manrope(.semiBold, size: WOUStyle.bodySize))
-                            .foregroundColor(WOUStyle.bodyGray)
+                    Text(bodyText)
+                        .font(.manrope(.semiBold, size: WOUStyle.bodySize))
+                        .foregroundColor(WOUStyle.bodyGray)
+                        .lineSpacing(4)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.bottom, 10)
+                        .appearEffect(delay: 0.25)
+
+                    Text("No credit card required. Just enjoy!")
+                        .font(.manrope(.semiBold, size: WOUStyle.boldLineSize))
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .appearEffect(delay: 0.35)
+
+                    VStack(spacing: 16) {
+                        Text("By Arslan (dev) and his team\nResearch and best moments")
+                            .font(.manrope(.semiBold, size: WOUStyle.footerSize))
+                            .foregroundColor(.black)
+                            .multilineTextAlignment(.center)
                             .lineSpacing(4)
                             .fixedSize(horizontal: false, vertical: true)
-                            .padding(.bottom, 8)
-                            .appearEffect(delay: 0.25)
 
-                        Text("No credit card required. Just enjoy!")
-                            .font(.manrope(.semiBold, size: WOUStyle.boldLineSize))
-                            .foregroundColor(.black)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .appearEffect(delay: 0.35)
+                        LiquidGlassButton(title: "Sounds good!") {
+                            Haptics.success()
+                            onContinue()
+                        }
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, WOUStyle.topPad)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 40)
+                    .appearEffect(delay: 0.45)
                 }
-
-                VStack(spacing: 16) {
-                    Text("By Arslan (dev) and his team\nResearch and best moments")
-                        .font(.manrope(.semiBold, size: WOUStyle.footerSize))
-                        .foregroundColor(.black)
-                        .multilineTextAlignment(.center)
-                        .lineSpacing(4)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    LiquidGlassButton(title: "Sounds good!") {
-                        Haptics.success()
-                        onContinue()
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.top, 16)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.top, WOUStyle.topPad)
                 .padding(.bottom, OBStyle.ctaBottomPad)
-                .appearEffect(delay: 0.45)
             }
             .padding(.horizontal, WOUStyle.hPad)
             .readableWidth(560)

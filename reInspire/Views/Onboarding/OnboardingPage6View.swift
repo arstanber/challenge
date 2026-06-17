@@ -663,6 +663,11 @@ private struct P6InputField: View {
                         .font(.system(size: 16))
                         .frame(maxWidth: .infinity)
                         .textContentType(.password)
+                        // Card is a fixed white surface, so force dark text/cursor
+                        // -- otherwise in system dark mode the typed text renders
+                        // white-on-white and is invisible.
+                        .foregroundColor(.black)
+                        .tint(Color(hex: "0048E2"))
                 } else {
                     TextField(placeholder, text: $text)
                         .font(.system(size: 16))
@@ -671,6 +676,8 @@ private struct P6InputField: View {
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                         .textContentType(.emailAddress)
+                        .foregroundColor(.black)
+                        .tint(Color(hex: "0048E2"))
                 }
 
                 if isSecure {
