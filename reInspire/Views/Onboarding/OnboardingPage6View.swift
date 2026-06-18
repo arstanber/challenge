@@ -202,7 +202,15 @@ struct GetStartedScreen: View {
 
                     Spacer()
 
-                    if showEmailForm {
+                    if vm.awaitingCode {
+                        P6CodeCard(
+                            vm: vm,
+                            onBack: { withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) { vm.cancelCodeEntry() } }
+                        )
+                        .ignoresSafeArea(edges: .bottom)
+                        .offset(y: -max(0, keyboardHeight - geo.safeAreaInsets.bottom))
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                    } else if showEmailForm {
                         P6EmailCard(
                             vm: vm,
                             onBack: { withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) { showEmailForm = false } }
@@ -639,6 +647,142 @@ private struct P6EmailCard: View {
                 .shadow(color: .black.opacity(0.08), radius: 20, x: 0, y: -4)
                 .ignoresSafeArea(edges: .bottom)
         )
+    }
+}
+
+// MARK: - Email Confirmation Code Card
+
+private struct P6CodeCard: View {
+    @Bindable var vm: AuthViewModel
+    let onBack: () -> Void
+
+    @FocusState private var codeFocused: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Header
+            HStack {
+                Button { Haptics.tap(); onBack() } label: {
+                    ZStack {
+                        Circle()
+                            .fill(Color(hex: "F0EDF1"))
+                            .frame(width: 32, height: 32)
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.gray)
+                    }
+                }
+                Spacer()
+                Image(systemName: "sparkle")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 28, height: 28)
+                    .foregroundColor(.black)
+                Spacer()
+                // Spacer balance for the back button.
+                Color.clear.frame(width: 32, height: 32)
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 24)
+
+            Text("Подтвердите почту")
+                .font(.system(size: 27, weight: .semibold))
+                .foregroundColor(Color(red: 0.192, green: 0.184, blue: 0.196))
+                .padding(.horizontal, 20)
+                .padding(.top, 16)
+
+            Text("Мы отправили 6-значный код на\n\(vm.pendingEmail). Введите его ниже.")
+                .font(.system(size: 16))
+                .foregroundColor(Color(hex: "948F95"))
+                .lineSpacing(4)
+                .padding(.horizontal, 20)
+                .padding(.top, 10)
+
+            // Code field
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Код из письма")
+                    .font(.system(size: 14))
+                    .foregroundColor(.black)
+
+                TextField("000000", text: Binding(
+                    get: { vm.code },
+                    // Keep only digits, cap at 6.
+                    set: { vm.code = String($0.filter(\.isNumber).prefix(6)) }
+                ))
+                .font(.system(size: 22, weight: .semibold, design: .monospaced))
+                .kerning(6)
+                .keyboardType(.numberPad)
+                .textContentType(.oneTimeCode)
+                .foregroundColor(.black)
+                .tint(Color(hex: "0048E2"))
+                .focused($codeFocused)
+                .padding(.horizontal, 16)
+                .frame(height: 56)
+                .background(Color.white)
+                .cornerRadius(10)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color(red: 0.847, green: 0.855, blue: 0.863), lineWidth: 1)
+                )
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 20)
+
+            if let error = vm.errorMessage {
+                Text(error)
+                    .font(.caption)
+                    .foregroundColor(.red)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
+            }
+
+            Button {
+                Task { await vm.verifyCode() }
+            } label: {
+                Group {
+                    if vm.isLoading {
+                        ProgressView().tint(.white)
+                    } else {
+                        Text("Подтвердить")
+                            .font(.system(size: 20, weight: .medium))
+                            .foregroundColor(.white)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 65)
+                .background(
+                    RoundedRectangle(cornerRadius: 29)
+                        .fill(vm.isCodeValid ? Color.black : Color(hex: "CCCCCC"))
+                )
+            }
+            .buttonStyle(PressableButtonStyle())
+            .disabled(!vm.isCodeValid || vm.isLoading)
+            .padding(.horizontal, 20)
+            .padding(.top, 24)
+
+            // Resend
+            Button {
+                Haptics.tap()
+                Task { await vm.resendCode() }
+            } label: {
+                Text("Отправить код заново")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(Color(hex: "7c4df0"))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 8)
+            .padding(.bottom, 48)
+        }
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 50)
+                .fill(Color.white)
+                .shadow(color: .black.opacity(0.08), radius: 20, x: 0, y: -4)
+                .ignoresSafeArea(edges: .bottom)
+        )
+        .onAppear { codeFocused = true }
     }
 }
 

@@ -170,34 +170,66 @@ final class AuthService {
         }
     }
 
+    /// Step 1 of email sign-up. Creates the auth user; with email confirmation
+    /// enabled this returns NO session and Supabase emails a 6-digit code. The
+    /// `users` profile row is created only after the code is verified
+    /// (`confirmSignUp`), because the RLS insert policy requires an
+    /// authenticated session (`auth.uid() = id`).
     func signUp(email: String, password: String) async throws {
         do {
-            let response = try await supabase.auth.signUp(email: email, password: password)
-            let user = response.user
+            _ = try await supabase.auth.signUp(email: email, password: password)
+        } catch let error as AuthError {
+            throw error
+        } catch {
+            throw AuthError.unknown(error)
+        }
+    }
 
-            let profile = AppUserInsert(
-                id: user.id,
-                email: email,
-                plan: .free,
-                role: .individual
+    /// Step 2 of email sign-up. Verifies the 6-digit code from the email, which
+    /// establishes a session, then creates the profile row (idempotent: loads it
+    /// if it somehow already exists).
+    func confirmSignUp(email: String, code: String) async throws {
+        do {
+            let token = code.trimmingCharacters(in: .whitespacesAndNewlines)
+            let response = try await supabase.auth.verifyOTP(
+                email: email, token: token, type: .signup
             )
-            let inserted: AppUser = try await supabase
-                .from("users")
-                .insert(profile)
-                .select()
-                .single()
-                .execute()
-                .value
-            currentUser = inserted
+            let userId = response.user.id
+            do {
+                // Verified existing profile (e.g. a retried confirmation).
+                try await loadUserProfile(id: userId)
+            } catch let pgErr as PostgrestError where pgErr.code == "PGRST116" {
+                // PGRST116 = no rows => brand-new user, create the profile now
+                // that we hold a session.
+                let profile = AppUserInsert(
+                    id: userId,
+                    email: email,
+                    plan: .free,
+                    role: .individual
+                )
+                let inserted: AppUser = try await supabase
+                    .from("users")
+                    .insert(profile)
+                    .select()
+                    .single()
+                    .execute()
+                    .value
+                currentUser = inserted
+                isAuthenticated = true
+                syncTimezone(userId: inserted.id)
+            }
             needsWelcomeIntro = true
-            isAuthenticated = true
-            syncTimezone(userId: inserted.id)
             AnalyticsService.shared.track(.signedUp, ["method": "email"])
         } catch let error as AuthError {
             throw error
         } catch {
             throw AuthError.unknown(error)
         }
+    }
+
+    /// Re-sends the sign-up confirmation code to the email.
+    func resendSignUpCode(email: String) async throws {
+        try await supabase.auth.resend(email: email, type: .signup)
     }
 
     func signInWithApple(credential: ASAuthorizationAppleIDCredential, nonce: String) async throws {
