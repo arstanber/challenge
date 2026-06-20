@@ -6,6 +6,17 @@
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
 	<string>reInspire</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>MKDirectionsRequest</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>com.apple.maps.directionsrequest</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -39,6 +50,19 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>GIDClientID</key>
 	<string>403964246968-l9ibioo4q4hr42t83b44rt247hslbnsn.apps.googleusercontent.com</string>
+	<key>GIDServerClientID</key>
+	<string>403964246968-d2os0q213gtih8gf5552ucgfv0ec8tt8.apps.googleusercontent.com</string>
+	<key>MKDirectionsApplicationSupportedModes</key>
+	<array>
+		<string>MKDirectionsModeOther</string>
+	</array>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_chlg-fam._tcp</string>
+		<string>_chlg-fam._udp</string>
+		<string>_chlg-duel._tcp</string>
+		<string>_chlg-duel._udp</string>
+	</array>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>reInspire читает календарь, чтобы показывать события дня рядом с задачами.</string>
 	<key>NSCameraUsageDescription</key>
@@ -47,13 +71,6 @@
 	<string>reInspire reads steps, energy, exercise minutes and distance from Apple Health to automatically track your goals.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>reInspire соединяет два телефона рядом, когда вы трясёте устройства -- чтобы добавить ребёнка в семью или начать дуэль с другом.</string>
-	<key>NSBonjourServices</key>
-	<array>
-		<string>_chlg-fam._tcp</string>
-		<string>_chlg-fam._udp</string>
-		<string>_chlg-duel._tcp</string>
-		<string>_chlg-duel._udp</string>
-	</array>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>reInspire uses your location in the background to remind you about activities when you arrive at a place, like the gym.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
