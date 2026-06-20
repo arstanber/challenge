@@ -67,7 +67,7 @@ struct ActivityDetailView: View {
                     shareRequest = ShareRequest(
                         kind: .taskDone(title: vm.activity.title,
                                         streak: vm.activity.streakCurrent,
-                                        connector: vm.activity.connector?.displayName),
+                                        connector: vm.activity.connector),
                         name: AuthService.shared.currentUser?.displayLabel)
                 } label: {
                     Image(systemName: "square.and.arrow.up")

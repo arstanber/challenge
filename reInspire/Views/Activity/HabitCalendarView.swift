@@ -104,7 +104,7 @@ struct HabitCalendarView: View {
                 shareRequest = ShareRequest(
                     kind: .taskDone(title: vm.activity.title,
                                     streak: vm.currentStreak,
-                                    connector: vm.activity.connector?.displayName),
+                                    connector: vm.activity.connector),
                     name: AuthService.shared.currentUser?.displayLabel)
             } label: {
                 Image(systemName: "square.and.arrow.up")

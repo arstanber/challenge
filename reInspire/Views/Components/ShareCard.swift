@@ -7,9 +7,10 @@ import UIKit
 enum ShareCardKind {
     /// The user's current global streak (with their best for context).
     case streak(days: Int, best: Int)
-    /// A single task the user just completed. `connector` is the display name
-    /// of the data source that auto-verified it (e.g. "Strava"), if any.
-    case taskDone(title: String, streak: Int, connector: String? = nil)
+    /// A single task the user just completed. `connector` is the data source
+    /// that auto-verified it (e.g. Strava / Chess.com), if any -- its brand
+    /// logo is stamped on the card.
+    case taskDone(title: String, streak: Int, connector: DataConnector? = nil)
 }
 
 // MARK: - Theme & format
@@ -212,7 +213,7 @@ struct ShareCardView: View {
         .padding(.horizontal, 80)
     }
 
-    private func taskContent(title: String, streak: Int, connector: String?) -> some View {
+    private func taskContent(title: String, streak: Int, connector: DataConnector?) -> some View {
         VStack(spacing: 44) {
             Text("Задача\nвыполнена")
                 .font(.sfProDisplay(96, weight: .bold))
@@ -226,34 +227,37 @@ struct ShareCardView: View {
                 .multilineTextAlignment(.center)
                 .lineLimit(3)
 
-            HStack(spacing: 16) {
+            // Stacked vertically so a streak chip and a connector chip never
+            // collide / wrap when both are present.
+            VStack(spacing: 16) {
                 if streak > 0 {
                     HStack(spacing: 14) {
                         Text("🔥").font(.system(size: 48))
                         Text("\(streak) подряд")
                             .font(.sfProDisplay(48, weight: .semibold))
                             .foregroundStyle(theme.ink)
+                            .fixedSize()
                     }
                     .padding(.horizontal, 44)
                     .padding(.vertical, 24)
                     .background(theme.ink.opacity(0.12), in: Capsule())
                 }
 
-                if let connector, !connector.isEmpty {
-                    HStack(spacing: 12) {
-                        Image(systemName: "bolt.horizontal.circle.fill")
-                            .font(.system(size: 44))
-                        Text(connector)
+                if let connector {
+                    HStack(spacing: 16) {
+                        ConnectorGlyph(connector: connector, size: 56, cornerRadius: 14)
+                        Text(connector.displayName)
                             .font(.sfProDisplay(48, weight: .semibold))
                             .foregroundStyle(theme.ink)
+                            .fixedSize()
                     }
-                    .padding(.horizontal, 44)
-                    .padding(.vertical, 24)
+                    .padding(.horizontal, 40)
+                    .padding(.vertical, 20)
                     .background(theme.ink.opacity(0.12), in: Capsule())
                 }
             }
         }
-        .padding(.horizontal, 100)
+        .padding(.horizontal, 80)
     }
 }
 
