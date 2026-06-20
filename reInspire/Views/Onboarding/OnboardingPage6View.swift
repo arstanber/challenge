@@ -510,6 +510,7 @@ private struct P6Terms: View {
         Text(termsText)
             .multilineTextAlignment(.center)
             .lineSpacing(4)
+            .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .center)
     }
 }
@@ -656,7 +657,19 @@ private struct P6CodeCard: View {
     @Bindable var vm: AuthViewModel
     let onBack: () -> Void
 
+    private static let codeLength = 6
+    private static let resendCooldown = 60
+
     @FocusState private var codeFocused: Bool
+    @State private var resendSeconds = resendCooldown
+
+    private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+
+    private var resendLabel: String {
+        let m = resendSeconds / 60
+        let s = resendSeconds % 60
+        return String(format: "%02d:%02d", m, s)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -685,55 +698,41 @@ private struct P6CodeCard: View {
             .padding(.horizontal, 20)
             .padding(.top, 24)
 
-            Text("Подтвердите почту")
+            Text("Проверьте почту")
                 .font(.system(size: 27, weight: .semibold))
                 .foregroundColor(Color(red: 0.192, green: 0.184, blue: 0.196))
                 .padding(.horizontal, 20)
                 .padding(.top, 16)
 
-            Text("Мы отправили 6-значный код на\n\(vm.pendingEmail). Введите его ниже.")
-                .font(.system(size: 16))
+            (Text("Мы отправили код на ")
                 .foregroundColor(Color(hex: "948F95"))
+             + Text(vm.pendingEmail)
+                .foregroundColor(.black)
+                .fontWeight(.semibold))
+                .font(.system(size: 16))
                 .lineSpacing(4)
                 .padding(.horizontal, 20)
                 .padding(.top, 10)
 
-            // Code field
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Код из письма")
-                    .font(.system(size: 14))
-                    .foregroundColor(.black)
-
-                TextField("000000", text: Binding(
+            // OTP boxes -- a hidden field captures input (keeps iOS code
+            // autofill, paste and dictation); the boxes are display-only.
+            P6OTPBoxes(
+                code: Binding(
                     get: { vm.code },
-                    // Keep only digits, cap at 6.
-                    set: { vm.code = String($0.filter(\.isNumber).prefix(6)) }
-                ))
-                .font(.system(size: 22, weight: .semibold, design: .monospaced))
-                .kerning(6)
-                .keyboardType(.numberPad)
-                .textContentType(.oneTimeCode)
-                .foregroundColor(.black)
-                .tint(Color(hex: "0048E2"))
-                .focused($codeFocused)
-                .padding(.horizontal, 16)
-                .frame(height: 56)
-                .background(Color.white)
-                .cornerRadius(10)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color(red: 0.847, green: 0.855, blue: 0.863), lineWidth: 1)
-                )
-            }
+                    set: { vm.code = String($0.filter(\.isNumber).prefix(Self.codeLength)) }
+                ),
+                length: Self.codeLength,
+                focused: $codeFocused
+            )
             .padding(.horizontal, 20)
-            .padding(.top, 20)
+            .padding(.top, 28)
 
             if let error = vm.errorMessage {
                 Text(error)
                     .font(.caption)
                     .foregroundColor(.red)
                     .padding(.horizontal, 20)
-                    .padding(.top, 8)
+                    .padding(.top, 10)
             }
 
             Button {
@@ -760,16 +759,32 @@ private struct P6CodeCard: View {
             .padding(.horizontal, 20)
             .padding(.top, 24)
 
-            // Resend
-            Button {
-                Haptics.tap()
-                Task { await vm.resendCode() }
-            } label: {
-                Text("Отправить код заново")
+            // Resend -- gated by a cooldown countdown.
+            Group {
+                if resendSeconds > 0 {
+                    HStack(spacing: 6) {
+                        Text("Отправить код заново")
+                            .foregroundColor(.black.opacity(0.7))
+                        Text(resendLabel)
+                            .foregroundColor(.black.opacity(0.4))
+                            .monospacedDigit()
+                    }
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(Color(hex: "7c4df0"))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
+                } else {
+                    Button {
+                        Haptics.tap()
+                        resendSeconds = Self.resendCooldown
+                        Task { await vm.resendCode() }
+                    } label: {
+                        Text("Отправить код заново")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundColor(Color(hex: "7c4df0"))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                    }
+                }
             }
             .padding(.horizontal, 20)
             .padding(.top, 8)
@@ -783,6 +798,72 @@ private struct P6CodeCard: View {
                 .ignoresSafeArea(edges: .bottom)
         )
         .onAppear { codeFocused = true }
+        .onReceive(ticker) { _ in
+            if resendSeconds > 0 { resendSeconds -= 1 }
+        }
+        .onChange(of: vm.code) { _, newValue in
+            // Auto-submit once all digits are in.
+            if newValue.count == Self.codeLength && !vm.isLoading {
+                codeFocused = false
+                Task { await vm.verifyCode() }
+            }
+        }
+    }
+}
+
+// MARK: - OTP digit boxes
+
+/// Six boxes that render the entered code, backed by an invisible text field
+/// so the system keyboard, SMS/email autofill, paste and dictation all work.
+private struct P6OTPBoxes: View {
+    @Binding var code: String
+    let length: Int
+    var focused: FocusState<Bool>.Binding
+
+    private var digits: [String] {
+        let chars = Array(code)
+        return (0..<length).map { i in i < chars.count ? String(chars[i]) : "" }
+    }
+
+    /// Index of the box the next digit lands in (the active one).
+    private var activeIndex: Int { min(code.count, length - 1) }
+
+    var body: some View {
+        ZStack {
+            // Invisible capture field on top of the boxes.
+            TextField("", text: $code)
+                .keyboardType(.numberPad)
+                .textContentType(.oneTimeCode)
+                .foregroundColor(.clear)
+                .tint(.clear)
+                .accentColor(.clear)
+                .focused(focused)
+                .frame(maxWidth: .infinity)
+                .frame(height: 64)
+
+            HStack(spacing: 10) {
+                ForEach(0..<length, id: \.self) { i in
+                    let isActive = focused.wrappedValue && i == activeIndex
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 14)
+                            .stroke(
+                                isActive ? Color.black : Color(red: 0.847, green: 0.855, blue: 0.863),
+                                lineWidth: isActive ? 1.5 : 1
+                            )
+                        if !digits[i].isEmpty {
+                            Text(digits[i])
+                                .font(.system(size: 26, weight: .medium))
+                                .foregroundColor(.black)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 64)
+                }
+            }
+            .allowsHitTesting(false)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture { focused.wrappedValue = true }
     }
 }
 
