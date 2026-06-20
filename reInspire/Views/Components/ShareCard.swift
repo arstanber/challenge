@@ -334,6 +334,7 @@ struct ShareComposerView: View {
     @State private var theme: ShareCardTheme = .blue
     @State private var format: ShareCardFormat = .story
     @State private var sheetImage: ShareableImage?
+    @State private var confettiTrigger = 0
 
     var body: some View {
         NavigationStack {
@@ -371,6 +372,11 @@ struct ShareComposerView: View {
             }
             .sheet(item: $sheetImage) { item in
                 ShareCardSheet(items: item.caption.map { [item.image, $0] } ?? [item.image])
+            }
+            .overlay {
+                ConfettiView(trigger: confettiTrigger)
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
             }
         }
     }
@@ -461,7 +467,8 @@ struct ShareComposerView: View {
     }
 
     private func share(toInstagram: Bool) {
-        Haptics.tap()
+        Haptics.success()
+        confettiTrigger += 1
         guard let image = ShareCardRenderer.render(kind, name: name, theme: theme, format: format) else { return }
         AnalyticsService.shared.track(.shareCardShared, [
             "kind": kindLabel,
