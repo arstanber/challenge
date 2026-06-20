@@ -64,15 +64,21 @@ serve(async (req) => {
     // Require a genuine authenticated user. Default JWT verification also
     // accepts the bare anon key, which would let anyone trigger pushes to an
     // arbitrary user_id -- so verify there is a real user behind the token.
+    // Exception: trusted server-to-server callers (cron jobs, other edge
+    // functions) may present the service-role key instead of a user token.
     const authHeader = req.headers.get("Authorization") ?? "";
-    const authClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
-    const { data: { user: caller }, error: authErr } = await authClient.auth.getUser();
-    if (authErr || !caller) {
-      return json({ error: "Unauthorized" }, 401);
+    const bearer = authHeader.replace(/^Bearer\s+/i, "");
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    if (bearer !== serviceKey) {
+      const authClient = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_ANON_KEY")!,
+        { global: { headers: { Authorization: authHeader } } }
+      );
+      const { data: { user: caller }, error: authErr } = await authClient.auth.getUser();
+      if (authErr || !caller) {
+        return json({ error: "Unauthorized" }, 401);
+      }
     }
 
     const keyId      = Deno.env.get("APNS_KEY_ID");
