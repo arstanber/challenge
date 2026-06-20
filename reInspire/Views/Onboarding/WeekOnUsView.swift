@@ -33,15 +33,22 @@ struct WeekOnUsView: View {
 
     var body: some View {
         ZStack {
-            Color.white.ignoresSafeArea()
-
-            // Background decorative gradient ellipse
-            Ellipse()
-                .fill(WOUStyle.accentBlue)
-                .frame(width: 712, height: 850)
-                .offset(x: 60, y: 200)
-                .blur(radius: 40)
+            // Decorative blob lives in the background's overlay, not as a
+            // direct ZStack child. Its fixed 712pt frame would otherwise size
+            // the ZStack (and the whole content column) to 712pt wide, pushing
+            // the text column off both screen edges. As an overlay it can spill
+            // past the screen without driving layout width.
+            Color.white
                 .ignoresSafeArea()
+                .overlay {
+                    Ellipse()
+                        .fill(WOUStyle.accentBlue)
+                        .frame(width: 712, height: 850)
+                        .offset(x: 60, y: 200)
+                        .blur(radius: 40)
+                }
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
 
             // Decorative star artwork
             Image("star2")
@@ -54,11 +61,9 @@ struct WeekOnUsView: View {
                 .opacity(0.25)
                 .allowsHitTesting(false)
 
-            // Single scroll column: copy flows top-to-bottom with the footer
-            // following the text directly. Avoids the previous layout where a
-            // full-height ScrollView shoved the footer to the bottom and left a
-            // large empty gap in the middle. Each Text is width-capped so long
-            // lines wrap instead of overflowing the screen edges.
+            // Copy scrolls in the top region; the footer credit + CTA are pinned
+            // to the bottom of the screen via safeAreaInset, so the button
+            // always sits at the bottom edge regardless of copy length.
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 0) {
                     Text("reInspire.")
@@ -79,41 +84,43 @@ struct WeekOnUsView: View {
                         .font(.manrope(.semiBold, size: WOUStyle.bodySize))
                         .foregroundColor(WOUStyle.bodyGray)
                         .lineSpacing(4)
+                        .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .fixedSize(horizontal: false, vertical: true)
                         .padding(.bottom, 10)
                         .appearEffect(delay: 0.25)
 
                     Text("No credit card required. Just enjoy!")
                         .font(.manrope(.semiBold, size: WOUStyle.boldLineSize))
                         .foregroundColor(.black)
+                        .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .fixedSize(horizontal: false, vertical: true)
                         .appearEffect(delay: 0.35)
-
-                    VStack(spacing: 16) {
-                        Text("By Arslan (dev) and his team\nResearch and best moments")
-                            .font(.manrope(.semiBold, size: WOUStyle.footerSize))
-                            .foregroundColor(.black)
-                            .multilineTextAlignment(.center)
-                            .lineSpacing(4)
-                            .fixedSize(horizontal: false, vertical: true)
-
-                        LiquidGlassButton(title: "Sounds good!") {
-                            Haptics.success()
-                            onContinue()
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 40)
-                    .appearEffect(delay: 0.45)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.top, WOUStyle.topPad)
-                .padding(.bottom, OBStyle.ctaBottomPad)
             }
             .padding(.horizontal, WOUStyle.hPad)
             .readableWidth(560)
+            .safeAreaInset(edge: .bottom) {
+                VStack(spacing: 16) {
+                    Text("By Arslan (dev), his team\nResearch and best moments")
+                        .font(.manrope(.semiBold, size: WOUStyle.footerSize))
+                        .foregroundColor(.black)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(4)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    LiquidGlassButton(title: "Sounds good!") {
+                        Haptics.success()
+                        onContinue()
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, WOUStyle.hPad)
+                .padding(.bottom, OBStyle.ctaBottomPad)
+                .readableWidth(560)
+                .appearEffect(delay: 0.45)
+            }
         }
         .multilineTextAlignment(.leading)
         .onAppear {
