@@ -143,6 +143,10 @@ struct ShareCardView: View {
             .overlay(alignment: .bottom) {
                 footer.padding(.bottom, 64)
             }
+            // Baked-in confetti so the shared story/post looks celebratory.
+            .overlay {
+                ShareConfettiLayer(size: size)
+            }
             .clipped()
     }
 
@@ -242,6 +246,53 @@ struct ShareCardView: View {
         }
         .padding(.horizontal, 100)
     }
+}
+
+// MARK: - Baked confetti
+
+/// A static confetti scatter drawn into the card so the exported story/post
+/// looks celebratory. Deterministic (seeded by index) and biased toward the
+/// top, as if it just rained down.
+private struct ShareConfettiLayer: View {
+    let size: CGSize
+    var count: Int = 90
+
+    // Colours that pop on both the blue and white backgrounds.
+    private let palette: [Color] = [
+        Color(hex: "FFC542"), Color(hex: "FF6B6B"),
+        Color(hex: "2FB873"), Color(hex: "B388FF"), Color(hex: "FF7A18")
+    ]
+
+    var body: some View {
+        Canvas { ctx, sz in
+            for i in 0..<count {
+                let r1 = frac(sin(Double(i) * 12.9898) * 43758.5453)
+                let r2 = frac(sin(Double(i) * 78.2330) * 12345.6789)
+                let r3 = frac(sin(Double(i) * 39.4250) * 9876.54321)
+                let r4 = frac(cos(Double(i) * 21.7100) * 5555.55555)
+
+                let x = r1 * sz.width
+                // Bias toward the top third, with a tail falling lower.
+                let y = pow(r2, 1.7) * sz.height * 0.92
+                let w = 14 + r3 * 18
+                let h = w * 1.7
+                let angle = Angle.degrees(r4 * 360)
+                let color = palette[i % palette.count]
+
+                var piece = Path(roundedRect: CGRect(x: -w / 2, y: -h / 2, width: w, height: h),
+                                 cornerRadius: 4)
+                piece = piece.applying(.init(rotationAngle: angle.radians))
+                piece = piece.applying(.init(translationX: x, y: y))
+                ctx.opacity = 0.92
+                ctx.fill(piece, with: .color(color))
+            }
+        }
+        .frame(width: size.width, height: size.height)
+        .allowsHitTesting(false)
+    }
+
+    /// Fractional part, used as a cheap seeded PRNG.
+    private func frac(_ v: Double) -> Double { v - v.rounded(.down) }
 }
 
 // MARK: - Rendering
