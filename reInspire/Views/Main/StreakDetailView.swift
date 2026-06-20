@@ -8,6 +8,7 @@ struct StreakDetailView: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var isFreezing = false
+    @State private var pendingShare: ShareableImage?
     @State private var shareItem: ShareableImage?
 
     private var streak: Int { vm.globalStreakCurrent }
@@ -47,9 +48,7 @@ struct StreakDetailView: View {
                 .padding(.bottom, 32)
             }
             .background(Color(.systemBackground))
-            .sheet(item: $shareItem) { item in
-                ShareCardSheet(items: [item.image])
-            }
+            .shareDestinationDialog(pending: $pendingShare, sheet: $shareItem)
             .navigationTitle("Твоя серия")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -114,7 +113,7 @@ struct StreakDetailView: View {
             guard let image = ShareCardRenderer.render(.streak(days: streak, best: best),
                                                        name: name) else { return }
             AnalyticsService.shared.track(.shareCardShared, ["kind": "streak"])
-            shareItem = ShareableImage(image: image)
+            pendingShare = ShareableImage(image: image)
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: "square.and.arrow.up")

@@ -166,9 +166,39 @@ enum ShareCardRenderer {
     }
 }
 
+// MARK: - Instagram Stories
+
+/// One-tap sharing of a rendered card straight into the Instagram Stories
+/// composer. Falls back to the system share sheet (via the completion flag)
+/// when Instagram is not installed.
+enum InstagramStoryShare {
+    /// Opens Instagram Stories with `image` preloaded as the story background.
+    /// `completion(false)` means Instagram could not be opened -- the caller
+    /// should fall back to the system share sheet.
+    @MainActor
+    static func share(image: UIImage, completion: @escaping @MainActor @Sendable (Bool) -> Void) {
+        let appID = Bundle.main.bundleIdentifier ?? "com.reinspire"
+        // `open` does not consult LSApplicationQueriesSchemes, so no Info.plist
+        // entry is needed; a missing Instagram simply yields success == false.
+        guard let url = URL(string: "instagram-stories://share?source_application=\(appID)"),
+              let data = image.pngData() else {
+            completion(false)
+            return
+        }
+        let items: [[String: Any]] = [[
+            "com.instagram.sharedSticker.backgroundImage": data
+        ]]
+        UIPasteboard.general.setItems(items, options: [
+            .expirationDate: Date().addingTimeInterval(60 * 5)
+        ])
+        UIApplication.shared.open(url, options: [:], completionHandler: completion)
+    }
+}
+
 // MARK: - Share sheet bridge
 
-/// Wraps a rendered image so it can drive a `.sheet(item:)`.
+/// Wraps a rendered image so it can drive a `.sheet(item:)` or
+/// `.confirmationDialog(item:)`.
 struct ShareableImage: Identifiable {
     let id = UUID()
     let image: UIImage
@@ -182,6 +212,43 @@ struct ShareCardSheet: UIViewControllerRepresentable {
         UIActivityViewController(activityItems: items, applicationActivities: nil)
     }
     func updateUIViewController(_ controller: UIActivityViewController, context: Context) {}
+}
+
+// MARK: - Destination chooser
+
+extension View {
+    /// Presents an "Instagram Stories vs. other apps" chooser for `pending`.
+    /// Picking Instagram opens it directly; "other apps" (and the Instagram
+    /// fallback when it is not installed) opens the system share sheet.
+    func shareDestinationDialog(pending: Binding<ShareableImage?>,
+                                sheet: Binding<ShareableImage?>) -> some View {
+        modifier(ShareDestinationDialog(pending: pending, sheet: sheet))
+    }
+}
+
+private struct ShareDestinationDialog: ViewModifier {
+    @Binding var pending: ShareableImage?
+    @Binding var sheet: ShareableImage?
+
+    private var isPresented: Binding<Bool> {
+        Binding(get: { pending != nil }, set: { if !$0 { pending = nil } })
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .confirmationDialog("Поделиться", isPresented: isPresented, presenting: pending) { item in
+                Button("Instagram Stories") {
+                    InstagramStoryShare.share(image: item.image) { ok in
+                        if !ok { sheet = item }
+                    }
+                }
+                Button("Другие приложения") { sheet = item }
+                Button("Отмена", role: .cancel) {}
+            }
+            .sheet(item: $sheet) { item in
+                ShareCardSheet(items: [item.image])
+            }
+    }
 }
 
 #Preview {

@@ -297,6 +297,7 @@ private struct AIVerificationResultScreen: View {
     @State private var scanSpin = false
     @State private var confettiTrigger = 0
     @State private var bonusXP: Int?
+    @State private var pendingShare: ShareableImage?
     @State private var shareItem: ShareableImage?
 
     /// Resolved verdict once revealed; safe fallback while still scanning.
@@ -329,9 +330,7 @@ private struct AIVerificationResultScreen: View {
         }
         .onAppear(perform: startScanning)
         .onChange(of: result) { _, _ in maybeReveal() }
-        .sheet(item: $shareItem) { item in
-            ShareCardSheet(items: [item.image])
-        }
+        .shareDestinationDialog(pending: $pendingShare, sheet: $shareItem)
     }
 
     // MARK: Scanning beat
@@ -510,7 +509,7 @@ private struct AIVerificationResultScreen: View {
         guard let image = ShareCardRenderer.render(.taskDone(title: activityTitle, streak: streak),
                                                    name: name) else { return }
         AnalyticsService.shared.track(.shareCardShared, ["kind": "task"])
-        shareItem = ShareableImage(image: image)
+        pendingShare = ShareableImage(image: image)
     }
 
     private var bgColor: Color {
