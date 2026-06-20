@@ -8,6 +8,7 @@ struct StreakDetailView: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var isFreezing = false
+    @State private var shareItem: ShareableImage?
 
     private var streak: Int { vm.globalStreakCurrent }
     private var best: Int { vm.globalStreakBest }
@@ -31,6 +32,10 @@ struct StreakDetailView: View {
                                  caption: "Заморозки")
                     }
 
+                    if streak > 0 {
+                        shareButton
+                    }
+
                     explainer
 
                     if canFreezeYesterday {
@@ -42,6 +47,9 @@ struct StreakDetailView: View {
                 .padding(.bottom, 32)
             }
             .background(Color(.systemBackground))
+            .sheet(item: $shareItem) { item in
+                ShareCardSheet(items: [item.image])
+            }
             .navigationTitle("Твоя серия")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -95,6 +103,31 @@ struct StreakDetailView: View {
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18))
+    }
+
+    // MARK: - Share
+
+    private var shareButton: some View {
+        Button {
+            Haptics.tap()
+            let name = AuthService.shared.currentUser?.displayLabel
+            guard let image = ShareCardRenderer.render(.streak(days: streak, best: best),
+                                                       name: name) else { return }
+            AnalyticsService.shared.track(.shareCardShared, ["kind": "streak"])
+            shareItem = ShareableImage(image: image)
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "square.and.arrow.up")
+                Text("Поделиться серией")
+                    .font(.sfProDisplay(16, weight: .semibold))
+            }
+            .foregroundStyle(Color.accentColor)
+            .frame(maxWidth: .infinity)
+            .frame(height: 54)
+            .overlay(RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.accentColor.opacity(0.5), lineWidth: 1.5))
+        }
+        .buttonStyle(.haptic)
     }
 
     // MARK: - Freeze yesterday

@@ -23,6 +23,8 @@ struct SubmitReportView: View {
                         stage: vm.submissionStage,
                         explanation: vm.lastAIExplanation,
                         wasExcuse: submittedAsExcuse,
+                        activityTitle: activity.title,
+                        streak: activity.streakCurrent,
                         onDone: { dismiss(); onSubmit() },
                         onRetry: {
                             showResult = false
@@ -281,6 +283,8 @@ private struct AIVerificationResultScreen: View {
     let stage: ActivityDetailViewModel.SubmissionStage
     let explanation: String?
     let wasExcuse: Bool
+    let activityTitle: String
+    let streak: Int
     let onDone: () -> Void
     let onRetry: () -> Void
 
@@ -293,6 +297,7 @@ private struct AIVerificationResultScreen: View {
     @State private var scanSpin = false
     @State private var confettiTrigger = 0
     @State private var bonusXP: Int?
+    @State private var shareItem: ShareableImage?
 
     /// Resolved verdict once revealed; safe fallback while still scanning.
     private var r: AIVerificationResult { result ?? .pending }
@@ -324,6 +329,9 @@ private struct AIVerificationResultScreen: View {
         }
         .onAppear(perform: startScanning)
         .onChange(of: result) { _, _ in maybeReveal() }
+        .sheet(item: $shareItem) { item in
+            ShareCardSheet(items: [item.image])
+        }
     }
 
     // MARK: Scanning beat
@@ -418,6 +426,19 @@ private struct AIVerificationResultScreen: View {
             .buttonStyle(.borderedProminent)
             .tint(bgColor)
 
+            if r == .approved || r == .excused {
+                Button { Haptics.tap(); shareCompletion() } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "square.and.arrow.up")
+                        Text("Поделиться")
+                    }
+                    .fontWeight(.semibold)
+                    .frame(maxWidth: .infinity).frame(height: 44)
+                }
+                .buttonStyle(.bordered)
+                .tint(bgColor)
+            }
+
             if r == .rejected {
                 Button { Haptics.tap(); onRetry() } label: {
                     Text("Ещё раз")
@@ -481,6 +502,15 @@ private struct AIVerificationResultScreen: View {
                 bonusXP = amount
             }
         }
+    }
+
+    /// Renders the "task done" card and opens the system share sheet.
+    private func shareCompletion() {
+        let name = AuthService.shared.currentUser?.displayLabel
+        guard let image = ShareCardRenderer.render(.taskDone(title: activityTitle, streak: streak),
+                                                   name: name) else { return }
+        AnalyticsService.shared.track(.shareCardShared, ["kind": "task"])
+        shareItem = ShareableImage(image: image)
     }
 
     private var bgColor: Color {
