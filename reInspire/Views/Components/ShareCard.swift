@@ -68,10 +68,12 @@ enum ShareCardFormat {
 
     /// Burst offset from the bottom-trailing corner (positive pushes the art
     /// off the bottom-right edge so the explosion origin sits in the corner).
+    /// Offset from the bottom-leading corner (negative pushes the art off the
+    /// bottom-left edge so the explosion origin sits in the corner).
     var burstOffset: CGSize {
         switch self {
-        case .story: return CGSize(width: 550, height: 380)
-        case .post:  return CGSize(width: 550, height: 360)
+        case .story: return CGSize(width: -550, height: 380)
+        case .post:  return CGSize(width: -550, height: 360)
         }
     }
 
@@ -105,13 +107,12 @@ struct ShareCardView: View {
         // though the burst image overflows the frame.
         theme.background
             .frame(width: size.width, height: size.height)
-            // Burst-checkmark (decorative): mirrored so the explosion origin
-            // sits in the bottom-right corner, spikes radiating up-left.
-            .overlay(alignment: .bottomTrailing) {
+            // Burst-checkmark (decorative): explosion origin sits in the
+            // bottom-left corner, spikes radiating up-right.
+            .overlay(alignment: .bottomLeading) {
                 Image("shareStar")
                     .resizable()
                     .scaledToFit()
-                    .scaleEffect(x: -1, y: 1)
                     .frame(width: format.burstWidth, height: format.burstWidth)
                     .offset(x: format.burstOffset.width, y: format.burstOffset.height)
             }
@@ -385,32 +386,43 @@ struct ShareComposerView: View {
 
     private var buttons: some View {
         VStack(spacing: 10) {
-            Button { share(toInstagram: true) } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "camera.fill")
-                    Text("Instagram Stories")
+            // Instagram Stories deep-links only into the Stories composer, so
+            // it only makes sense for the story format. A feed post can only be
+            // created via the system sheet (Instagram has no feed deep link).
+            if format == .story {
+                Button { share(toInstagram: true) } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "camera.fill")
+                        Text("Instagram Stories")
+                    }
+                    .font(.sfProDisplay(16, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity).frame(height: 52)
+                    .background(
+                        LinearGradient(colors: [Color(hex: "C13584"), Color(hex: "F77737")],
+                                       startPoint: .topLeading, endPoint: .bottomTrailing),
+                        in: RoundedRectangle(cornerRadius: 16)
+                    )
                 }
-                .font(.sfProDisplay(16, weight: .semibold))
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity).frame(height: 52)
-                .background(
-                    LinearGradient(colors: [Color(hex: "C13584"), Color(hex: "F77737")],
-                                   startPoint: .topLeading, endPoint: .bottomTrailing),
-                    in: RoundedRectangle(cornerRadius: 16)
-                )
+                .buttonStyle(.haptic)
             }
-            .buttonStyle(.haptic)
 
             Button { share(toInstagram: false) } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "square.and.arrow.up")
-                    Text("Другие приложения")
+                    Text(format == .post ? "Поделиться в ленте и др." : "Другие приложения")
                 }
                 .font(.sfProDisplay(16, weight: .semibold))
-                .foregroundStyle(Color.accentColor)
+                .foregroundStyle(format == .post ? .white : Color.accentColor)
                 .frame(maxWidth: .infinity).frame(height: 52)
-                .overlay(RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color.accentColor.opacity(0.5), lineWidth: 1.5))
+                .background {
+                    if format == .post {
+                        RoundedRectangle(cornerRadius: 16).fill(Color.accentColor)
+                    } else {
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(Color.accentColor.opacity(0.5), lineWidth: 1.5)
+                    }
+                }
             }
             .buttonStyle(.haptic)
         }

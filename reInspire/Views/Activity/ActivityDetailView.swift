@@ -56,16 +56,21 @@ struct ActivityDetailView: View {
                         Button("Break this goal down 🤖") { Haptics.tap(); showGoalSplit = true }   // #12
                     }
                     Button("Location reminder 📍") { Haptics.tap(); showLocationReminder = true }   // #10
-                    Button("Поделиться 📤") {
-                        Haptics.tap()
-                        shareRequest = ShareRequest(
-                            kind: .taskDone(title: vm.activity.title,
-                                            streak: vm.activity.streakCurrent,
-                                            connector: vm.activity.connector?.displayName),
-                            name: AuthService.shared.currentUser?.displayLabel)
-                    }
                 } label: {
                     Image(systemName: "ellipsis.circle")
+                }
+            }
+            // Share this task's status / achievement.
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    Haptics.tap()
+                    shareRequest = ShareRequest(
+                        kind: .taskDone(title: vm.activity.title,
+                                        streak: vm.activity.streakCurrent,
+                                        connector: vm.activity.connector?.displayName),
+                        name: AuthService.shared.currentUser?.displayLabel)
+                } label: {
+                    Image(systemName: "square.and.arrow.up")
                 }
             }
         }
