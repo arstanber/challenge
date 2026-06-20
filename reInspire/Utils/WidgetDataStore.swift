@@ -96,6 +96,28 @@ enum WidgetDataStore {
 
     static let checkinQueueKey = "widget_checkin_queue"
 
+    /// Queue a completion triggered from an App Intent / Apple Shortcut. The
+    /// intent process has no Supabase session, so it only records the id; the
+    /// app replays the queue into real check-in reports on next open
+    /// (`replayWidgetCheckins`). The snapshot is patched optimistically so the
+    /// row reads as done immediately in the widget.
+    static func queueCheckin(_ id: UUID) {
+        guard let defaults else { return }
+        var queue = defaults.stringArray(forKey: checkinQueueKey) ?? []
+        guard !queue.contains(id.uuidString) else { return }
+        queue.append(id.uuidString)
+        defaults.set(queue, forKey: checkinQueueKey)
+
+        if var snapshot = load(),
+           let idx = snapshot.tasks.firstIndex(where: { $0.id == id }),
+           !snapshot.tasks[idx].isDone {
+            snapshot.tasks[idx].isDone = true
+            snapshot.todayDone += 1
+            snapshot.updatedAt = Date()
+            save(snapshot)
+        }
+    }
+
     /// Completions tapped on the widget while the app was closed (the
     /// extension has no Supabase session, so it only queues). Read & clear;
     /// the caller turns them into real check-in reports.
