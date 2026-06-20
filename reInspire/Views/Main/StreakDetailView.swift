@@ -37,7 +37,7 @@ struct StreakDetailView: View {
                 VStack(spacing: 24) {
                     flameHeader
 
-                    WeekStreakStrip(days: vm.last7Days)
+                    WeekStreakStrip(days: vm.currentWeekDays)
 
                     HStack(spacing: 12) {
                         StatTile(emoji: "🏆",

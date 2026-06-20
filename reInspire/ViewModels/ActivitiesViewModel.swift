@@ -45,20 +45,30 @@ final class ActivitiesViewModel {
         var id: Date { date }
     }
 
-    /// The last 7 calendar days ending today (today last), derived from
-    /// `monthDays`. Today's cell uses the live done-count so it flips the moment
-    /// a task is completed. Used by the trailing-week strip in the streak sheet.
-    var last7Days: [WeekDayProgress] {
+    /// The current calendar week, Monday -> Sunday, derived from `monthDays`.
+    /// Today's cell uses the live done-count so it flips the moment a task is
+    /// completed; future days (and any that fall in the previous month) carry
+    /// no data and render faint. Used by the week strip in the streak sheet.
+    var currentWeekDays: [WeekDayProgress] {
         let today = calendar.startOfDay(for: Date())
+        // Gregorian weekday is Sun=1..Sat=7; map to an offset from Monday so the
+        // strip always starts on Monday regardless of the device locale.
+        let weekday = calendar.component(.weekday, from: today)
+        let mondayOffset = (weekday + 5) % 7 // Mon=0, Tue=1, ... Sun=6
+        guard let monday = calendar.date(byAdding: .day, value: -mondayOffset, to: today) else { return [] }
         let nowComps = calendar.dateComponents([.year, .month], from: today)
-        return (0..<7).reversed().compactMap { offset in
-            guard let date = calendar.date(byAdding: .day, value: -offset, to: today) else { return nil }
-            let isToday = offset == 0
+        return (0..<7).compactMap { offset in
+            guard let date = calendar.date(byAdding: .day, value: offset, to: monday) else { return nil }
+            let isToday = calendar.isDate(date, inSameDayAs: today)
             if isToday {
                 return WeekDayProgress(date: date,
                                        met: todayDoneTopLevelCount >= dailyStreakGoal,
                                        hasData: true,
                                        isToday: true)
+            }
+            // Future days this week haven't happened yet -- leave them faint.
+            if date > today {
+                return WeekDayProgress(date: date, met: false, hasData: false, isToday: false)
             }
             let comps = calendar.dateComponents([.year, .month, .day], from: date)
             let sameMonth = comps.year == nowComps.year && comps.month == nowComps.month
