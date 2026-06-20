@@ -58,11 +58,17 @@ final class AuthViewModel {
         let normalizedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         do {
             if isSignUp {
-                try await authService.signUp(email: normalizedEmail, password: password)
-                // No session yet -- a code was emailed. Move to code entry.
-                pendingEmail = normalizedEmail
-                code = ""
-                awaitingCode = true
+                let autoConfirmed = try await authService.signUp(email: normalizedEmail, password: password)
+                if autoConfirmed {
+                    // "Confirm email" is off server-side: already signed in, no
+                    // code was emailed, so skip the code screen entirely.
+                    awaitingCode = false
+                } else {
+                    // No session yet -- a code was emailed. Move to code entry.
+                    pendingEmail = normalizedEmail
+                    code = ""
+                    awaitingCode = true
+                }
             } else {
                 try await authService.signIn(email: normalizedEmail, password: password)
             }

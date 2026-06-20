@@ -160,8 +160,33 @@ final class AuthService {
     func signIn(email: String, password: String) async throws {
         do {
             let session = try await supabase.auth.signIn(email: email, password: password)
-            try await loadUserProfile(id: session.user.id)
-            needsWelcomeIntro = false
+            do {
+                try await loadUserProfile(id: session.user.id)
+                needsWelcomeIntro = false
+            } catch let pgErr as PostgrestError where pgErr.code == "PGRST116" {
+                // PGRST116 = no profile row. The auth user exists and is
+                // confirmed, but the in-app profile-create step never ran --
+                // e.g. the email was confirmed via the link in the browser
+                // instead of the code screen. Create the profile now that we
+                // hold a session, so the account isn't permanently stuck.
+                let profile = AppUserInsert(
+                    id: session.user.id,
+                    email: session.user.email ?? email,
+                    plan: .free,
+                    role: .individual
+                )
+                let inserted: AppUser = try await supabase
+                    .from("users")
+                    .insert(profile)
+                    .select()
+                    .single()
+                    .execute()
+                    .value
+                currentUser = inserted
+                isAuthenticated = true
+                syncTimezone(userId: inserted.id)
+                needsWelcomeIntro = true
+            }
             AnalyticsService.shared.track(.signedIn, ["method": "email"])
         } catch let error as AuthError {
             throw error
@@ -175,9 +200,40 @@ final class AuthService {
     /// `users` profile row is created only after the code is verified
     /// (`confirmSignUp`), because the RLS insert policy requires an
     /// authenticated session (`auth.uid() = id`).
-    func signUp(email: String, password: String) async throws {
+    /// Returns `true` if the user was auto-confirmed -- i.e. "Confirm email" is
+    /// disabled in Supabase, so signUp returned a live session and NO code was
+    /// emailed. The caller must then skip the code screen, otherwise the user
+    /// waits forever for a code that will never arrive. Returns `false` when a
+    /// code was emailed and confirmation is still pending.
+    @discardableResult
+    func signUp(email: String, password: String) async throws -> Bool {
         do {
-            _ = try await supabase.auth.signUp(email: email, password: password)
+            let response = try await supabase.auth.signUp(email: email, password: password)
+            guard response.session != nil else { return false }
+            // Auto-confirmed: establish the profile now, same as confirmSignUp.
+            do {
+                try await loadUserProfile(id: response.user.id)
+            } catch let pgErr as PostgrestError where pgErr.code == "PGRST116" {
+                let profile = AppUserInsert(
+                    id: response.user.id,
+                    email: email,
+                    plan: .free,
+                    role: .individual
+                )
+                let inserted: AppUser = try await supabase
+                    .from("users")
+                    .insert(profile)
+                    .select()
+                    .single()
+                    .execute()
+                    .value
+                currentUser = inserted
+                isAuthenticated = true
+                syncTimezone(userId: inserted.id)
+            }
+            needsWelcomeIntro = true
+            AnalyticsService.shared.track(.signedUp, ["method": "email"])
+            return true
         } catch let error as AuthError {
             throw error
         } catch {
