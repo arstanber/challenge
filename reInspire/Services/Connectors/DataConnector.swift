@@ -92,6 +92,20 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
         }
     }
 
+    /// Bundled brand logo (asset name) shown instead of the SF Symbol `icon`.
+    /// Telegram and the alarm clock have no brand asset and fall back to `icon`.
+    var logoAsset: String? {
+        switch self {
+        case .appleHealth:    return "applehealth"
+        case .appleFitness:   return "applefitness"
+        case .appleCalendar:  return "applecalendar"
+        case .appleShortcuts: return "appleshortcuts"
+        case .chessCom:       return "chess"
+        case .strava:         return "strava"
+        case .telegram, .appleClock: return nil
+        }
+    }
+
     var tint: Color {
         switch self {
         case .appleHealth:   return Color(hex: "FF2D55")

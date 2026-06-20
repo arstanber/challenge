@@ -102,14 +102,7 @@ struct ConnectorSuggestionSheet: View {
             tap(connector, unlocked: unlocked, connected: connected)
         } label: {
             HStack(spacing: 14) {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(connector.tint.opacity(0.15))
-                    .frame(width: 40, height: 40)
-                    .overlay {
-                        Image(systemName: connector.icon)
-                            .font(.system(size: 18, weight: .medium))
-                            .foregroundStyle(connector.tint)
-                    }
+                ConnectorGlyph(connector: connector, size: 40, cornerRadius: 12)
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(connector.displayName)

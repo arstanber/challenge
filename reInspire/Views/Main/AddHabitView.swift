@@ -349,9 +349,8 @@ private struct TemplateRow: View {
                         }
                     }
                     if let connector = template.connector {
-                        HStack(spacing: 4) {
-                            Image(systemName: connector.icon)
-                                .font(.system(size: 9, weight: .semibold))
+                        HStack(spacing: 5) {
+                            ConnectorGlyph(connector: connector, size: 14, cornerRadius: 4)
                             Text(connector.displayName)
                                 .font(.system(size: 12, weight: .semibold))
                         }

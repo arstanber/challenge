@@ -204,9 +204,7 @@ struct ByYourselfView: View {
 
     private func suggestionChip(_ cap: ConnectorCapability) -> some View {
         HStack(spacing: 7) {
-            Image(systemName: cap.connector.icon)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(cap.connector.tint)
+            ConnectorGlyph(connector: cap.connector, size: 18, cornerRadius: 5)
             VStack(alignment: .leading, spacing: 0) {
                 Text(cap.connector.displayName)
                     .font(.system(size: 13, weight: .semibold))
@@ -224,9 +222,7 @@ struct ByYourselfView: View {
 
     private func boundChip(for i: Int, capability cap: ConnectorCapability) -> some View {
         HStack(spacing: 10) {
-            Image(systemName: cap.connector.icon)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(cap.connector.tint)
+            ConnectorGlyph(connector: cap.connector, size: 20, cornerRadius: 5)
 
             Text(cap.connector.displayName)
                 .font(.system(size: 14, weight: .semibold))

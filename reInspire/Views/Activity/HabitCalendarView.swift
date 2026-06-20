@@ -429,17 +429,14 @@ private struct ConnectorChip: View {
         } label: {
             VStack(spacing: 9) {
                 ZStack(alignment: .topTrailing) {
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .fill(connector.tint.opacity(connected ? 0.28 : 0.16))
-                        .frame(width: 64, height: 64)
+                    ConnectorGlyph(connector: connector, size: 64, cornerRadius: 20,
+                                   fallbackFillOpacity: connected ? 0.28 : 0.16)
                         .overlay(
                             Group {
                                 if busy {
-                                    ProgressView().tint(connector.tint)
-                                } else {
-                                    Image(systemName: connector.icon)
-                                        .font(.system(size: 26, weight: .semibold))
-                                        .foregroundStyle(connector.tint)
+                                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                        .fill(.ultraThinMaterial)
+                                        .overlay(ProgressView().tint(connector.tint))
                                 }
                             }
                         )
