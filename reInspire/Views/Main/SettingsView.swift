@@ -316,10 +316,11 @@ struct SettingsView: View {
                 Haptics.tap(); showHallOfFame = true
             }
             SettingsDivider()
-            SettingsRow(icon: "chart.xyaxis.line", title: "Статистика", trailing: .chevron) {
-                Haptics.tap(); showStatistics = true
-            }
-            SettingsDivider()
+            // TEMP: Статистика hidden -- restore this row + divider to bring it back.
+            // SettingsRow(icon: "chart.xyaxis.line", title: "Статистика", trailing: .chevron) {
+            //     Haptics.tap(); showStatistics = true
+            // }
+            // SettingsDivider()
             SettingsRow(icon: "person.3", title: "Семейная группа", trailing: .chevron) {
                 Haptics.tap(); showFamily = true
             }
