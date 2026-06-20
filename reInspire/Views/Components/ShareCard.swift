@@ -271,40 +271,147 @@ struct ShareCardSheet: UIViewControllerRepresentable {
     func updateUIViewController(_ controller: UIActivityViewController, context: Context) {}
 }
 
-// MARK: - Destination chooser
+// MARK: - Share composer
 
-extension View {
-    /// Presents an "Instagram Stories vs. other apps" chooser for `pending`.
-    /// Picking Instagram opens it directly; "other apps" (and the Instagram
-    /// fallback when it is not installed) opens the system share sheet.
-    func shareDestinationDialog(pending: Binding<ShareableImage?>,
-                                sheet: Binding<ShareableImage?>) -> some View {
-        modifier(ShareDestinationDialog(pending: pending, sheet: sheet))
-    }
+/// A request to share, wrapping the card content. Drives the composer sheet
+/// via `.sheet(item:)`.
+struct ShareRequest: Identifiable {
+    let id = UUID()
+    let kind: ShareCardKind
+    var name: String?
 }
 
-private struct ShareDestinationDialog: ViewModifier {
-    @Binding var pending: ShareableImage?
-    @Binding var sheet: ShareableImage?
+/// In-app share screen: a live preview plus theme (blue/white) and format
+/// (story/post) pickers, then a one-tap "Instagram Stories" or system-sheet
+/// send. Presented as a sheet from the streak / verification screens.
+struct ShareComposerView: View {
+    let kind: ShareCardKind
+    var name: String?
 
-    private var isPresented: Binding<Bool> {
-        Binding(get: { pending != nil }, set: { if !$0 { pending = nil } })
-    }
+    @Environment(\.dismiss) private var dismiss
+    @State private var theme: ShareCardTheme = .blue
+    @State private var format: ShareCardFormat = .story
+    @State private var sheetImage: ShareableImage?
 
-    func body(content: Content) -> some View {
-        content
-            .confirmationDialog("Поделиться", isPresented: isPresented, presenting: pending) { item in
-                Button("Instagram Stories") {
-                    InstagramStoryShare.share(image: item.image) { ok in
-                        if !ok { sheet = item }
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 22) {
+                preview
+
+                VStack(spacing: 12) {
+                    Picker("Тема", selection: $theme) {
+                        Text("Синяя").tag(ShareCardTheme.blue)
+                        Text("Белая").tag(ShareCardTheme.light)
                     }
+                    .pickerStyle(.segmented)
+
+                    Picker("Формат", selection: $format) {
+                        Text("Сторис").tag(ShareCardFormat.story)
+                        Text("Пост").tag(ShareCardFormat.post)
+                    }
+                    .pickerStyle(.segmented)
                 }
-                Button("Другие приложения") { sheet = item }
-                Button("Отмена", role: .cancel) {}
+                .padding(.horizontal, 20)
+
+                Spacer(minLength: 0)
+
+                buttons
             }
-            .sheet(item: $sheet) { item in
+            .padding(.top, 12)
+            .padding(.bottom, 16)
+            .navigationTitle("Поделиться")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Закрыть") { dismiss() }
+                        .font(.sfProDisplay(16, weight: .semibold))
+                }
+            }
+            .sheet(item: $sheetImage) { item in
                 ShareCardSheet(items: [item.image])
             }
+        }
+    }
+
+    // MARK: Preview
+
+    private var preview: some View {
+        // Fixed preview width; the card scales to fit either aspect ratio.
+        let previewWidth: CGFloat = 230
+        let scale = previewWidth / format.size.width
+        return ShareCardView(kind: kind, name: name, theme: theme, format: format)
+            .frame(width: format.size.width, height: format.size.height)
+            .scaleEffect(scale)
+            .frame(width: format.size.width * scale, height: format.size.height * scale)
+            .clipShape(RoundedRectangle(cornerRadius: 60 * scale, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 60 * scale, style: .continuous)
+                .stroke(Color.primary.opacity(0.08)))
+            .shadow(color: .black.opacity(0.12), radius: 16, y: 8)
+            .animation(.easeInOut(duration: 0.2), value: theme)
+            .animation(.easeInOut(duration: 0.2), value: format)
+    }
+
+    // MARK: Buttons
+
+    private var buttons: some View {
+        VStack(spacing: 10) {
+            Button { share(toInstagram: true) } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "camera.fill")
+                    Text("Instagram Stories")
+                }
+                .font(.sfProDisplay(16, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity).frame(height: 52)
+                .background(
+                    LinearGradient(colors: [Color(hex: "C13584"), Color(hex: "F77737")],
+                                   startPoint: .topLeading, endPoint: .bottomTrailing),
+                    in: RoundedRectangle(cornerRadius: 16)
+                )
+            }
+            .buttonStyle(.haptic)
+
+            Button { share(toInstagram: false) } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "square.and.arrow.up")
+                    Text("Другие приложения")
+                }
+                .font(.sfProDisplay(16, weight: .semibold))
+                .foregroundStyle(Color.accentColor)
+                .frame(maxWidth: .infinity).frame(height: 52)
+                .overlay(RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.accentColor.opacity(0.5), lineWidth: 1.5))
+            }
+            .buttonStyle(.haptic)
+        }
+        .padding(.horizontal, 20)
+    }
+
+    // MARK: Actions
+
+    private var kindLabel: String {
+        switch kind {
+        case .streak:   return "streak"
+        case .taskDone: return "task"
+        }
+    }
+
+    private func share(toInstagram: Bool) {
+        Haptics.tap()
+        guard let image = ShareCardRenderer.render(kind, name: name, theme: theme, format: format) else { return }
+        AnalyticsService.shared.track(.shareCardShared, [
+            "kind": kindLabel,
+            "theme": theme == .blue ? "blue" : "light",
+            "format": format == .story ? "story" : "post",
+            "destination": toInstagram ? "instagram_stories" : "system_sheet"
+        ])
+        if toInstagram {
+            InstagramStoryShare.share(image: image) { ok in
+                if !ok { sheetImage = ShareableImage(image: image) }
+            }
+        } else {
+            sheetImage = ShareableImage(image: image)
+        }
     }
 }
 

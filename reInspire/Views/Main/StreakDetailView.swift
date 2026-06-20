@@ -8,8 +8,7 @@ struct StreakDetailView: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var isFreezing = false
-    @State private var pendingShare: ShareableImage?
-    @State private var shareItem: ShareableImage?
+    @State private var shareRequest: ShareRequest?
 
     private var streak: Int { vm.globalStreakCurrent }
     private var best: Int { vm.globalStreakBest }
@@ -48,7 +47,9 @@ struct StreakDetailView: View {
                 .padding(.bottom, 32)
             }
             .background(Color(.systemBackground))
-            .shareDestinationDialog(pending: $pendingShare, sheet: $shareItem)
+            .sheet(item: $shareRequest) { req in
+                ShareComposerView(kind: req.kind, name: req.name)
+            }
             .navigationTitle("Твоя серия")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -109,11 +110,8 @@ struct StreakDetailView: View {
     private var shareButton: some View {
         Button {
             Haptics.tap()
-            let name = AuthService.shared.currentUser?.displayLabel
-            guard let image = ShareCardRenderer.render(.streak(days: streak, best: best),
-                                                       name: name) else { return }
-            AnalyticsService.shared.track(.shareCardShared, ["kind": "streak"])
-            pendingShare = ShareableImage(image: image)
+            shareRequest = ShareRequest(kind: .streak(days: streak, best: best),
+                                        name: AuthService.shared.currentUser?.displayLabel)
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: "square.and.arrow.up")

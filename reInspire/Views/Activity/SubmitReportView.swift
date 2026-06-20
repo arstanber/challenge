@@ -297,8 +297,7 @@ private struct AIVerificationResultScreen: View {
     @State private var scanSpin = false
     @State private var confettiTrigger = 0
     @State private var bonusXP: Int?
-    @State private var pendingShare: ShareableImage?
-    @State private var shareItem: ShareableImage?
+    @State private var shareRequest: ShareRequest?
 
     /// Resolved verdict once revealed; safe fallback while still scanning.
     private var r: AIVerificationResult { result ?? .pending }
@@ -330,7 +329,9 @@ private struct AIVerificationResultScreen: View {
         }
         .onAppear(perform: startScanning)
         .onChange(of: result) { _, _ in maybeReveal() }
-        .shareDestinationDialog(pending: $pendingShare, sheet: $shareItem)
+        .sheet(item: $shareRequest) { req in
+            ShareComposerView(kind: req.kind, name: req.name)
+        }
     }
 
     // MARK: Scanning beat
@@ -503,13 +504,10 @@ private struct AIVerificationResultScreen: View {
         }
     }
 
-    /// Renders the "task done" card and opens the system share sheet.
+    /// Opens the share composer for the just-completed task.
     private func shareCompletion() {
-        let name = AuthService.shared.currentUser?.displayLabel
-        guard let image = ShareCardRenderer.render(.taskDone(title: activityTitle, streak: streak),
-                                                   name: name) else { return }
-        AnalyticsService.shared.track(.shareCardShared, ["kind": "task"])
-        pendingShare = ShareableImage(image: image)
+        shareRequest = ShareRequest(kind: .taskDone(title: activityTitle, streak: streak),
+                                    name: AuthService.shared.currentUser?.displayLabel)
     }
 
     private var bgColor: Color {
