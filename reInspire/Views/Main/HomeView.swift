@@ -108,6 +108,7 @@ struct HomeView: View {
     @State private var newHabitDraft: HabitDraft?
     // Navigation
     @State private var showSettings = false
+    @State private var showStreakDetail = false
     // Inline drag-to-reorder happens right on the home list (no separate page).
     @State private var reorderMode = false
     @State private var draggingTask: Activity?
@@ -379,7 +380,8 @@ struct HomeView: View {
             }
             .safeAreaInset(edge: .top, spacing: 0) {
                 HomeTopBar(dateLabel: todayLabel, count: todayTasks.count,
-                           allDone: allDone, streak: vm.globalStreakCurrent)
+                           allDone: allDone, streak: vm.globalStreakCurrent,
+                           onTap: { Haptics.tap(); showStreakDetail = true })
             }
 
             ConfettiView(trigger: confettiTrigger)
@@ -494,6 +496,10 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showBySaying, onDismiss: reload) { BySayingView() }
         .sheet(isPresented: $showSettings) { SettingsView() }
+        .sheet(isPresented: $showStreakDetail) {
+            StreakDetailView(vm: vm)
+                .presentationDetents([.medium, .large])
+        }
         .sheet(item: $addSubtaskParent) { parent in
             AddSubtaskSheet(parent: parent, vm: vm, onCreated: reload)
         }
@@ -644,9 +650,10 @@ private struct HomeTopBar: View {
     let count: Int
     let allDone: Bool
     let streak: Int
+    var onTap: (() -> Void)? = nil
 
     var body: some View {
-        HomeHeader(dateLabel: dateLabel, count: count, allDone: allDone, streak: streak)
+        HomeHeader(dateLabel: dateLabel, count: count, allDone: allDone, streak: streak, onTap: onTap)
             .appearEffect(delay: 0.05)
             .frame(maxWidth: .infinity)
             .background {
@@ -681,6 +688,7 @@ private struct HomeHeader: View {
     let count: Int
     let allDone: Bool
     let streak: Int
+    var onTap: (() -> Void)? = nil
     @State private var flamePulse = false
 
     private var flameColor: Color {
@@ -727,9 +735,17 @@ private struct HomeHeader: View {
                     flamePulse = true
                 }
             }
+
+            if onTap != nil {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.tertiary)
+            }
         }
         .padding(.top, 16)
         .padding(.bottom, 18)
+        .contentShape(Rectangle())
+        .onTapGesture { onTap?() }
         .animation(.spring(response: 0.4, dampingFraction: 0.7), value: count)
         .animation(.spring(response: 0.4, dampingFraction: 0.7), value: streak)
     }
