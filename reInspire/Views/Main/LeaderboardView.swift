@@ -45,22 +45,24 @@ struct LeaderboardClaim: Decodable {
         case rank, reward
     }
 
-    /// Human message for the result alert.
+    /// Human message for the result alert. Rewards are granted automatically by
+    /// the Monday distribution job, so this only reports the outcome.
     var message: String {
-        let rankText = rank.map { "#\($0)" } ?? "вне топа"
-        let prize: String
+        let rankText = rank.map { "#\($0)" } ?? "вне топ-3"
+        // New freeze rewards + legacy PRO codes for any pre-existing rows.
+        let prize: String?
         switch reward {
-        case "pro7d": prize = " -- тебе начислено 7 дней PRO!"
-        case "pro3d": prize = " -- тебе начислено 3 дня PRO!"
-        case "freeze": prize = " -- тебе начислена заморозка серии 🧊"
-        default:      prize = ". Топ-3 на этой неделе?"
+        case "freeze3":          prize = "3 заморозки серии 🧊"
+        case "freeze2":          prize = "2 заморозки серии 🧊"
+        case "freeze1", "freeze": prize = "1 заморозка серии 🧊"
+        case "pro7d":            prize = "7 дней PRO"
+        case "pro3d":            prize = "3 дня PRO"
+        default:                 prize = nil
         }
-        if alreadyClaimed {
-            return reward == nil
-                ? "На прошлой неделе ты был \(rankText)."
-                : "Награда за прошлую неделю уже получена (\(rankText))."
+        if let prize {
+            return "За прошлую неделю ты занял \(rankText) -- начислено \(prize)."
         }
-        return "На прошлой неделе ты был \(rankText)\(prize)"
+        return "На прошлой неделе ты не попал в топ-3. Награды (3 / 2 / 1 заморозки) начисляются автоматически по понедельникам."
     }
 }
 
@@ -179,7 +181,7 @@ struct LeaderboardView: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text("Награды недели")
                     .font(.manrope(.bold, size: 15))
-                Text("Топ-3 среди всех пользователей получают PRO дни и заморозку")
+                Text("Каждый понедельник топ-3 получают заморозки серии: 3 / 2 / 1 🧊")
                     .font(.manrope(.medium, size: 12))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
