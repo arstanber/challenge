@@ -88,6 +88,7 @@ final class ActivitiesViewModel {
     var freezesAvailable: Int { engine.freezesAvailable }
     var yesterdayFreezable: Bool { engine.yesterdayFreezable }
     var yesterdayFrozen: Bool { engine.yesterdayFrozen }
+    var yesterdayAutoFrozen: Bool { engine.yesterdayAutoFrozen }
 
     /// Whether today's daily goal is already met -- drives the gray vs lit flame.
     var todayGoalMet: Bool { todayDoneTopLevelCount >= dailyStreakGoal }

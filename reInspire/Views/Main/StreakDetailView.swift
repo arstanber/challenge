@@ -106,7 +106,10 @@ struct StreakDetailView: View {
     @ViewBuilder
     private var flameStatus: some View {
         if vm.yesterdayFrozen && !vm.todayGoalMet {
-            statusPill(text: "Вчера спасла заморозка", color: Self.frozenBlue)
+            statusPill(text: vm.yesterdayAutoFrozen
+                       ? "Заморозка использована автоматически"
+                       : "Вчера спасла заморозка",
+                       color: Self.frozenBlue)
         } else if !vm.todayGoalMet {
             statusPill(text: "Сегодня ещё не выполнено", color: .secondary)
         }
@@ -132,7 +135,7 @@ struct StreakDetailView: View {
                     Text("Как работают заморозки")
                         .font(.sfProDisplay(15, weight: .semibold))
                         .foregroundStyle(.primary)
-                    Text("Заморозка спасает серию за пропущенный день -- он засчитывается, и серия не прерывается. Новые заморозки начисляются за каждые 7 дней лучшей серии.")
+                    Text("Если ты пропустил день, заморозка применяется автоматически -- день засчитывается, и серия не прерывается. Новые заморозки начисляются за каждые 7 дней лучшей серии.")
                         .font(.sfProDisplay(13, weight: .medium))
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
