@@ -3,6 +3,7 @@ import SwiftUI
 struct ActivityDetailView: View {
     @State private var vm: ActivityDetailViewModel
     @State private var showSubmitReport = false
+    @State private var shareRequest: ShareRequest?
     // AI features (#11, #12)
     @State private var showFailureAnalysis = false
     @State private var showGoalSplit = false
@@ -55,10 +56,21 @@ struct ActivityDetailView: View {
                         Button("Break this goal down 🤖") { Haptics.tap(); showGoalSplit = true }   // #12
                     }
                     Button("Location reminder 📍") { Haptics.tap(); showLocationReminder = true }   // #10
+                    Button("Поделиться 📤") {
+                        Haptics.tap()
+                        shareRequest = ShareRequest(
+                            kind: .taskDone(title: vm.activity.title,
+                                            streak: vm.activity.streakCurrent,
+                                            connector: vm.activity.connector?.displayName),
+                            name: AuthService.shared.currentUser?.displayLabel)
+                    }
                 } label: {
                     Image(systemName: "ellipsis.circle")
                 }
             }
+        }
+        .sheet(item: $shareRequest) { req in
+            ShareComposerView(kind: req.kind, name: req.name)
         }
         .sheet(isPresented: $showSubmitReport, onDismiss: {
             Task { await vm.loadReports() }

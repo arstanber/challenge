@@ -7,8 +7,9 @@ import UIKit
 enum ShareCardKind {
     /// The user's current global streak (with their best for context).
     case streak(days: Int, best: Int)
-    /// A single task the user just completed.
-    case taskDone(title: String, streak: Int)
+    /// A single task the user just completed. `connector` is the display name
+    /// of the data source that auto-verified it (e.g. "Strava"), if any.
+    case taskDone(title: String, streak: Int, connector: String? = nil)
 }
 
 // MARK: - Theme & format
@@ -57,11 +58,20 @@ enum ShareCardFormat {
         }
     }
 
-    /// Burst image frame (from Figma, in canvas pixels). Overflows + clips.
-    var burstFrame: CGRect {
+    /// Burst image width (square art). Overflows the canvas and clips.
+    var burstWidth: CGFloat {
         switch self {
-        case .story: return CGRect(x: -337, y: 600, width: 1944, height: 1943)
-        case .post:  return CGRect(x: -518, y: 35, width: 2181, height: 2179)
+        case .story: return 1500
+        case .post:  return 1500
+        }
+    }
+
+    /// Burst offset from the bottom-trailing corner (positive pushes the art
+    /// off the bottom-right edge so the explosion origin sits in the corner).
+    var burstOffset: CGSize {
+        switch self {
+        case .story: return CGSize(width: 550, height: 380)
+        case .post:  return CGSize(width: 550, height: 360)
         }
     }
 
@@ -95,13 +105,15 @@ struct ShareCardView: View {
         // though the burst image overflows the frame.
         theme.background
             .frame(width: size.width, height: size.height)
-            // Burst-checkmark (decorative), anchored per the template.
-            .overlay(alignment: .topLeading) {
+            // Burst-checkmark (decorative): mirrored so the explosion origin
+            // sits in the bottom-right corner, spikes radiating up-left.
+            .overlay(alignment: .bottomTrailing) {
                 Image("shareStar")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: format.burstFrame.width, height: format.burstFrame.height)
-                    .offset(x: format.burstFrame.minX, y: format.burstFrame.minY)
+                    .scaleEffect(x: -1, y: 1)
+                    .frame(width: format.burstWidth, height: format.burstWidth)
+                    .offset(x: format.burstOffset.width, y: format.burstOffset.height)
             }
             // Wordmark, top-left.
             .overlay(alignment: .topLeading) {
@@ -145,8 +157,8 @@ struct ShareCardView: View {
         switch kind {
         case let .streak(days, best):
             streakContent(days: days, best: best)
-        case let .taskDone(title, streak):
-            taskContent(title: title, streak: streak)
+        case let .taskDone(title, streak, connector):
+            taskContent(title: title, streak: streak, connector: connector)
         }
     }
 
@@ -175,7 +187,7 @@ struct ShareCardView: View {
         .padding(.horizontal, 80)
     }
 
-    private func taskContent(title: String, streak: Int) -> some View {
+    private func taskContent(title: String, streak: Int, connector: String?) -> some View {
         VStack(spacing: 44) {
             Text("Задача\nвыполнена")
                 .font(.sfProDisplay(96, weight: .bold))
@@ -189,16 +201,31 @@ struct ShareCardView: View {
                 .multilineTextAlignment(.center)
                 .lineLimit(3)
 
-            if streak > 0 {
-                HStack(spacing: 14) {
-                    Text("🔥").font(.system(size: 48))
-                    Text("\(streak) подряд")
-                        .font(.sfProDisplay(48, weight: .semibold))
-                        .foregroundStyle(theme.ink)
+            HStack(spacing: 16) {
+                if streak > 0 {
+                    HStack(spacing: 14) {
+                        Text("🔥").font(.system(size: 48))
+                        Text("\(streak) подряд")
+                            .font(.sfProDisplay(48, weight: .semibold))
+                            .foregroundStyle(theme.ink)
+                    }
+                    .padding(.horizontal, 44)
+                    .padding(.vertical, 24)
+                    .background(theme.ink.opacity(0.12), in: Capsule())
                 }
-                .padding(.horizontal, 44)
-                .padding(.vertical, 24)
-                .background(theme.ink.opacity(0.12), in: Capsule())
+
+                if let connector, !connector.isEmpty {
+                    HStack(spacing: 12) {
+                        Image(systemName: "bolt.horizontal.circle.fill")
+                            .font(.system(size: 44))
+                        Text(connector)
+                            .font(.sfProDisplay(48, weight: .semibold))
+                            .foregroundStyle(theme.ink)
+                    }
+                    .padding(.horizontal, 44)
+                    .padding(.vertical, 24)
+                    .background(theme.ink.opacity(0.12), in: Capsule())
+                }
             }
         }
         .padding(.horizontal, 100)

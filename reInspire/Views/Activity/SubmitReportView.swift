@@ -25,6 +25,7 @@ struct SubmitReportView: View {
                         wasExcuse: submittedAsExcuse,
                         activityTitle: activity.title,
                         streak: activity.streakCurrent,
+                        connectorName: activity.connector?.displayName,
                         onDone: { dismiss(); onSubmit() },
                         onRetry: {
                             showResult = false
@@ -285,6 +286,7 @@ private struct AIVerificationResultScreen: View {
     let wasExcuse: Bool
     let activityTitle: String
     let streak: Int
+    let connectorName: String?
     let onDone: () -> Void
     let onRetry: () -> Void
 
@@ -506,7 +508,8 @@ private struct AIVerificationResultScreen: View {
 
     /// Opens the share composer for the just-completed task.
     private func shareCompletion() {
-        shareRequest = ShareRequest(kind: .taskDone(title: activityTitle, streak: streak),
+        shareRequest = ShareRequest(kind: .taskDone(title: activityTitle, streak: streak,
+                                                    connector: connectorName),
                                     name: AuthService.shared.currentUser?.displayLabel)
     }
 
