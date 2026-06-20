@@ -144,8 +144,8 @@ struct ShareCardView: View {
                     .font(.sfProDisplay(34, weight: .semibold))
                     .foregroundStyle(theme.ink.opacity(0.75))
             }
-            Text("thechallenges.app")
-                .font(.sfProDisplay(28, weight: .medium))
+            Text("@\(Constants.App.instagramHandle)")
+                .font(.sfProDisplay(28, weight: .semibold))
                 .foregroundStyle(theme.inkMuted)
         }
     }
@@ -286,6 +286,9 @@ enum InstagramStoryShare {
 struct ShareableImage: Identifiable {
     let id = UUID()
     let image: UIImage
+    /// Optional caption (with @mention + hashtags) attached for apps that
+    /// accept share text (Telegram, WhatsApp, X). Instagram ignores it.
+    var caption: String? = nil
 }
 
 /// Minimal bridge handing items to the system share sheet (Instagram, Stories,
@@ -355,7 +358,7 @@ struct ShareComposerView: View {
                 }
             }
             .sheet(item: $sheetImage) { item in
-                ShareCardSheet(items: [item.image])
+                ShareCardSheet(items: item.caption.map { [item.image, $0] } ?? [item.image])
             }
         }
     }
@@ -423,6 +426,17 @@ struct ShareComposerView: View {
         }
     }
 
+    /// Caption (with @mention + hashtags) for apps that accept share text.
+    private var shareCaption: String {
+        let tag = "@\(Constants.App.instagramHandle)"
+        switch kind {
+        case let .streak(days, _):
+            return "🔥 \(days) дней подряд в reInspire! Присоединяйся: \(tag) #reInspire #привычки"
+        case let .taskDone(title, _, _):
+            return "Задача выполнена в reInspire ✅ \(title) \(tag) #reInspire #привычки"
+        }
+    }
+
     private func share(toInstagram: Bool) {
         Haptics.tap()
         guard let image = ShareCardRenderer.render(kind, name: name, theme: theme, format: format) else { return }
@@ -434,10 +448,10 @@ struct ShareComposerView: View {
         ])
         if toInstagram {
             InstagramStoryShare.share(image: image) { ok in
-                if !ok { sheetImage = ShareableImage(image: image) }
+                if !ok { sheetImage = ShareableImage(image: image, caption: shareCaption) }
             }
         } else {
-            sheetImage = ShareableImage(image: image)
+            sheetImage = ShareableImage(image: image, caption: shareCaption)
         }
     }
 }

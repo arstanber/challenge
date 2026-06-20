@@ -23,6 +23,10 @@ enum Constants {
         static func dailyStreakGoal(scheduledToday: Int) -> Int {
             max(1, Int((streakDailyCompletionRatio * Double(scheduledToday)).rounded(.up)))
         }
+
+        /// Instagram handle (without @) stamped on share cards and used in the
+        /// auto-caption for the system share sheet.
+        static let instagramHandle = "reinspireqzly"
     }
 
     enum Storage {
