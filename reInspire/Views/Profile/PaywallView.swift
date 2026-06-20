@@ -213,10 +213,17 @@ struct PremiumView: View {
                 }
                 Spacer()
                 HStack(spacing: 0) {
-                    Text(priceText(for: option.id))
-                        .font(.system(size: 16, weight: .semibold)).foregroundColor(.white)
-                    Text(option.period)
-                        .font(.system(size: 16)).foregroundColor(.white.opacity(0.7))
+                    if let price = priceText(for: option.id) {
+                        Text(price)
+                            .font(.system(size: 16, weight: .semibold)).foregroundColor(.white)
+                        Text(option.period)
+                            .font(.system(size: 16)).foregroundColor(.white.opacity(0.7))
+                    } else {
+                        // Products not loaded yet -- skeleton, never a wrong price.
+                        Text("0000")
+                            .font(.system(size: 16, weight: .semibold)).foregroundColor(.white)
+                            .redacted(reason: .placeholder)
+                    }
                 }
             }
             .padding(.horizontal, 16)
@@ -296,35 +303,21 @@ struct PremiumView: View {
 
     // MARK: Pricing helpers
 
-    private func priceText(for productID: String) -> String {
-        if let p = store.product(for: productID)?.displayPrice { return p }
-        // Fallbacks until StoreKit products load.
-        switch productID {
-        case Constants.Store.premiumAnnualID:  return "$39.99"
-        case Constants.Store.premiumMonthlyID: return "$4.99"
-        case Constants.Store.premiumForeverID: return "$99.99"
-        case Constants.Store.familyAnnualID:   return "$79.99"
-        case Constants.Store.familyMonthlyID:  return "$9.99"
-        case Constants.Store.maxAnnualID:      return "$129.99"
-        case Constants.Store.maxMonthlyID:     return "$14.99"
-        default:                               return "--"
-        }
+    /// Localized App Store price, or nil until the StoreKit product loads.
+    /// No hardcoded fallback -- the row shows a redacted skeleton instead of a
+    /// wrong (and wrong-currency) number while products are loading.
+    private func priceText(for productID: String) -> String? {
+        store.product(for: productID)?.displayPrice
     }
 
     /// "Выгода X%" for a yearly option vs 12× its monthly counterpart.
+    /// Returns nil until both real StoreKit prices are available.
     private func savingsBadge(for option: PaywallOption) -> String? {
-        guard let monthlyID = option.monthlyForSavings else { return nil }
-        let annual = store.product(for: option.id)?.price
-        let monthly = store.product(for: monthlyID)?.price
-        let a: Double, m: Double
-        if let annual, let monthly {
-            a = NSDecimalNumber(decimal: annual).doubleValue
-            m = NSDecimalNumber(decimal: monthly).doubleValue
-        } else {
-            // Fallback figures matching priceText.
-            a = option.id == Constants.Store.familyAnnualID ? 79.99 : 39.99
-            m = option.id == Constants.Store.familyAnnualID ? 9.99 : 4.99
-        }
+        guard let monthlyID = option.monthlyForSavings,
+              let annual = store.product(for: option.id)?.price,
+              let monthly = store.product(for: monthlyID)?.price else { return nil }
+        let a = NSDecimalNumber(decimal: annual).doubleValue
+        let m = NSDecimalNumber(decimal: monthly).doubleValue
         guard m > 0 else { return nil }
         let pct = Int(((m * 12 - a) / (m * 12) * 100).rounded())
         return pct > 0 ? "Выгода \(pct)%" : nil
