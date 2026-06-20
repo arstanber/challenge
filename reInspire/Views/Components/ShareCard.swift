@@ -11,70 +11,130 @@ enum ShareCardKind {
     case taskDone(title: String, streak: Int)
 }
 
+// MARK: - Theme & format
+
+/// Brand colourway of a share card. Mirrors the Figma templates.
+enum ShareCardTheme {
+    case blue   // #0048e2 background, white ink + bright burst
+    case light  // white background, black ink + ghost burst
+
+    var background: Color {
+        switch self {
+        case .blue:  return Color(hex: "0048E2")
+        case .light: return .white
+        }
+    }
+
+    var ink: Color {
+        switch self {
+        case .blue:  return .white
+        case .light: return .black
+        }
+    }
+
+    /// Fill for secondary chips / muted text.
+    var inkMuted: Color { ink.opacity(0.6) }
+}
+
+/// Output canvas of a share card.
+enum ShareCardFormat {
+    case story  // 1080x1920 (Instagram/TikTok Stories)
+    case post   // 1080x1350 (Instagram feed 4:5)
+
+    /// Native pixel size; the card is rendered at scale 1 into this size.
+    var size: CGSize {
+        switch self {
+        case .story: return CGSize(width: 1080, height: 1920)
+        case .post:  return CGSize(width: 1080, height: 1350)
+        }
+    }
+
+    /// Wordmark top-left origin (from Figma).
+    var wordmarkOrigin: CGPoint {
+        switch self {
+        case .story: return CGPoint(x: 139, y: 171)
+        case .post:  return CGPoint(x: 73, y: 65)
+        }
+    }
+
+    /// Burst image frame (from Figma, in canvas pixels). Overflows + clips.
+    var burstFrame: CGRect {
+        switch self {
+        case .story: return CGRect(x: -337, y: 600, width: 1944, height: 1943)
+        case .post:  return CGRect(x: -518, y: 35, width: 2181, height: 2179)
+        }
+    }
+
+    /// Vertical centre (fraction of height) of the clean zone where the
+    /// dynamic content sits, above the dense part of the burst.
+    var contentCenterFraction: CGFloat {
+        switch self {
+        case .story: return 0.40
+        case .post:  return 0.36
+        }
+    }
+}
+
 // MARK: - Share card view
 
-/// A 9:16 branded card rendered to an image and handed to the system share
-/// sheet (Instagram, Stories, Telegram, WhatsApp, Save Image, etc). Sized for
-/// Instagram Stories so it drops in without cropping.
+/// A branded share card matching the Figma post/story templates: solid
+/// background, "reInspire." wordmark top-left, a hand-drawn burst-checkmark
+/// anchored bottom, and the dynamic streak/task content in the clean zone.
+/// Rendered to an image and handed to the share sheet / Instagram Stories.
 struct ShareCardView: View {
     let kind: ShareCardKind
     /// Optional user label shown in the footer.
     var name: String?
-
-    /// Base layout size; the renderer upscales this to ~1080x1920.
-    static let size = CGSize(width: 360, height: 640)
+    var theme: ShareCardTheme = .blue
+    var format: ShareCardFormat = .story
+    private var size: CGSize { format.size }
 
     var body: some View {
-        ZStack {
-            background
-
-            VStack(spacing: 0) {
-                Text("reInspire.")
-                    .font(.manrope(.extraBold, size: 22))
-                    .foregroundStyle(.white)
-                    .padding(.top, 44)
-
-                Spacer()
-
-                content
-
-                Spacer()
-
-                footer
-                    .padding(.bottom, 44)
+        // The background defines a fixed canvas; every overlay is laid out
+        // against it, so offsets/alignment resolve in true pixel space even
+        // though the burst image overflows the frame.
+        theme.background
+            .frame(width: size.width, height: size.height)
+            // Burst-checkmark (decorative), anchored per the template.
+            .overlay(alignment: .topLeading) {
+                Image("shareStar")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: format.burstFrame.width, height: format.burstFrame.height)
+                    .offset(x: format.burstFrame.minX, y: format.burstFrame.minY)
             }
-        }
-        .frame(width: Self.size.width, height: Self.size.height)
-    }
-
-    // MARK: Background
-
-    private var background: some View {
-        ZStack {
-            LinearGradient(
-                colors: [Color(hex: "1c1638"), Color(hex: "0c0a18")],
-                startPoint: .top, endPoint: .bottom
-            )
-            Circle()
-                .fill(Color(hex: "7c4df0").opacity(0.40))
-                .frame(width: 340, height: 340)
-                .blur(radius: 100)
-                .offset(y: -190)
-        }
+            // Wordmark, top-left.
+            .overlay(alignment: .topLeading) {
+                Text("reInspire.")
+                    .font(.sfProDisplay(64, weight: .medium))
+                    .foregroundStyle(theme.ink)
+                    .offset(x: format.wordmarkOrigin.x, y: format.wordmarkOrigin.y)
+            }
+            // Dynamic content in the clean zone.
+            .overlay {
+                content
+                    .offset(y: (format.contentCenterFraction - 0.5) * size.height)
+            }
+            // Footer / handle.
+            .overlay(alignment: .bottom) {
+                footer.padding(.bottom, 64)
+            }
+            .clipped()
     }
 
     // MARK: Footer
 
+    @ViewBuilder
     private var footer: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 10) {
             if let name, !name.isEmpty {
                 Text(name)
-                    .font(.manrope(.semiBold, size: 15))
-                    .foregroundStyle(.white.opacity(0.7))
+                    .font(.sfProDisplay(34, weight: .semibold))
+                    .foregroundStyle(theme.ink.opacity(0.75))
             }
             Text("thechallenges.app")
-                .font(.manrope(.medium, size: 13))
-                .foregroundStyle(.white.opacity(0.4))
+                .font(.sfProDisplay(28, weight: .medium))
+                .foregroundStyle(theme.inkMuted)
         }
     }
 
@@ -91,76 +151,73 @@ struct ShareCardView: View {
     }
 
     private func streakContent(days: Int, best: Int) -> some View {
-        VStack(spacing: 14) {
+        VStack(spacing: 24) {
             Text("🔥")
-                .font(.system(size: 92))
+                .font(.system(size: 200))
 
             Text("\(days)")
-                .font(.manrope(.extraBold, size: 104))
-                .foregroundStyle(
-                    LinearGradient(colors: [Color(hex: "ffce54"), Color(hex: "ff7a18")],
-                                   startPoint: .top, endPoint: .bottom)
-                )
+                .font(.sfProDisplay(300, weight: .bold))
+                .foregroundStyle(theme.ink)
+                .minimumScaleFactor(0.5)
+                .lineLimit(1)
 
             Text(days == 1 ? "день подряд" : "дней подряд")
-                .font(.manrope(.bold, size: 22))
-                .foregroundStyle(.white)
+                .font(.sfProDisplay(64, weight: .semibold))
+                .foregroundStyle(theme.ink)
 
             if best > days {
                 Text("Рекорд: \(best)")
-                    .font(.manrope(.medium, size: 15))
-                    .foregroundStyle(.white.opacity(0.55))
-                    .padding(.top, 4)
+                    .font(.sfProDisplay(40, weight: .medium))
+                    .foregroundStyle(theme.inkMuted)
+                    .padding(.top, 8)
             }
         }
+        .padding(.horizontal, 80)
     }
 
     private func taskContent(title: String, streak: Int) -> some View {
-        VStack(spacing: 20) {
-            ZStack {
-                Circle()
-                    .fill(Color(hex: "22c55e").opacity(0.18))
-                    .frame(width: 132, height: 132)
-                Image(systemName: "checkmark.seal.fill")
-                    .font(.system(size: 72))
-                    .foregroundStyle(Color(hex: "22c55e"))
-            }
-
-            Text("Задача выполнена")
-                .font(.manrope(.extraBold, size: 26))
-                .foregroundStyle(.white)
+        VStack(spacing: 44) {
+            Text("Задача\nвыполнена")
+                .font(.sfProDisplay(96, weight: .bold))
+                .foregroundStyle(theme.ink)
+                .multilineTextAlignment(.center)
+                .lineSpacing(2)
 
             Text(title)
-                .font(.manrope(.medium, size: 18))
-                .foregroundStyle(.white.opacity(0.75))
+                .font(.sfProDisplay(52, weight: .medium))
+                .foregroundStyle(theme.ink.opacity(0.8))
                 .multilineTextAlignment(.center)
                 .lineLimit(3)
-                .padding(.horizontal, 36)
 
             if streak > 0 {
-                HStack(spacing: 6) {
-                    Text("🔥")
+                HStack(spacing: 14) {
+                    Text("🔥").font(.system(size: 48))
                     Text("\(streak) подряд")
-                        .font(.manrope(.semiBold, size: 16))
-                        .foregroundStyle(.white)
+                        .font(.sfProDisplay(48, weight: .semibold))
+                        .foregroundStyle(theme.ink)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(.white.opacity(0.10), in: Capsule())
+                .padding(.horizontal, 44)
+                .padding(.vertical, 24)
+                .background(theme.ink.opacity(0.12), in: Capsule())
             }
         }
+        .padding(.horizontal, 100)
     }
 }
 
 // MARK: - Rendering
 
 enum ShareCardRenderer {
-    /// Renders a card to a high-resolution opaque image (~1080x1920).
+    /// Renders a card to a native-resolution opaque image (1080x1920 story /
+    /// 1080x1350 post).
     @MainActor
-    static func render(_ kind: ShareCardKind, name: String?) -> UIImage? {
-        let card = ShareCardView(kind: kind, name: name)
+    static func render(_ kind: ShareCardKind,
+                       name: String?,
+                       theme: ShareCardTheme = .blue,
+                       format: ShareCardFormat = .story) -> UIImage? {
+        let card = ShareCardView(kind: kind, name: name, theme: theme, format: format)
         let renderer = ImageRenderer(content: card)
-        renderer.scale = 1080 / ShareCardView.size.width   // -> 1080x1920
+        renderer.scale = 1
         renderer.isOpaque = true
         return renderer.uiImage
     }
@@ -252,10 +309,18 @@ private struct ShareDestinationDialog: ViewModifier {
 }
 
 #Preview {
-    VStack {
-        ShareCardView(kind: .streak(days: 47, best: 60), name: "Арслан")
-            .scaleEffect(0.5)
-        ShareCardView(kind: .taskDone(title: "Пробежка 5 км", streak: 12), name: "Арслан")
-            .scaleEffect(0.5)
+    ScrollView(.horizontal) {
+        HStack(spacing: 20) {
+            ShareCardView(kind: .streak(days: 47, best: 60), name: "Арслан",
+                          theme: .blue, format: .story)
+                .scaleEffect(0.18).frame(width: 1080 * 0.18, height: 1920 * 0.18)
+            ShareCardView(kind: .taskDone(title: "Пробежка 5 км", streak: 12), name: "Арслан",
+                          theme: .light, format: .story)
+                .scaleEffect(0.18).frame(width: 1080 * 0.18, height: 1920 * 0.18)
+            ShareCardView(kind: .streak(days: 47, best: 60), name: "Арслан",
+                          theme: .blue, format: .post)
+                .scaleEffect(0.18).frame(width: 1080 * 0.18, height: 1350 * 0.18)
+        }
+        .padding()
     }
 }
