@@ -100,6 +100,10 @@ struct Activity: Codable, Identifiable {
     var parentId: UUID?
     var sortOrder: Int = 0
     var category: String?
+    /// Shared across the per-child rows a parent creates in one "assign task"
+    /// action, so the app can group an assignment and show who completed it.
+    /// nil for self-created tasks and pre-grouping legacy assignments.
+    var assignmentGroupId: UUID?
     /// ISO weekdays (1 = Monday ... 7 = Sunday) the activity is scheduled on.
     /// nil/empty = every day. Matches Postgres extract(isodow).
     var scheduleDays: [Int]?
@@ -126,6 +130,7 @@ struct Activity: Codable, Identifiable {
         case parentId = "parent_id"
         case sortOrder = "sort_order"
         case category
+        case assignmentGroupId = "assignment_group_id"
         case scheduleDays = "schedule_days"
         case connector
         case connectorMetric = "connector_metric"
@@ -177,6 +182,7 @@ struct CreateActivityRequest: Codable {
     var workspaceId: UUID?
     var parentId: UUID?
     var category: String? = nil
+    var assignmentGroupId: UUID? = nil
     var scheduleDays: [Int]? = nil
     var connector: DataConnector? = nil
     var connectorMetric: ConnectorMetric? = nil
@@ -193,6 +199,7 @@ struct CreateActivityRequest: Codable {
         case workspaceId = "workspace_id"
         case parentId = "parent_id"
         case category
+        case assignmentGroupId = "assignment_group_id"
         case scheduleDays = "schedule_days"
         case connector
         case connectorMetric = "connector_metric"
@@ -227,6 +234,7 @@ extension Activity {
             parentId: req.parentId,
             sortOrder: 0,
             category: req.category,
+            assignmentGroupId: req.assignmentGroupId,
             scheduleDays: req.scheduleDays,
             connector: req.connector,
             connectorMetric: req.connectorMetric

@@ -33,6 +33,42 @@ final class ActivitiesViewModel {
     /// of truth; here a day is "met" when its check-ins reach the daily goal.
     private(set) var monthDays: [Bool] = []
 
+    /// One day of the trailing-week streak strip (GitHub-style), oldest first.
+    struct WeekDayProgress: Identifiable {
+        let date: Date
+        /// True when the daily goal was met that day.
+        let met: Bool
+        /// False for days we have no local data for (e.g. the previous month's
+        /// tail at the start of a month) -- rendered faint, like a future day.
+        let hasData: Bool
+        let isToday: Bool
+        var id: Date { date }
+    }
+
+    /// The last 7 calendar days ending today (today last), derived from
+    /// `monthDays`. Today's cell uses the live done-count so it flips the moment
+    /// a task is completed. Used by the trailing-week strip in the streak sheet.
+    var last7Days: [WeekDayProgress] {
+        let today = calendar.startOfDay(for: Date())
+        let nowComps = calendar.dateComponents([.year, .month], from: today)
+        return (0..<7).reversed().compactMap { offset in
+            guard let date = calendar.date(byAdding: .day, value: -offset, to: today) else { return nil }
+            let isToday = offset == 0
+            if isToday {
+                return WeekDayProgress(date: date,
+                                       met: todayDoneTopLevelCount >= dailyStreakGoal,
+                                       hasData: true,
+                                       isToday: true)
+            }
+            let comps = calendar.dateComponents([.year, .month, .day], from: date)
+            let sameMonth = comps.year == nowComps.year && comps.month == nowComps.month
+            if sameMonth, let day = comps.day, monthDays.indices.contains(day - 1) {
+                return WeekDayProgress(date: date, met: monthDays[day - 1], hasData: true, isToday: false)
+            }
+            return WeekDayProgress(date: date, met: false, hasData: false, isToday: false)
+        }
+    }
+
     /// Weekly completion rates (last 6 weeks, index 0 = oldest) and 30-day
     /// check-in counts feeding the performance card / widget. Display metrics --
     /// the server stays authoritative for streaks.

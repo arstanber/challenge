@@ -180,6 +180,10 @@ struct FamilyView: View {
         roleGroup(title: "Папы", members: vm.dads)
         roleGroup(title: "Дети (\(vm.kids.count))", members: vm.kids, isKids: true)
 
+        if !vm.kids.isEmpty {
+            assignmentsSection
+        }
+
         Section {
             Button(role: .destructive) { Haptics.warning(); showDelete = true } label: {
                 Text("Удалить семью")
@@ -216,6 +220,52 @@ struct FamilyView: View {
             }
         }
     }
+
+    // MARK: Assignments (who completed what)
+
+    @ViewBuilder private var assignmentsSection: some View {
+        Section("Задания") {
+            if vm.assignments.isEmpty {
+                Text("Пока нет заданий. Дай задание ребёнку (свайп влево по нему) или сразу всем.")
+                    .font(.subheadline).foregroundStyle(.secondary)
+            } else {
+                ForEach(vm.assignments) { assignment in
+                    NavigationLink {
+                        AssignmentDetailView(assignment: assignment)
+                    } label: {
+                        assignmentRow(assignment)
+                    }
+                }
+            }
+        }
+    }
+
+    private func assignmentRow(_ a: AssignmentOverview) -> some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(a.title).font(.subheadline.bold()).lineLimit(1)
+                if let deadline = a.deadline {
+                    Label(Self.deadlineFormatter.string(from: deadline), systemImage: "calendar")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            Spacer()
+            Text("\(a.doneCount)/\(a.total)")
+                .font(.caption.bold().monospacedDigit())
+                .padding(.horizontal, 10).padding(.vertical, 5)
+                .background(Capsule().fill(
+                    (a.doneCount == a.total ? Color.green : Color.orange).opacity(0.15)))
+                .foregroundStyle(a.doneCount == a.total ? .green : .orange)
+        }
+        .padding(.vertical, 2)
+    }
+
+    static let deadlineFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "ru_RU")
+        f.dateFormat = "d MMMM"
+        return f
+    }()
 
     // MARK: Child
 
@@ -520,6 +570,66 @@ private struct ChildCredentialsSheet: View {
                     .overlay { if vm.isLoading { ProgressView().scaleEffect(0.7) } }
                 }
             }
+        }
+    }
+}
+
+// MARK: - Assignment detail (per-child completion)
+
+private struct AssignmentDetailView: View {
+    let assignment: AssignmentOverview
+
+    var body: some View {
+        List {
+            Section {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(assignment.title).font(.headline)
+                    if !assignment.description.isEmpty {
+                        Text(assignment.description)
+                            .font(.subheadline).foregroundStyle(.secondary)
+                    }
+                    if let deadline = assignment.deadline {
+                        Label("Дедлайн: \(FamilyView.deadlineFormatter.string(from: deadline))",
+                              systemImage: "calendar")
+                            .font(.caption.bold()).foregroundStyle(.purple)
+                    }
+                    Text("Выполнили \(assignment.doneCount) из \(assignment.total)")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+                .padding(.vertical, 4)
+            }
+
+            Section("Кто выполнил") {
+                ForEach(assignment.children) { child in
+                    HStack(spacing: 12) {
+                        UserAvatarView(urlString: child.avatarURL, label: child.name,
+                                       size: 36, tint: .purple)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(child.name).font(.subheadline.bold())
+                            if let at = child.lastReportAt, child.state != .waiting {
+                                Text(at, style: .relative)
+                                    .font(.caption2).foregroundStyle(.secondary)
+                            }
+                        }
+                        Spacer()
+                        Label(child.state.title, systemImage: child.state.icon)
+                            .font(.caption.bold())
+                            .foregroundStyle(Self.color(for: child.state))
+                    }
+                    .padding(.vertical, 2)
+                }
+            }
+        }
+        .navigationTitle("Задание")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private static func color(for state: AssignmentChildState) -> Color {
+        switch state {
+        case .done:     return .green
+        case .pending:  return .orange
+        case .rejected: return .red
+        case .waiting:  return .secondary
         }
     }
 }

@@ -78,9 +78,11 @@ struct CreateActivityView: View {
                         }
                         .padding(.vertical, 4)
                     }
-                    Toggle("Set deadline", isOn: $vm.hasDeadline)
+                    let isAssignment = presetChildName != nil
+                    Toggle(isAssignment ? "Поставить дедлайн" : "Set deadline", isOn: $vm.hasDeadline)
                     if vm.hasDeadline {
-                        DatePicker("Deadline", selection: $vm.deadline, in: Date()..., displayedComponents: .date)
+                        DatePicker(isAssignment ? "Дедлайн" : "Deadline",
+                                   selection: $vm.deadline, in: Date()..., displayedComponents: .date)
                     }
                     Toggle("Daily reminder", isOn: $vm.reminderEnabled)
                     if vm.reminderEnabled {

@@ -23,6 +23,8 @@ struct StreakDetailView: View {
                 VStack(spacing: 24) {
                     flameHeader
 
+                    WeekStreakStrip(days: vm.last7Days)
+
                     HStack(spacing: 12) {
                         StatTile(emoji: "🏆",
                                  value: "\(best)",
@@ -154,6 +156,70 @@ struct StreakDetailView: View {
             .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 16))
         }
         .disabled(isFreezing)
+    }
+}
+
+// MARK: - Week strip (GitHub-style trailing 7 days)
+
+/// A row of 7 day squares -- the last week ending today -- mirroring the
+/// month heatmap from the widget. Filled (orange) when the daily goal was met;
+/// today gets a ring; days with no local data render faint.
+private struct WeekStreakStrip: View {
+    let days: [ActivitiesViewModel.WeekDayProgress]
+
+    private static let active = Color(red: 0.980, green: 0.325, blue: 0.110)
+
+    private static let weekdayFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "ru_RU")
+        f.setLocalizedDateFormatFromTemplate("EEEEEE") // short standalone weekday
+        return f
+    }()
+
+    private var metCount: Int { days.filter { $0.hasData && $0.met }.count }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Эта неделя")
+                    .font(.sfProDisplay(16, weight: .semibold))
+                    .foregroundStyle(.primary)
+                Spacer()
+                Text("\(metCount)/7")
+                    .font(.sfProDisplay(15, weight: .bold))
+                    .foregroundStyle(Self.active)
+                    .contentTransition(.numericText())
+            }
+
+            HStack(spacing: 8) {
+                ForEach(days) { day in
+                    VStack(spacing: 6) {
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .fill(fill(for: day))
+                            .aspectRatio(1, contentMode: .fit)
+                            .overlay {
+                                if day.isToday {
+                                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                        .strokeBorder(Self.active, lineWidth: 2)
+                                }
+                            }
+                        Text(Self.weekdayFormatter.string(from: day.date))
+                            .font(.sfProDisplay(11, weight: .medium))
+                            .foregroundStyle(day.isToday ? Self.active : .secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18))
+    }
+
+    private func fill(for day: ActivitiesViewModel.WeekDayProgress) -> Color {
+        if day.met { return Self.active }
+        if !day.hasData { return Color.primary.opacity(0.04) }
+        return Color.primary.opacity(0.09)
     }
 }
 

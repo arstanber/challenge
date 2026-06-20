@@ -73,6 +73,9 @@ final class CreateActivityViewModel {
             : assignToChildIds
         let isAssignment = !childTargets.isEmpty
         let targets: [UUID] = isAssignment ? childTargets : [user.id]
+        // One id shared by every per-child row of this assignment, so the parent
+        // can later see who completed it as a single grouped task.
+        let assignmentGroupId: UUID? = isAssignment ? UUID() : nil
 
         let resolvedScheduleDays = frequency == .weekly && !scheduleDays.isEmpty && scheduleDays.count < 7
             ? scheduleDays.sorted()
@@ -94,6 +97,7 @@ final class CreateActivityViewModel {
                     workspaceId: workspaceId,
                     parentId: parentId,
                     category: category,
+                    assignmentGroupId: assignmentGroupId,
                     scheduleDays: resolvedScheduleDays,
                     connector: isAssignment ? nil : selectedCapability?.connector,
                     connectorMetric: isAssignment ? nil : selectedCapability?.metric

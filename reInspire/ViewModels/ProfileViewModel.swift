@@ -27,6 +27,8 @@ final class ProfileViewModel {
         }
     }
     var leaveRequests: [LeaveRequest] = []
+    /// Tasks the parent assigned, grouped, with each child's completion status.
+    var assignments: [AssignmentOverview] = []
     var isLoading = false
     var errorMessage: String?
     var totalCompleted: Int = 0
@@ -95,6 +97,8 @@ final class ProfileViewModel {
                 // Pending leave codes the parent can read in-app.
                 leaveRequests = (try? await supabase.rpc("get_family_leave_requests")
                     .execute().value) ?? []
+
+                await loadAssignments()
             }
 
             // Every family member (parent or child) can read the roster of who
@@ -113,6 +117,98 @@ final class ProfileViewModel {
             errorMessage = error.localizedDescription
         }
         isLoading = false
+    }
+
+    /// Build the parent's assignment overview: every task the parent assigned,
+    /// grouped by assignment, with each targeted child's completion status.
+    /// Relies on the family RLS policies that let a parent read child activities
+    /// and reports. Requires `children` to already be loaded (for names/avatars).
+    func loadAssignments() async {
+        guard let user = authService.currentUser, user.isParent else { return }
+        do {
+            let assigned: [Activity] = try await supabase
+                .from("activities")
+                .select()
+                .eq("assigned_by", value: user.id.uuidString)
+                .execute()
+                .value
+            guard !assigned.isEmpty else { assignments = []; return }
+
+            let activityIds = assigned.map(\.id.uuidString)
+            let reports: [Report] = try await supabase
+                .from("reports")
+                .select()
+                .in("activity_id", values: activityIds)
+                .order("created_at", ascending: false)
+                .execute()
+                .value
+            let reportsByActivity = Dictionary(grouping: reports, by: \.activityId)
+
+            // child_user_id -> child AppUser, for names and avatars.
+            let childByID = Dictionary(
+                children.compactMap { m -> (UUID, AppUser)? in
+                    m.childUser.map { (m.childUserId, $0) }
+                },
+                uniquingKeysWith: { first, _ in first }
+            )
+
+            // Group the per-child rows. Legacy rows (no group id) stand alone.
+            let groups = Dictionary(grouping: assigned) {
+                $0.assignmentGroupId?.uuidString ?? $0.id.uuidString
+            }
+
+            assignments = groups.compactMap { key, rows -> AssignmentOverview? in
+                let sortedRows = rows.sorted { $0.createdAt < $1.createdAt }
+                guard let rep = sortedRows.first else { return nil }
+                let statuses = sortedRows.map { act -> AssignmentChildStatus in
+                    let (state, last) = Self.childState(
+                        for: act, reports: reportsByActivity[act.id] ?? [])
+                    let child = childByID[act.userId]
+                    return AssignmentChildStatus(
+                        id: act.userId,
+                        name: child?.displayLabel ?? "Ребёнок",
+                        avatarURL: child?.avatarURL,
+                        state: state,
+                        lastReportAt: last
+                    )
+                }
+                .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+                return AssignmentOverview(
+                    id: key,
+                    title: rep.title,
+                    description: rep.description,
+                    deadline: rep.deadline,
+                    children: statuses
+                )
+            }
+            // Soonest deadline first; undated assignments last.
+            .sorted { ($0.deadline ?? .distantFuture) < ($1.deadline ?? .distantFuture) }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    /// Resolve one child's state on an assigned activity from its reports.
+    /// Mirrors the task-core rule: approved/completed/excused count as done,
+    /// pending shows as checking, a trailing rejection shows as not accepted.
+    private static func childState(
+        for activity: Activity, reports: [Report]
+    ) -> (AssignmentChildState, Date?) {
+        let latest = reports.sorted { $0.createdAt > $1.createdAt }
+        if activity.status == .completed {
+            return (.done, latest.first?.createdAt)
+        }
+        if let qualifying = latest.first(where: {
+            $0.aiResult == .approved || $0.aiResult == .notApplicable || $0.aiResult == .excused
+        }) {
+            return (.done, qualifying.createdAt)
+        }
+        guard let top = latest.first else { return (.waiting, nil) }
+        switch top.aiResult {
+        case .pending:  return (.pending, top.createdAt)
+        case .rejected: return (.rejected, top.createdAt)
+        default:        return (.waiting, top.createdAt)
+        }
     }
 
     func createFamily() async {
