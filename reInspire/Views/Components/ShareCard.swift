@@ -35,6 +35,16 @@ enum ShareCardTheme {
 
     /// Fill for secondary chips / muted text.
     var inkMuted: Color { ink.opacity(0.6) }
+
+    /// Opacity of the decorative burst. On blue the bright white burst is
+    /// dialled back so it never washes out the white text it overlaps; on
+    /// white the burst is already a faint ghost, so it stays full.
+    var burstOpacity: Double {
+        switch self {
+        case .blue:  return 0.45
+        case .light: return 1.0
+        }
+    }
 }
 
 /// Output canvas of a share card.
@@ -114,6 +124,7 @@ struct ShareCardView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: format.burstWidth, height: format.burstWidth)
+                    .opacity(theme.burstOpacity)
                     .offset(x: format.burstOffset.width, y: format.burstOffset.height)
             }
             // Wordmark, top-left.
