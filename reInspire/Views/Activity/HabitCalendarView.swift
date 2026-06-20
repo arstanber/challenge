@@ -11,6 +11,7 @@ struct HabitCalendarView: View {
     @State private var showPerfect = false
     @State private var showCamera = false
     @State private var liveToday: Double?
+    @State private var shareRequest: ShareRequest?
 
     // Honors the "Начало недели" setting (Mon/Sun-first grid).
     private let cal = AppPrefs.calendar
@@ -81,6 +82,9 @@ struct HabitCalendarView: View {
                     .transition(.opacity)
             }
         }
+        .sheet(item: $shareRequest) { req in
+            ShareComposerView(kind: req.kind, name: req.name)
+        }
     }
 
     // MARK: Top bar
@@ -95,6 +99,20 @@ struct HabitCalendarView: View {
                     .background(Circle().fill(Color.primary.opacity(0.08)))
             }
             Spacer()
+            Button {
+                Haptics.tap()
+                shareRequest = ShareRequest(
+                    kind: .taskDone(title: vm.activity.title,
+                                    streak: vm.currentStreak,
+                                    connector: vm.activity.connector?.displayName),
+                    name: AuthService.shared.currentUser?.displayLabel)
+            } label: {
+                Image(systemName: "square.and.arrow.up")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.primary.opacity(0.6))
+                    .frame(width: 38, height: 38)
+                    .background(Circle().fill(Color.primary.opacity(0.08)))
+            }
         }
         .padding(.horizontal, 18)
         .padding(.top, 8)
