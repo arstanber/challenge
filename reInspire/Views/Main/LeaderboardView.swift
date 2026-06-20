@@ -8,7 +8,9 @@ import Supabase
 struct LeaderboardEntry: Decodable, Identifiable {
     let rank: Int
     let userId: UUID
-    let email: String
+    // Null for every row except the caller's own (privacy -- the global
+    // board never leaks other users' emails). Must stay optional.
+    let email: String?
     let displayName: String?
     let avatarURL: String?
     let streakCurrent: Int
@@ -17,10 +19,11 @@ struct LeaderboardEntry: Decodable, Identifiable {
 
     var id: UUID { userId }
 
-    /// Friendly name: explicit display name, else the email local part.
+    /// Friendly name: explicit display name, else the email local part, else a generic label.
     var name: String {
         if let displayName, !displayName.isEmpty { return displayName }
-        return email.components(separatedBy: "@").first ?? email
+        if let email { return email.components(separatedBy: "@").first ?? email }
+        return "Пользователь"
     }
 
     enum CodingKeys: String, CodingKey {
@@ -134,6 +137,8 @@ struct LeaderboardView: View {
                     Spacer()
                     ProgressView()
                     Spacer()
+                } else if let errorMessage = vm.errorMessage {
+                    errorState(errorMessage)
                 } else if vm.entries.isEmpty {
                     emptyState
                 } else {
@@ -212,10 +217,33 @@ struct LeaderboardView: View {
                 .font(.system(size: 56))
             Text("Пока не с кем соревноваться")
                 .font(.manrope(.bold, size: 18))
-            Text("Присоединись к семье, чтобы увидеть свой рейтинг")
+            Text("Выполни первую задачу, чтобы попасть в рейтинг")
                 .font(.manrope(.medium, size: 14))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
+        }
+        .frame(maxHeight: .infinity)
+        .padding(.horizontal, 40)
+    }
+
+    private func errorState(_ message: String) -> some View {
+        VStack(spacing: 14) {
+            Text("⚠️")
+                .font(.system(size: 48))
+            Text("Не удалось загрузить рейтинг")
+                .font(.manrope(.bold, size: 18))
+            Text(message)
+                .font(.manrope(.medium, size: 13))
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+            Button("Повторить") {
+                Haptics.tap()
+                Task { await vm.load() }
+            }
+            .font(.manrope(.semiBold, size: 14))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 18).padding(.vertical, 10)
+            .background(Capsule().fill(blue))
         }
         .frame(maxHeight: .infinity)
         .padding(.horizontal, 40)
