@@ -791,42 +791,126 @@ private struct ShareSheet: UIViewControllerRepresentable {
 // MARK: - Change password
 
 private struct ChangePasswordSheet: View {
+    private enum Step { case password, code }
+
     @Environment(\.dismiss) private var dismiss
+    @State private var step: Step = .password
     @State private var password = ""
     @State private var confirm = ""
+    @State private var code = ""
     @State private var saving = false
     @State private var errorMessage: String?
     @State private var saved = false
 
-    private var isValid: Bool { password.count >= 6 && password == confirm }
+    private static let codeLength = 6
+
+    private var passwordValid: Bool { password.count >= 6 && password == confirm }
+    private var codeValid: Bool { code.count == Self.codeLength }
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Новый пароль (от 6 символов)") {
-                    SecureField("Новый пароль", text: $password)
-                    SecureField("Повтори пароль", text: $confirm)
-                }
-                if let errorMessage {
-                    Section { Text(errorMessage).font(.caption).foregroundStyle(.red) }
-                }
-                if saved {
-                    Section { Label("Пароль изменён", systemImage: "checkmark.circle.fill").foregroundStyle(.green) }
+            Group {
+                switch step {
+                case .password: passwordForm
+                case .code:     codeForm
                 }
             }
             .navigationTitle("Сменить пароль")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Отмена") { dismiss() }
+                    Button(step == .code ? "Назад" : "Отмена") {
+                        if step == .code {
+                            errorMessage = nil; code = ""; step = .password
+                        } else {
+                            dismiss()
+                        }
+                    }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Сохранить") { Task { await save() } }
-                        .fontWeight(.semibold)
-                        .disabled(!isValid || saving)
-                        .overlay { if saving { ProgressView().scaleEffect(0.7) } }
+                    switch step {
+                    case .password:
+                        Button("Далее") { Task { await sendCode() } }
+                            .fontWeight(.semibold)
+                            .disabled(!passwordValid || saving)
+                            .overlay { if saving { ProgressView().scaleEffect(0.7) } }
+                    case .code:
+                        Button("Сохранить") { Task { await save() } }
+                            .fontWeight(.semibold)
+                            .disabled(!codeValid || saving)
+                            .overlay { if saving { ProgressView().scaleEffect(0.7) } }
+                    }
                 }
             }
+        }
+    }
+
+    // MARK: Step 1 -- pick a new password
+
+    private var passwordForm: some View {
+        Form {
+            Section("Новый пароль (от 6 символов)") {
+                SecureField("Новый пароль", text: $password)
+                SecureField("Повтори пароль", text: $confirm)
+            }
+            Section {
+                Text("Для подтверждения мы отправим код на твою почту.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            if let errorMessage {
+                Section { Text(errorMessage).font(.caption).foregroundStyle(.red) }
+            }
+        }
+    }
+
+    // MARK: Step 2 -- confirm with the emailed code
+
+    private var codeForm: some View {
+        Form {
+            Section("Код подтверждения") {
+                TextField("Код из письма", text: Binding(
+                    get: { code },
+                    set: { code = String($0.filter(\.isNumber).prefix(Self.codeLength)) }
+                ))
+                .keyboardType(.numberPad)
+                .textContentType(.oneTimeCode)
+            }
+            Section {
+                Button("Отправить код ещё раз") { Task { await resend() } }
+                    .disabled(saving)
+            }
+            if let errorMessage {
+                Section { Text(errorMessage).font(.caption).foregroundStyle(.red) }
+            }
+            if saved {
+                Section { Label("Пароль изменён", systemImage: "checkmark.circle.fill").foregroundStyle(.green) }
+            }
+        }
+    }
+
+    private func sendCode() async {
+        saving = true
+        errorMessage = nil
+        defer { saving = false }
+        do {
+            try await AuthService.shared.sendPasswordChangeCode()
+            Haptics.tap()
+            step = .code
+        } catch {
+            errorMessage = "Не удалось отправить код. Попробуй ещё раз."
+        }
+    }
+
+    private func resend() async {
+        saving = true
+        errorMessage = nil
+        defer { saving = false }
+        do {
+            try await AuthService.shared.sendPasswordChangeCode()
+            Haptics.tap()
+        } catch {
+            errorMessage = "Не удалось отправить код. Попробуй ещё раз."
         }
     }
 
@@ -835,12 +919,12 @@ private struct ChangePasswordSheet: View {
         errorMessage = nil
         defer { saving = false }
         do {
-            try await AuthService.shared.changePassword(to: password)
+            try await AuthService.shared.changePassword(to: password, nonce: code)
             Haptics.success(); saved = true
             try? await Task.sleep(nanoseconds: 700_000_000)
             dismiss()
         } catch {
-            errorMessage = "Не удалось изменить пароль. Попробуй ещё раз."
+            errorMessage = "Неверный код или не удалось изменить пароль. Попробуй ещё раз."
         }
     }
 }

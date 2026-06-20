@@ -94,8 +94,17 @@ final class AuthService {
     }
 
     /// Change the signed-in user's password.
-    func changePassword(to newPassword: String) async throws {
-        try await supabase.auth.update(user: UserAttributes(password: newPassword))
+    /// Sends a one-time confirmation code to the signed-in user's email so a
+    /// password change can be reauthenticated. Call before ``changePassword``.
+    func sendPasswordChangeCode() async throws {
+        try await supabase.auth.reauthenticate()
+    }
+
+    /// Changes the password, gated by the reauthentication code emailed via
+    /// ``sendPasswordChangeCode``. The `nonce` is the code the user entered.
+    func changePassword(to newPassword: String, nonce: String) async throws {
+        let code = nonce.trimmingCharacters(in: .whitespacesAndNewlines)
+        try await supabase.auth.update(user: UserAttributes(password: newPassword, nonce: code))
     }
 
     // MARK: - Session Restore
