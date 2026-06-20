@@ -109,6 +109,11 @@ struct ShareCardView: View {
     var name: String?
     var theme: ShareCardTheme = .blue
     var format: ShareCardFormat = .story
+    /// Bake a still confetti scatter (used for the static-image fallback).
+    var staticConfetti: Bool = false
+    /// Overlay live, animated confetti (used for the composer preview only --
+    /// never for the video base, which composites confetti per frame).
+    var animatedConfetti: Bool = false
     private var size: CGSize { format.size }
 
     var body: some View {
@@ -143,9 +148,13 @@ struct ShareCardView: View {
             .overlay(alignment: .bottom) {
                 footer.padding(.bottom, 64)
             }
-            // Baked-in confetti so the shared story/post looks celebratory.
+            // Confetti so the shared story/post looks celebratory.
             .overlay {
-                ShareConfettiLayer(size: size)
+                if animatedConfetti {
+                    AnimatedConfettiView(size: size)
+                } else if staticConfetti {
+                    StaticConfettiCanvas(size: size, time: 1.2)
+                }
             }
             .clipped()
     }
@@ -248,51 +257,123 @@ struct ShareCardView: View {
     }
 }
 
-// MARK: - Baked confetti
+// MARK: - Confetti model (shared by preview + video)
 
-/// A static confetti scatter drawn into the card so the exported story/post
-/// looks celebratory. Deterministic (seeded by index) and biased toward the
-/// top, as if it just rained down.
-private struct ShareConfettiLayer: View {
-    let size: CGSize
-    var count: Int = 90
-
-    // Colours that pop on both the blue and white backgrounds.
-    private let palette: [Color] = [
+/// Deterministic falling-confetti field. The same specs drive the live preview
+/// (`AnimatedConfettiView`), the static fallback (`StaticConfettiCanvas`) and
+/// the per-frame video compositor, so all three look identical.
+enum ShareConfetti {
+    /// Colours that pop on both the blue and white backgrounds.
+    static let palette: [Color] = [
         Color(hex: "FFC542"), Color(hex: "FF6B6B"),
         Color(hex: "2FB873"), Color(hex: "B388FF"), Color(hex: "FF7A18")
     ]
+    /// UIColor mirror for the Core Graphics video path.
+    static let uiPalette: [UIColor] = [
+        UIColor(red: 1.00, green: 0.77, blue: 0.26, alpha: 1),
+        UIColor(red: 1.00, green: 0.42, blue: 0.42, alpha: 1),
+        UIColor(red: 0.18, green: 0.72, blue: 0.45, alpha: 1),
+        UIColor(red: 0.70, green: 0.53, blue: 1.00, alpha: 1),
+        UIColor(red: 1.00, green: 0.48, blue: 0.09, alpha: 1)
+    ]
+
+    struct Spec {
+        let x0: CGFloat        // 0..1 horizontal anchor
+        let y0: CGFloat        // 0..1 vertical phase
+        let colorIndex: Int
+        let w: CGFloat         // piece width (px)
+        let fall: CGFloat      // heights per second
+        let drift: CGFloat     // horizontal sway amplitude (fraction of width)
+        let rot: Double        // rotations per second
+        let phase: CGFloat     // 0..1
+    }
+
+    static func specs(count: Int = 90) -> [Spec] {
+        (0..<count).map { i in
+            let r1 = frac(sin(Double(i) * 12.9898) * 43758.5453)
+            let r2 = frac(sin(Double(i) * 78.2330) * 12345.6789)
+            let r3 = frac(sin(Double(i) * 39.4250) * 9876.54321)
+            let r4 = frac(cos(Double(i) * 21.7100) * 5555.55555)
+            let r5 = frac(sin(Double(i) * 53.1700) * 2468.13579)
+            return Spec(
+                x0: r1,
+                y0: r2,
+                colorIndex: i % palette.count,
+                w: 14 + r3 * 18,
+                fall: 0.16 + r4 * 0.22,
+                drift: 0.015 + r5 * 0.04,
+                rot: 0.4 + r3 * 1.2,
+                phase: r4
+            )
+        }
+    }
+
+    /// Position / rotation / size of a piece at time `t` (seconds) in `size`.
+    static func frame(_ s: Spec, t: Double, size: CGSize) -> (pos: CGPoint, angle: CGFloat, w: CGFloat, h: CGFloat) {
+        let span: CGFloat = 1.6
+        var y = (s.y0 + s.fall * CGFloat(t)).truncatingRemainder(dividingBy: span)
+        if y < 0 { y += span }
+        y -= 0.3                                  // start a little above the top
+        let x = s.x0 * size.width + s.drift * size.width * CGFloat(sin(t * 1.6 + Double(s.phase) * 6.28))
+        let angle = CGFloat(s.rot * t * 2 * .pi + Double(s.phase) * 6.28)
+        return (CGPoint(x: x, y: y * size.height), angle, s.w, s.w * 1.7)
+    }
+
+    /// Fractional part, used as a cheap seeded PRNG.
+    static func frac(_ v: Double) -> Double { v - v.rounded(.down) }
+}
+
+/// Static confetti scatter at a fixed time (for the image fallback).
+private struct StaticConfettiCanvas: View {
+    let size: CGSize
+    var time: Double = 1.2
+    private let specs = ShareConfetti.specs()
 
     var body: some View {
-        Canvas { ctx, sz in
-            for i in 0..<count {
-                let r1 = frac(sin(Double(i) * 12.9898) * 43758.5453)
-                let r2 = frac(sin(Double(i) * 78.2330) * 12345.6789)
-                let r3 = frac(sin(Double(i) * 39.4250) * 9876.54321)
-                let r4 = frac(cos(Double(i) * 21.7100) * 5555.55555)
-
-                let x = r1 * sz.width
-                // Bias toward the top third, with a tail falling lower.
-                let y = pow(r2, 1.7) * sz.height * 0.92
-                let w = 14 + r3 * 18
-                let h = w * 1.7
-                let angle = Angle.degrees(r4 * 360)
-                let color = palette[i % palette.count]
-
-                var piece = Path(roundedRect: CGRect(x: -w / 2, y: -h / 2, width: w, height: h),
-                                 cornerRadius: 4)
-                piece = piece.applying(.init(rotationAngle: angle.radians))
-                piece = piece.applying(.init(translationX: x, y: y))
-                ctx.opacity = 0.92
-                ctx.fill(piece, with: .color(color))
+        Canvas { ctx, _ in
+            for s in specs {
+                let f = ShareConfetti.frame(s, t: time, size: size)
+                draw(f, color: ShareConfetti.palette[s.colorIndex], in: &ctx)
             }
         }
         .frame(width: size.width, height: size.height)
         .allowsHitTesting(false)
     }
 
-    /// Fractional part, used as a cheap seeded PRNG.
-    private func frac(_ v: Double) -> Double { v - v.rounded(.down) }
+    private func draw(_ f: (pos: CGPoint, angle: CGFloat, w: CGFloat, h: CGFloat),
+                      color: Color, in ctx: inout GraphicsContext) {
+        var p = Path(roundedRect: CGRect(x: -f.w / 2, y: -f.h / 2, width: f.w, height: f.h), cornerRadius: 4)
+        p = p.applying(.init(rotationAngle: f.angle))
+        p = p.applying(.init(translationX: f.pos.x, y: f.pos.y))
+        ctx.opacity = 0.95
+        ctx.fill(p, with: .color(color))
+    }
+}
+
+/// Live animated confetti for the composer preview.
+private struct AnimatedConfettiView: View {
+    let size: CGSize
+    private let specs = ShareConfetti.specs()
+
+    var body: some View {
+        TimelineView(.animation) { timeline in
+            Canvas { ctx, _ in
+                let t = timeline.date.timeIntervalSinceReferenceDate
+                    .truncatingRemainder(dividingBy: 1000)
+                for s in specs {
+                    let f = ShareConfetti.frame(s, t: t, size: size)
+                    var p = Path(roundedRect: CGRect(x: -f.w / 2, y: -f.h / 2, width: f.w, height: f.h),
+                                 cornerRadius: 4)
+                    p = p.applying(.init(rotationAngle: f.angle))
+                    p = p.applying(.init(translationX: f.pos.x, y: f.pos.y))
+                    ctx.opacity = 0.95
+                    ctx.fill(p, with: .color(ShareConfetti.palette[s.colorIndex]))
+                }
+            }
+        }
+        .frame(width: size.width, height: size.height)
+        .allowsHitTesting(false)
+    }
 }
 
 // MARK: - Rendering
@@ -304,8 +385,10 @@ enum ShareCardRenderer {
     static func render(_ kind: ShareCardKind,
                        name: String?,
                        theme: ShareCardTheme = .blue,
-                       format: ShareCardFormat = .story) -> UIImage? {
-        let card = ShareCardView(kind: kind, name: name, theme: theme, format: format)
+                       format: ShareCardFormat = .story,
+                       staticConfetti: Bool = false) -> UIImage? {
+        let card = ShareCardView(kind: kind, name: name, theme: theme, format: format,
+                                 staticConfetti: staticConfetti)
         let renderer = ImageRenderer(content: card)
         renderer.scale = 1
         renderer.isOpaque = true
@@ -340,6 +423,24 @@ enum InstagramStoryShare {
         ])
         UIApplication.shared.open(url, options: [:], completionHandler: completion)
     }
+
+    /// Opens Instagram Stories with `videoURL` as the story background video.
+    @MainActor
+    static func shareVideo(url videoURL: URL, completion: @escaping @MainActor @Sendable (Bool) -> Void) {
+        let appID = Bundle.main.bundleIdentifier ?? "com.reinspire"
+        guard let url = URL(string: "instagram-stories://share?source_application=\(appID)"),
+              let data = try? Data(contentsOf: videoURL) else {
+            completion(false)
+            return
+        }
+        let items: [[String: Any]] = [[
+            "com.instagram.sharedSticker.backgroundVideo": data
+        ]]
+        UIPasteboard.general.setItems(items, options: [
+            .expirationDate: Date().addingTimeInterval(60 * 5)
+        ])
+        UIApplication.shared.open(url, options: [:], completionHandler: completion)
+    }
 }
 
 // MARK: - Share sheet bridge
@@ -351,6 +452,13 @@ struct ShareableImage: Identifiable {
     let image: UIImage
     /// Optional caption (with @mention + hashtags) attached for apps that
     /// accept share text (Telegram, WhatsApp, X). Instagram ignores it.
+    var caption: String? = nil
+}
+
+/// A rendered video file awaiting a share destination (system sheet).
+struct ShareableFile: Identifiable {
+    let id = UUID()
+    let url: URL
     var caption: String? = nil
 }
 
@@ -385,7 +493,9 @@ struct ShareComposerView: View {
     @State private var theme: ShareCardTheme = .blue
     @State private var format: ShareCardFormat = .story
     @State private var sheetImage: ShareableImage?
+    @State private var shareFile: ShareableFile?
     @State private var confettiTrigger = 0
+    @State private var isRendering = false
 
     var body: some View {
         NavigationStack {
@@ -424,12 +534,33 @@ struct ShareComposerView: View {
             .sheet(item: $sheetImage) { item in
                 ShareCardSheet(items: item.caption.map { [item.image, $0] } ?? [item.image])
             }
+            .sheet(item: $shareFile) { file in
+                ShareCardSheet(items: file.caption.map { [file.url, $0] } ?? [file.url])
+            }
             .overlay {
                 ConfettiView(trigger: confettiTrigger)
                     .ignoresSafeArea()
                     .allowsHitTesting(false)
             }
+            .overlay {
+                if isRendering { renderingOverlay }
+            }
         }
+    }
+
+    private var renderingOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.25).ignoresSafeArea()
+            VStack(spacing: 12) {
+                ProgressView().tint(.white)
+                Text("Готовим видео…")
+                    .font(.sfProDisplay(14, weight: .semibold))
+                    .foregroundStyle(.white)
+            }
+            .padding(24)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
+        }
+        .transition(.opacity)
     }
 
     // MARK: Preview
@@ -438,7 +569,8 @@ struct ShareComposerView: View {
         // Fixed preview width; the card scales to fit either aspect ratio.
         let previewWidth: CGFloat = 230
         let scale = previewWidth / format.size.width
-        return ShareCardView(kind: kind, name: name, theme: theme, format: format)
+        return ShareCardView(kind: kind, name: name, theme: theme, format: format,
+                             animatedConfetti: true)
             .frame(width: format.size.width, height: format.size.height)
             .scaleEffect(scale)
             .frame(width: format.size.width * scale, height: format.size.height * scale)
@@ -473,6 +605,7 @@ struct ShareComposerView: View {
                     )
                 }
                 .buttonStyle(.haptic)
+                .disabled(isRendering)
             }
 
             Button { share(toInstagram: false) } label: {
@@ -493,6 +626,7 @@ struct ShareComposerView: View {
                 }
             }
             .buttonStyle(.haptic)
+            .disabled(isRendering)
         }
         .padding(.horizontal, 20)
     }
@@ -518,21 +652,50 @@ struct ShareComposerView: View {
     }
 
     private func share(toInstagram: Bool) {
+        guard !isRendering else { return }
         Haptics.success()
         confettiTrigger += 1
-        guard let image = ShareCardRenderer.render(kind, name: name, theme: theme, format: format) else { return }
         AnalyticsService.shared.track(.shareCardShared, [
             "kind": kindLabel,
             "theme": theme == .blue ? "blue" : "light",
             "format": format == .story ? "story" : "post",
             "destination": toInstagram ? "instagram_stories" : "system_sheet"
         ])
-        if toInstagram {
-            InstagramStoryShare.share(image: image) { ok in
-                if !ok { sheetImage = ShareableImage(image: image, caption: shareCaption) }
+
+        // Render the base card (no confetti) on the main actor, then encode an
+        // animated-confetti video off-main. Fall back to a static image if the
+        // video export fails.
+        guard let base = ShareCardRenderer.render(kind, name: name, theme: theme, format: format),
+              let baseData = base.pngData() else { return }
+        let size = format.size
+        let caption = shareCaption
+        withAnimation { isRendering = true }
+
+        Task {
+            let videoURL = await ShareVideoRenderer.render(baseData: baseData, size: size)
+            await MainActor.run {
+                withAnimation { isRendering = false }
+                if let videoURL {
+                    if toInstagram {
+                        InstagramStoryShare.shareVideo(url: videoURL) { ok in
+                            if !ok { shareFile = ShareableFile(url: videoURL, caption: caption) }
+                        }
+                    } else {
+                        shareFile = ShareableFile(url: videoURL, caption: caption)
+                    }
+                } else {
+                    // Static-image fallback.
+                    let image = ShareCardRenderer.render(kind, name: name, theme: theme,
+                                                         format: format, staticConfetti: true) ?? base
+                    if toInstagram {
+                        InstagramStoryShare.share(image: image) { ok in
+                            if !ok { sheetImage = ShareableImage(image: image, caption: caption) }
+                        }
+                    } else {
+                        sheetImage = ShareableImage(image: image, caption: caption)
+                    }
+                }
             }
-        } else {
-            sheetImage = ShareableImage(image: image, caption: shareCaption)
         }
     }
 }
