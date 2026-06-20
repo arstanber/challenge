@@ -140,6 +140,19 @@ private struct HorizontalPanGesture: UIGestureRecognizerRepresentable {
             let t = pan.translation(in: view)
             return abs(t.x) > abs(t.y)
         }
+
+        // The card also carries SwiftUI gestures (tap-to-open, a min-distance-0
+        // press DragGesture for the scale effect, and contextMenu's long press).
+        // A UIKit recognizer added via UIGestureRecognizerRepresentable does NOT
+        // recognize simultaneously with SwiftUI's gestures by default, so the
+        // press drag would swallow the touch and the horizontal swipe never
+        // begins. Allowing simultaneous recognition lets the pan run alongside
+        // them; `shouldBegin` still gates on horizontal-dominant movement so
+        // vertical scrolling is untouched.
+        func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
+                               shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool {
+            true
+        }
     }
 }
 
