@@ -31,9 +31,9 @@ final class LocationReminderService: NSObject, CLLocationManagerDelegate {
     private let manager = CLLocationManager()
     private let defaults = UserDefaults(suiteName: WidgetDataStore.appGroup) ?? .standard
     private var authContinuations: [CheckedContinuation<CLAuthorizationStatus, Never>] = []
+    private var locationContinuations: [CheckedContinuation<CLLocation?, Never>] = []
 
     var authorizationStatus: CLAuthorizationStatus { manager.authorizationStatus }
-    var currentLocation: CLLocation? { manager.location }
 
     override private init() {
         super.init()
@@ -78,6 +78,51 @@ final class LocationReminderService: NSObject, CLLocationManagerDelegate {
             let continuations = self.authContinuations
             self.authContinuations.removeAll()
             for continuation in continuations { continuation.resume(returning: status) }
+        }
+    }
+
+    // MARK: - One-shot current location (for centering map pickers)
+
+    /// Requests "When In Use" authorization if needed, then resolves to the
+    /// device's real location for the map pickers to center on. Returns nil if
+    /// permission is denied or no fix can be obtained. Reuses a recent cached
+    /// fix when available so the map snaps immediately.
+    func requestCurrentLocation() async -> CLLocation? {
+        var status = manager.authorizationStatus
+        if status == .notDetermined {
+            status = await withCheckedContinuation { continuation in
+                authContinuations.append(continuation)
+                manager.requestWhenInUseAuthorization()
+            }
+        }
+        guard status == .authorizedAlways || status == .authorizedWhenInUse else { return nil }
+
+        // Use a recent cached fix immediately; otherwise request a fresh one.
+        if let cached = manager.location, cached.timestamp.timeIntervalSinceNow > -120 {
+            return cached
+        }
+        manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+        return await withCheckedContinuation { continuation in
+            locationContinuations.append(continuation)
+            manager.requestLocation()
+        }
+    }
+
+    nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        let location = locations.last
+        Task { @MainActor in
+            let continuations = self.locationContinuations
+            self.locationContinuations.removeAll()
+            for continuation in continuations { continuation.resume(returning: location) }
+        }
+    }
+
+    nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        Task { @MainActor in
+            logger.error("Location request failed: \(error.localizedDescription)")
+            let continuations = self.locationContinuations
+            self.locationContinuations.removeAll()
+            for continuation in continuations { continuation.resume(returning: nil) }
         }
     }
 

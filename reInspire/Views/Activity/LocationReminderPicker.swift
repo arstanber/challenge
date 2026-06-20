@@ -27,11 +27,17 @@ struct LocationReminderPicker: View {
     var body: some View {
         NavigationStack {
             ZStack(alignment: .bottom) {
-                Map(position: $cameraPosition)
-                    .onMapCameraChange { context in
-                        centerCoordinate = context.region.center
-                    }
-                    .ignoresSafeArea(edges: .top)
+                Map(position: $cameraPosition) {
+                    UserAnnotation()
+                }
+                .mapControls {
+                    MapUserLocationButton()
+                    MapCompass()
+                }
+                .onMapCameraChange { context in
+                    centerCoordinate = context.region.center
+                }
+                .ignoresSafeArea(edges: .top)
 
                 // Center pin
                 Image(systemName: "mappin.circle.fill")
@@ -121,18 +127,20 @@ struct LocationReminderPicker: View {
             .onAppear {
                 existingReminder = service.reminderPlaceName(for: activity.id)
                 if let existing = existingReminder { placeName = existing }
-                centerOnUserIfPossible()
             }
+            .task { await centerOnUser() }
         }
     }
 
-    private func centerOnUserIfPossible() {
-        guard let location = service.currentLocation else { return }
+    private func centerOnUser() async {
+        guard let location = await service.requestCurrentLocation() else { return }
         let region = MKCoordinateRegion(
             center: location.coordinate,
             span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
         )
-        cameraPosition = .region(region)
+        withAnimation {
+            cameraPosition = .region(region)
+        }
         centerCoordinate = location.coordinate
     }
 
