@@ -40,6 +40,9 @@ final class TaskEngine {
     private(set) var freezesAvailable = 0
     /// True when yesterday is missed, unfrozen, and the user has balance.
     private(set) var yesterdayFreezable = false
+    /// True when a freeze row already covers yesterday (the freeze currently
+    /// holding the run). Drives the blue streak flame.
+    private(set) var yesterdayFrozen = false
     /// True once a server streak refresh has succeeded -- lets readers tell
     /// "wallet not loaded yet" apart from "loaded, balance is 0".
     private(set) var streaksLoaded = false
@@ -306,6 +309,7 @@ final class TaskEngine {
         let activities: [ActivityStreak]
         let freezesAvailable: Int?
         let yesterdayFreezable: Bool?
+        let yesterdayFrozen: Bool?
         enum CodingKeys: String, CodingKey {
             case globalCurrent = "global_current"
             case globalBest = "global_best"
@@ -313,6 +317,7 @@ final class TaskEngine {
             case activities
             case freezesAvailable = "freezes_available"
             case yesterdayFreezable = "yesterday_freezable"
+            case yesterdayFrozen = "yesterday_frozen"
         }
     }
 
@@ -329,6 +334,7 @@ final class TaskEngine {
             serverTodayCount = payload.todayCount
             freezesAvailable = payload.freezesAvailable ?? 0
             yesterdayFreezable = payload.yesterdayFreezable ?? false
+            yesterdayFrozen = payload.yesterdayFrozen ?? false
             streaksLoaded = true
             activityStreaks = Dictionary(
                 uniqueKeysWithValues: payload.activities.map { ($0.id, (current: $0.streakCurrent, best: $0.streakBest)) }

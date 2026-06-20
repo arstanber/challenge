@@ -87,6 +87,10 @@ final class ActivitiesViewModel {
     var todayCount: Int { engine.todayCount }
     var freezesAvailable: Int { engine.freezesAvailable }
     var yesterdayFreezable: Bool { engine.yesterdayFreezable }
+    var yesterdayFrozen: Bool { engine.yesterdayFrozen }
+
+    /// Whether today's daily goal is already met -- drives the gray vs lit flame.
+    var todayGoalMet: Bool { todayDoneTopLevelCount >= dailyStreakGoal }
 
     /// Spend a freeze on yesterday, then reload so the banner and streak update.
     func freezeYesterday() async {

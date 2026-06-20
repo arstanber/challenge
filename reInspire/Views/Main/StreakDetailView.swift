@@ -17,6 +17,20 @@ struct StreakDetailView: View {
         vm.yesterdayFreezable && vm.freezesAvailable > 0
     }
 
+    private static let frozenBlue = Color(red: 0.0, green: 0.478, blue: 1.0)
+
+    /// Today's goal met -> orange; otherwise a freeze on yesterday is holding
+    /// the run -> blue; nothing keeping it lit today -> gray.
+    private var flameColor: Color {
+        if vm.todayGoalMet { return .orange }
+        if vm.yesterdayFrozen { return Self.frozenBlue }
+        return .secondary
+    }
+
+    /// Use the filled flame whenever it is lit (orange or blue); a cold gray
+    /// day shows the hollow outline.
+    private var flameLit: Bool { vm.todayGoalMet || vm.yesterdayFrozen }
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -67,10 +81,11 @@ struct StreakDetailView: View {
 
     private var flameHeader: some View {
         VStack(spacing: 8) {
-            Image(systemName: streak > 0 ? "flame.fill" : "flame")
+            Image(systemName: flameLit ? "flame.fill" : "flame")
                 .font(.system(size: 64, weight: .semibold))
-                .foregroundStyle(streak > 0 ? .orange : .secondary)
+                .foregroundStyle(flameColor)
                 .symbolEffect(.bounce, value: streak)
+                .animation(.easeInOut(duration: 0.25), value: flameColor)
 
             Text("\(streak)")
                 .font(.sfProDisplay(56, weight: .bold))
@@ -80,9 +95,31 @@ struct StreakDetailView: View {
             Text(streak == 1 ? "день подряд" : "дней подряд")
                 .font(.sfProDisplay(16, weight: .semibold))
                 .foregroundStyle(.secondary)
+
+            flameStatus
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
+    }
+
+    /// One-line cue that explains the flame's color.
+    @ViewBuilder
+    private var flameStatus: some View {
+        if vm.yesterdayFrozen && !vm.todayGoalMet {
+            statusPill(text: "Вчера спасла заморозка", color: Self.frozenBlue)
+        } else if !vm.todayGoalMet {
+            statusPill(text: "Сегодня ещё не выполнено", color: .secondary)
+        }
+    }
+
+    private func statusPill(text: String, color: Color) -> some View {
+        Text(text)
+            .font(.sfProDisplay(13, weight: .semibold))
+            .foregroundStyle(color)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(color.opacity(0.12), in: Capsule())
+            .padding(.top, 4)
     }
 
     // MARK: - Explainer
