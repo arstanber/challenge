@@ -6,17 +6,6 @@
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
 	<string>reInspire</string>
-	<key>CFBundleDocumentTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleTypeName</key>
-			<string>MKDirectionsRequest</string>
-			<key>LSItemContentTypes</key>
-			<array>
-				<string>com.apple.maps.directionsrequest</string>
-			</array>
-		</dict>
-	</array>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -52,10 +41,6 @@
 	<string>403964246968-l9ibioo4q4hr42t83b44rt247hslbnsn.apps.googleusercontent.com</string>
 	<key>GIDServerClientID</key>
 	<string>403964246968-d2os0q213gtih8gf5552ucgfv0ec8tt8.apps.googleusercontent.com</string>
-	<key>MKDirectionsApplicationSupportedModes</key>
-	<array>
-		<string>MKDirectionsModeOther</string>
-	</array>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_chlg-fam._tcp</string>
@@ -69,6 +54,8 @@
 	<string>reInspire needs camera access to take photos for your activity reports.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>reInspire reads steps, energy, exercise minutes and distance from Apple Health to automatically track your goals.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>reInspire does not write any data to Apple Health. This permission is required by the system because the app links the HealthKit framework.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>reInspire соединяет два телефона рядом, когда вы трясёте устройства -- чтобы добавить ребёнка в семью или начать дуэль с другом.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
