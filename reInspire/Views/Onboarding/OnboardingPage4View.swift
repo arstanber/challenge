@@ -97,9 +97,9 @@ struct PushNotificationsOnboardingView: View {
 // MARK: - Notification card
 
 private struct P4NotificationItem {
-    let title: String
-    let time: String
-    let body: String
+    let title: LocalizedStringKey
+    let time: LocalizedStringKey
+    let body: LocalizedStringKey
 }
 
 private struct P4NotificationCard: View {
