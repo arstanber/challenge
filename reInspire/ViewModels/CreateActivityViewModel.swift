@@ -116,10 +116,13 @@ final class CreateActivityViewModel {
                 }
                 // Parent assigned this to a child -- push them so it lands instantly.
                 if isAssignment {
+                    let lang = await recipientLanguage(target)
+                    let title = lang == "ru" ? "Новое задание 🎯" : "New task 🎯"
+                    let body = lang == "ru" ? "Родитель добавил: «\(created.title)»" : "Your parent added: \"\(created.title)\""
                     await notifications.sendPush(
                         toUserId: target,
-                        title: "Новое задание 🎯",
-                        body: "Родитель добавил: «\(created.title)»",
+                        title: title,
+                        body: body,
                         data: ["activity_id": created.id.uuidString]
                     )
                     AnalyticsService.shared.track(.activityCreated, ["type": "assigned_to_child"])
@@ -146,5 +149,19 @@ final class CreateActivityViewModel {
             errorMessage = error.localizedDescription
         }
         isLoading = false
+    }
+
+    /// Looks up another user's language for a cross-user push (the assigned
+    /// child, not the parent creating the task) -- mirrors
+    /// `DuelService.recipientLanguage`.
+    private func recipientLanguage(_ userId: UUID) async -> String {
+        do {
+            return try await supabase
+                .rpc("get_user_language", params: ["p_user_id": userId.uuidString])
+                .execute()
+                .value
+        } catch {
+            return "ru"
+        }
     }
 }

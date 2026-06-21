@@ -26,7 +26,7 @@ private struct SwipeActionsModifier: ViewModifier {
                 } label: {
                     Color(hex: "2FB873")
                         .overlay(alignment: .trailing) {
-                            actionLabel(icon: "checkmark.circle.fill", text: "Готово")
+                            actionLabel(icon: "checkmark.circle.fill", text: String(localized: "Готово"))
                         }
                 }
                 .buttonStyle(.plain)
@@ -42,7 +42,7 @@ private struct SwipeActionsModifier: ViewModifier {
                 } label: {
                     Color.red
                         .overlay(alignment: .leading) {
-                            actionLabel(icon: "trash.fill", text: "Удалить")
+                            actionLabel(icon: "trash.fill", text: String(localized: "Удалить"))
                         }
                 }
                 .buttonStyle(.plain)

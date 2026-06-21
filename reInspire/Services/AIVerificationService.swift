@@ -7,6 +7,7 @@ struct AIVerificationRequest: Encodable {
     let condition: String
     let photoURL: String
     let isExcuse: Bool
+    let language: String
 
     enum CodingKeys: String, CodingKey {
         case reportId    = "report_id"
@@ -14,6 +15,7 @@ struct AIVerificationRequest: Encodable {
         case condition
         case photoURL    = "photo_url"
         case isExcuse    = "is_excuse"
+        case language
     }
 }
 
@@ -39,6 +41,7 @@ struct AIVerificationResponse: Decodable {
 private struct SuggestConditionRequest: Encodable {
     let title: String
     let description: String
+    let language: String
 }
 
 private struct SuggestConditionResponse: Decodable {
@@ -52,7 +55,7 @@ final class AIVerificationService {
     /// Asks the AI what photo proves a task from its title/description.
     /// Returns nil if the server is unavailable or quota is exhausted.
     func suggestCondition(title: String, description: String = "") async -> String? {
-        let body = SuggestConditionRequest(title: title, description: description)
+        let body = SuggestConditionRequest(title: title, description: description, language: AppLanguage.current)
         do {
             let resp: SuggestConditionResponse = try await supabase.functions
                 .invoke("suggest-condition", options: FunctionInvokeOptions(body: body))
@@ -75,7 +78,8 @@ final class AIVerificationService {
             activityId: activityId.uuidString,
             condition:  condition,
             photoURL:   photoURL,
-            isExcuse:   isExcuse
+            isExcuse:   isExcuse,
+            language:   AppLanguage.current
         )
         return try await supabase.functions
             .invoke("verify-report", options: FunctionInvokeOptions(body: body))

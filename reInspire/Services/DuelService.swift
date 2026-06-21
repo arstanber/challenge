@@ -34,7 +34,7 @@ final class DuelService {
             }
         } catch {
             logger.error("get_my_duels failed: \(error)")
-            errorMessage = "Не удалось загрузить дуэли"
+            errorMessage = AppLanguage.current == "ru" ? "Не удалось загрузить дуэли" : "Couldn't load duels"
         }
     }
 
@@ -72,19 +72,45 @@ final class DuelService {
         guard let me = myUserId else { return }
         let otherId = duel.isChallenger(me) ? duel.opponentId : duel.challengerId
         guard let otherId else { return }
+        let lang = await recipientLanguage(otherId)
+        let title: String
         let body: String
-        if winnerId == nil {
-            body = "Ничья: оба продержались до конца. Реванш?"
-        } else if winnerId == otherId {
-            body = "Ты победил! Соперник не удержал темп."
+        if lang == "ru" {
+            title = "Дуэль завершена ⚔️"
+            if winnerId == nil {
+                body = "Ничья: оба продержались до конца. Реванш?"
+            } else if winnerId == otherId {
+                body = "Ты победил! Соперник не удержал темп."
+            } else {
+                body = "Победил соперник. Реванш расставит всё по местам."
+            }
         } else {
-            body = "Победил соперник. Реванш расставит всё по местам."
+            title = "Duel finished ⚔️"
+            if winnerId == nil {
+                body = "Draw: you both held on to the end. Rematch?"
+            } else if winnerId == otherId {
+                body = "You won! Your opponent couldn't keep the pace."
+            } else {
+                body = "Your opponent won. A rematch will settle it."
+            }
         }
-        await NotificationService.shared.sendPush(
-            toUserId: otherId,
-            title: "Дуэль завершена ⚔️",
-            body: body
-        )
+        await NotificationService.shared.sendPush(toUserId: otherId, title: title, body: body)
+    }
+
+    /// Looks up another user's language for a cross-user push (recipient's
+    /// language, not the sender's device locale) -- `users` RLS only allows
+    /// reading family members, so this goes through a narrow RPC. Defaults to
+    /// "ru" on error, matching the server-side default for the column.
+    private func recipientLanguage(_ userId: UUID) async -> String {
+        do {
+            return try await supabase
+                .rpc("get_user_language", params: ["p_user_id": userId.uuidString])
+                .execute()
+                .value
+        } catch {
+            logger.error("get_user_language failed: \(error)")
+            return "ru"
+        }
     }
 
     // MARK: - Mutations
@@ -105,7 +131,7 @@ final class DuelService {
             return row.inviteCode
         } catch {
             logger.error("create_duel failed: \(error)")
-            errorMessage = "Не удалось создать дуэль"
+            errorMessage = AppLanguage.current == "ru" ? "Не удалось создать дуэль" : "Couldn't create the duel"
             return nil
         }
     }
@@ -125,16 +151,17 @@ final class DuelService {
                 .execute()
                 .value
             AnalyticsService.shared.track(.duelJoined)
-            await NotificationService.shared.sendPush(
-                toUserId: row.challengerId,
-                title: "Вызов принят ⚔️",
-                body: "Соперник в игре: \(row.days) дн., начиная с сегодня. Не проиграй!"
-            )
+            let lang = await recipientLanguage(row.challengerId)
+            let title = lang == "ru" ? "Вызов принят ⚔️" : "Challenge accepted ⚔️"
+            let body = lang == "ru"
+                ? "Соперник в игре: \(row.days) дн., начиная с сегодня. Не проиграй!"
+                : "Your opponent is in: \(row.days) days, starting today. Don't lose!"
+            await NotificationService.shared.sendPush(toUserId: row.challengerId, title: title, body: body)
             await load()
             return true
         } catch {
             logger.error("join_duel failed: \(error)")
-            errorMessage = "Код не найден или дуэль уже началась"
+            errorMessage = AppLanguage.current == "ru" ? "Код не найден или дуэль уже началась" : "Code not found, or the duel already started"
             return false
         }
     }
@@ -147,7 +174,7 @@ final class DuelService {
             await load()
         } catch {
             logger.error("cancel_duel failed: \(error)")
-            errorMessage = "Не удалось отменить дуэль"
+            errorMessage = AppLanguage.current == "ru" ? "Не удалось отменить дуэль" : "Couldn't cancel the duel"
         }
     }
 }

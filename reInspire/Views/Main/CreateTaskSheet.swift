@@ -11,13 +11,13 @@ struct CreationMenuPopup: View {
         VStack(spacing: 0) {
             Divider().background(Color(.separator))
 
-            MenuRow(iconType: .aiSparkle, title: "ИИ пошагово", action: onAIStepByStep)
+            MenuRow(iconType: .aiSparkle, title: String(localized: "ИИ пошагово"), action: onAIStepByStep)
             Divider().background(Color(.separator))
 
-            MenuRow(iconType: .bySaying, title: "Голосом", action: onBySaying)
+            MenuRow(iconType: .bySaying, title: String(localized: "Голосом"), action: onBySaying)
             Divider().background(Color(.separator))
 
-            MenuRow(iconType: .byYourself, title: "Вручную", action: onByYourself)
+            MenuRow(iconType: .byYourself, title: String(localized: "Вручную"), action: onByYourself)
             Divider().background(Color(.separator))
         }
         .background(Color(.secondarySystemBackground))
@@ -51,8 +51,6 @@ private struct MenuRow: View {
                     .lineLimit(1)
 
                 Spacer()
-
-                MenuPreviewImage(iconType: iconType)
             }
             .padding(.horizontal, 20)
             .frame(height: 80)
@@ -69,44 +67,6 @@ private struct MenuRow: View {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { isPressed = false }
                 }
         )
-    }
-}
-
-// MARK: - Preview illustration per option
-
-private struct MenuPreviewImage: View {
-    let iconType: MenuIconType
-
-    private var gradient: [Color] {
-        switch iconType {
-        case .aiSparkle:  return [Color(hex: "0048E2"), Color(hex: "8B5CF6")]
-        case .bySaying:   return [Color(hex: "FF8A3D"), Color(hex: "FF4D4D")]
-        case .byYourself: return [Color(hex: "18C29C"), Color(hex: "2FB873")]
-        }
-    }
-
-    private var symbol: String {
-        switch iconType {
-        case .aiSparkle:  return "sparkles"
-        case .bySaying:   return "waveform"
-        case .byYourself: return "list.bullet.rectangle.fill"
-        }
-    }
-
-    var body: some View {
-        RoundedRectangle(cornerRadius: 12, style: .continuous)
-            .fill(LinearGradient(colors: gradient.map { $0.opacity(0.85) },
-                                 startPoint: .topLeading, endPoint: .bottomTrailing))
-            .frame(width: 64, height: 48)
-            .overlay(
-                Image(systemName: symbol)
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(.white)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(Color.black.opacity(0.06), lineWidth: 1)
-            )
     }
 }
 

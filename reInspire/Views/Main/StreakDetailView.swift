@@ -107,11 +107,11 @@ struct StreakDetailView: View {
     private var flameStatus: some View {
         if vm.yesterdayFrozen && !vm.todayGoalMet {
             statusPill(text: vm.yesterdayAutoFrozen
-                       ? "Заморозка использована автоматически"
-                       : "Вчера спасла заморозка",
+                       ? String(localized: "Заморозка использована автоматически")
+                       : String(localized: "Вчера спасла заморозка"),
                        color: Self.frozenBlue)
         } else if !vm.todayGoalMet {
-            statusPill(text: "Сегодня ещё не выполнено", color: .secondary)
+            statusPill(text: String(localized: "Сегодня ещё не выполнено"), color: .secondary)
         }
     }
 

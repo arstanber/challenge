@@ -8,10 +8,10 @@ private enum HabitCategory: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .popular:      return "Популярные"
-        case .health:       return "Здоровье"
-        case .mind:         return "Развитие"
-        case .productivity: return "Продуктивность"
+        case .popular:      return String(localized: "Популярные")
+        case .health:       return String(localized: "Здоровье")
+        case .mind:         return String(localized: "Развитие")
+        case .productivity: return String(localized: "Продуктивность")
         }
     }
 
@@ -44,56 +44,56 @@ private struct HabitTemplate: Identifiable {
     static func tint(_ hex: String) -> Color { Color(hex: hex) }
 
     static let all: [HabitTemplate] = [
-        .init(title: "Просыпаться рано", icon: "sunrise.fill", tint: tint("FF8A3D"), subtitle: nil,
+        .init(title: String(localized: "Просыпаться рано"), icon: "sunrise.fill", tint: tint("FF8A3D"), subtitle: nil,
               type: .habit, goalTarget: nil, healthLinked: false, categories: [.popular]),
-        .init(title: "Ежедневные шаги", icon: "figure.walk", tint: tint("2FB873"), subtitle: "10 000 шагов",
+        .init(title: String(localized: "Ежедневные шаги"), icon: "figure.walk", tint: tint("2FB873"), subtitle: String(localized: "10 000 шагов"),
               type: .goal, goalTarget: 10000, healthLinked: true, categories: [.popular, .health],
               connector: .appleHealth),
-        .init(title: "Тренировка", icon: "figure.run", tint: tint("FF4D4D"), subtitle: "30 мин",
+        .init(title: String(localized: "Тренировка"), icon: "figure.run", tint: tint("FF4D4D"), subtitle: String(localized: "30 мин"),
               type: .goal, goalTarget: 30, healthLinked: true, categories: [.popular, .health],
               connector: .appleFitness),
-        .init(title: "Вставать по будильнику", icon: "alarm.fill", tint: tint("FF9F0A"), subtitle: "07:00",
+        .init(title: String(localized: "Вставать по будильнику"), icon: "alarm.fill", tint: tint("FF9F0A"), subtitle: "07:00",
               type: .habit, goalTarget: nil, healthLinked: false, categories: [.popular, .productivity],
               connector: .appleClock),
-        .init(title: "Утренняя пробежка", icon: "figure.outdoor.cycle", tint: tint("FC4C02"), subtitle: "3 км",
+        .init(title: String(localized: "Утренняя пробежка"), icon: "figure.outdoor.cycle", tint: tint("FC4C02"), subtitle: String(localized: "3 км"),
               type: .goal, goalTarget: 3, healthLinked: true, categories: [.popular, .health],
               connector: .strava),
-        .init(title: "День по календарю", icon: "calendar", tint: tint("4285F4"), subtitle: "Без пропущенных встреч",
+        .init(title: String(localized: "День по календарю"), icon: "calendar", tint: tint("4285F4"), subtitle: String(localized: "Без пропущенных встреч"),
               type: .habit, goalTarget: nil, healthLinked: false, categories: [.popular, .productivity],
               connector: .appleCalendar),
-        .init(title: "Фото-отчёт в Telegram", icon: "paperplane.fill", tint: tint("29A9EA"), subtitle: nil,
+        .init(title: String(localized: "Фото-отчёт в Telegram"), icon: "paperplane.fill", tint: tint("29A9EA"), subtitle: nil,
               type: .habit, goalTarget: nil, healthLinked: false, categories: [.popular],
               connector: .telegram),
-        .init(title: "Здоровый сон", icon: "moon.zzz.fill", tint: tint("A86CFF"), subtitle: "8 часов",
+        .init(title: String(localized: "Здоровый сон"), icon: "moon.zzz.fill", tint: tint("A86CFF"), subtitle: String(localized: "8 часов"),
               type: .habit, goalTarget: nil, healthLinked: true, categories: [.popular, .health],
               connector: .appleHealth),
-        .init(title: "Читать", icon: "book.fill", tint: tint("3D9BFF"), subtitle: "30 мин",
+        .init(title: String(localized: "Читать"), icon: "book.fill", tint: tint("3D9BFF"), subtitle: String(localized: "30 мин"),
               type: .habit, goalTarget: nil, healthLinked: false, categories: [.popular, .mind]),
-        .init(title: "Медитировать", icon: "figure.mind.and.body", tint: tint("A86CFF"), subtitle: "10 мин",
+        .init(title: String(localized: "Медитировать"), icon: "figure.mind.and.body", tint: tint("A86CFF"), subtitle: String(localized: "10 мин"),
               type: .habit, goalTarget: nil, healthLinked: false, categories: [.popular, .mind, .health]),
-        .init(title: "Пить воду", icon: "drop.fill", tint: tint("28C2D6"), subtitle: "2 л",
+        .init(title: String(localized: "Пить воду"), icon: "drop.fill", tint: tint("28C2D6"), subtitle: String(localized: "2 л"),
               type: .habit, goalTarget: nil, healthLinked: false, categories: [.popular, .health]),
-        .init(title: "Планировать день", icon: "checklist", tint: tint("5B7CFF"), subtitle: nil,
+        .init(title: String(localized: "Планировать день"), icon: "checklist", tint: tint("5B7CFF"), subtitle: nil,
               type: .habit, goalTarget: nil, healthLinked: false, categories: [.popular, .productivity]),
-        .init(title: "Вести дневник", icon: "pencil.and.outline", tint: tint("FFB23D"), subtitle: nil,
+        .init(title: String(localized: "Вести дневник"), icon: "pencil.and.outline", tint: tint("FFB23D"), subtitle: nil,
               type: .habit, goalTarget: nil, healthLinked: false, categories: [.popular, .mind]),
-        .init(title: "Зарядка", icon: "dumbbell.fill", tint: tint("FF4D4D"), subtitle: "10 мин",
+        .init(title: String(localized: "Зарядка"), icon: "dumbbell.fill", tint: tint("FF4D4D"), subtitle: String(localized: "10 мин"),
               type: .goal, goalTarget: 10, healthLinked: true, categories: [.health]),
-        .init(title: "Растяжка", icon: "figure.flexibility", tint: tint("18C29C"), subtitle: "10 мин",
+        .init(title: String(localized: "Растяжка"), icon: "figure.flexibility", tint: tint("18C29C"), subtitle: String(localized: "10 мин"),
               type: .habit, goalTarget: nil, healthLinked: false, categories: [.health]),
-        .init(title: "Холодный душ", icon: "snowflake", tint: tint("28C2D6"), subtitle: nil,
+        .init(title: String(localized: "Холодный душ"), icon: "snowflake", tint: tint("28C2D6"), subtitle: nil,
               type: .habit, goalTarget: nil, healthLinked: false, categories: [.health]),
-        .init(title: "Ранний отбой", icon: "bed.double.fill", tint: tint("A86CFF"), subtitle: "23:00",
+        .init(title: String(localized: "Ранний отбой"), icon: "bed.double.fill", tint: tint("A86CFF"), subtitle: "23:00",
               type: .habit, goalTarget: nil, healthLinked: false, categories: [.health, .productivity]),
-        .init(title: "Без сахара", icon: "fork.knife", tint: tint("FF7A3D"), subtitle: nil,
+        .init(title: String(localized: "Без сахара"), icon: "fork.knife", tint: tint("FF7A3D"), subtitle: nil,
               type: .habit, goalTarget: nil, healthLinked: false, categories: [.health]),
-        .init(title: "Учить язык", icon: "character.bubble.fill", tint: tint("5B7CFF"), subtitle: "15 мин",
+        .init(title: String(localized: "Учить язык"), icon: "character.bubble.fill", tint: tint("5B7CFF"), subtitle: String(localized: "15 мин"),
               type: .habit, goalTarget: nil, healthLinked: false, categories: [.mind]),
-        .init(title: "Учиться", icon: "graduationcap.fill", tint: tint("3D9BFF"), subtitle: "1 час",
+        .init(title: String(localized: "Учиться"), icon: "graduationcap.fill", tint: tint("3D9BFF"), subtitle: String(localized: "1 час"),
               type: .habit, goalTarget: nil, healthLinked: false, categories: [.mind, .productivity]),
-        .init(title: "Без телефона перед сном", icon: "moon.zzz.fill", tint: tint("8A7CFF"), subtitle: nil,
+        .init(title: String(localized: "Без телефона перед сном"), icon: "moon.zzz.fill", tint: tint("8A7CFF"), subtitle: nil,
               type: .habit, goalTarget: nil, healthLinked: false, categories: [.mind, .productivity]),
-        .init(title: "Убраться дома", icon: "house.fill", tint: tint("18C29C"), subtitle: nil,
+        .init(title: String(localized: "Убраться дома"), icon: "house.fill", tint: tint("18C29C"), subtitle: nil,
               type: .habit, goalTarget: nil, healthLinked: false, categories: [.productivity])
     ]
 

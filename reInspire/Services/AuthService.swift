@@ -139,6 +139,7 @@ final class AuthService {
         currentUser = user
         isAuthenticated = true
         syncTimezone(userId: id)
+        syncLanguage(userId: id)
     }
 
     /// Re-pull the users row; plan, pro_until and bonus_freezes change
@@ -160,6 +161,22 @@ final class AuthService {
                     .execute()
             } catch {
                 authLogger.error("timezone sync failed: \(error)")
+            }
+        }
+    }
+
+    /// Fire-and-forget upsert of the device language -- the server uses it to
+    /// pick EN/RU for server-composed pushes and AI responses (users.language).
+    func syncLanguage(userId: UUID) {
+        Task {
+            do {
+                try await supabase
+                    .from("users")
+                    .update(["language": AppLanguage.current])
+                    .eq("id", value: userId.uuidString)
+                    .execute()
+            } catch {
+                authLogger.error("language sync failed: \(error)")
             }
         }
     }
@@ -194,6 +211,7 @@ final class AuthService {
                 currentUser = inserted
                 isAuthenticated = true
                 syncTimezone(userId: inserted.id)
+                syncLanguage(userId: inserted.id)
                 needsWelcomeIntro = true
             }
             AnalyticsService.shared.track(.signedIn, ["method": "email"])
@@ -239,6 +257,7 @@ final class AuthService {
                 currentUser = inserted
                 isAuthenticated = true
                 syncTimezone(userId: inserted.id)
+                syncLanguage(userId: inserted.id)
             }
             needsWelcomeIntro = true
             AnalyticsService.shared.track(.signedUp, ["method": "email"])
@@ -282,6 +301,7 @@ final class AuthService {
                 currentUser = inserted
                 isAuthenticated = true
                 syncTimezone(userId: inserted.id)
+                syncLanguage(userId: inserted.id)
             }
             needsWelcomeIntro = true
             AnalyticsService.shared.track(.signedUp, ["method": "email"])
@@ -333,6 +353,7 @@ final class AuthService {
                 needsWelcomeIntro = true
                 isAuthenticated = true
                 syncTimezone(userId: inserted.id)
+                syncLanguage(userId: inserted.id)
                 AnalyticsService.shared.track(.signedUp, ["method": "apple"])
             }
         } catch let error as AuthError {
@@ -376,6 +397,7 @@ final class AuthService {
                 needsWelcomeIntro = true
                 isAuthenticated = true
                 syncTimezone(userId: inserted.id)
+                syncLanguage(userId: inserted.id)
                 AnalyticsService.shared.track(.signedUp, ["method": "google"])
             }
         } catch let error as AuthError {

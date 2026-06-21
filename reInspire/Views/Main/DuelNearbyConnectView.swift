@@ -140,21 +140,21 @@ struct DuelNearbyConnectView: View {
     }
 
     private var statusTitle: String {
-        if joined { return "Соединено!" }
+        if joined { return String(localized: "Соединено!") }
         switch service.phase {
-        case .searching:  return "Ищу рядом..."
-        case .connecting: return "Подключаюсь к \(service.peerName ?? "устройству")..."
-        case .failed:     return "Не удалось соединить"
-        default:          return role == .create ? "Создай дуэль" : "Поднеси телефоны"
+        case .searching:  return String(localized: "Ищу рядом...")
+        case .connecting: return String(localized: "Подключаюсь к \(service.peerName ?? "устройству")...")
+        case .failed:     return String(localized: "Не удалось соединить")
+        default:          return role == .create ? String(localized: "Создай дуэль") : String(localized: "Поднеси телефоны")
         }
     }
 
     private var statusSubtitle: String {
-        if joined { return "Дуэль началась. Можешь закрыть экран." }
-        if service.phase == .failed { return "Поднесите телефоны ближе и потрясите оба ещё раз." }
+        if joined { return String(localized: "Дуэль началась. Можешь закрыть экран.") }
+        if service.phase == .failed { return String(localized: "Поднесите телефоны ближе и потрясите оба ещё раз.") }
         return role == .create
-            ? "Выбери длину дуэли и нажми кнопку, затем потрясите оба телефона."
-            : "Потрясите оба телефона рядом, чтобы присоединиться к дуэли друга."
+            ? String(localized: "Выбери длину дуэли и нажми кнопку, затем потрясите оба телефона.")
+            : String(localized: "Потрясите оба телефона рядом, чтобы присоединиться к дуэли друга.")
     }
 
     // MARK: Actions

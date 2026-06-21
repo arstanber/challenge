@@ -20,10 +20,10 @@ struct ProStats {
         case morning, day, evening, night
         var title: String {
             switch self {
-            case .morning: return "Утро"
-            case .day:     return "День"
-            case .evening: return "Вечер"
-            case .night:   return "Ночь"
+            case .morning: return String(localized: "Утро")
+            case .day:     return String(localized: "День")
+            case .evening: return String(localized: "Вечер")
+            case .night:   return String(localized: "Ночь")
             }
         }
         var emoji: String {

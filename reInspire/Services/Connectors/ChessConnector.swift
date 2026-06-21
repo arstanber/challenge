@@ -24,14 +24,14 @@ final class ChessConnector {
         let name = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard !name.isEmpty,
               let url = URL(string: "https://api.chess.com/pub/player/\(name)") else {
-            throw ConnectorError.notConfigured("Введите имя пользователя Chess.com")
+            throw ConnectorError.notConfigured(AppLanguage.current == "ru" ? "Введите имя пользователя Chess.com" : "Enter your Chess.com username")
         }
         var req = URLRequest(url: url)
         req.setValue(userAgent, forHTTPHeaderField: "User-Agent")
         let (_, response) = try await session.data(for: req)
-        guard let http = response as? HTTPURLResponse else { throw ConnectorError.server("Нет ответа") }
+        guard let http = response as? HTTPURLResponse else { throw ConnectorError.server(AppLanguage.current == "ru" ? "Нет ответа" : "No response") }
         guard http.statusCode == 200 else {
-            throw ConnectorError.notConfigured("Пользователь Chess.com не найден")
+            throw ConnectorError.notConfigured(AppLanguage.current == "ru" ? "Пользователь Chess.com не найден" : "Chess.com user not found")
         }
         UserDefaults.standard.set(name, forKey: Self.usernameKey)
     }

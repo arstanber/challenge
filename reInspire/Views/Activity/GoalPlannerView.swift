@@ -13,11 +13,11 @@ struct GoalPlannerView: View {
                 case .questions:
                     QuestionsView(vm: vm)
                 case .generatingPlan:
-                    AIThinkingView(message: "Строим твой план")
+                    AIThinkingView(message: String(localized: "Строим твой план"))
                 case .plan:
                     PlanPreviewView(vm: vm)
                 case .creating:
-                    AIThinkingView(message: "Создаём \(vm.plan?.activities.count ?? 0) задач")
+                    AIThinkingView(message: String(localized: "Создаём \(vm.plan?.activities.count ?? 0) задач"))
                 case .done:
                     DoneView(vm: vm, onDismiss: { dismiss() })
                 }
@@ -46,8 +46,8 @@ struct GoalPlannerView: View {
         switch vm.step {
         case .describe: return "reInspire."
         case .loadingQuestions, .questions: return "reInspire."
-        case .generatingPlan, .plan: return "Твой план"
-        case .creating, .done: return "Создаём план"
+        case .generatingPlan, .plan: return String(localized: "Твой план")
+        case .creating, .done: return String(localized: "Создаём план")
         }
     }
 }
@@ -443,7 +443,7 @@ private struct QuestionsView: View {
                     }
                 } label: {
                     HStack(spacing: 6) {
-                        Text(isLast ? "Сгенерировать" : "Далее")
+                        Text(isLast ? String(localized: "Сгенерировать") : String(localized: "Далее"))
                             .font(.system(size: 18, weight: .medium))
                             .foregroundColor(canAdvance ? .white : QColors.grayText)
                         Image(systemName: "sparkle")
@@ -573,8 +573,8 @@ private struct PPTaskCard: View {
 
     private var scheduleLabel: String { activity.frequency.displayName }
     private var durationLabel: String {
-        if let days = activity.deadlineDays { return "\(days) дн." }
-        return activity.frequency == .once ? "разово" : "постоянно"
+        if let days = activity.deadlineDays { return String(localized: "\(days) дн.") }
+        return activity.frequency == .once ? String(localized: "разово") : String(localized: "постоянно")
     }
     private var categoryColor: Color { activity.type.stepColor }
 

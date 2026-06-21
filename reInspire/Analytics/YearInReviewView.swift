@@ -173,7 +173,7 @@ struct YearInReviewView: View {
                             if let img = rendered(stats) {
                                 ShareLink(
                                     item: Image(uiImage: img),
-                                    preview: SharePreview("Мой \(stats.year) год в reInspire", image: Image(uiImage: img))
+                                    preview: SharePreview(String(localized: "Мой \(stats.year) год в reInspire"), image: Image(uiImage: img))
                                 ) {
                                     Label("Поделиться итогами \(String(stats.year))", systemImage: "square.and.arrow.up")
                                         .font(.manrope(.bold, size: 16))
@@ -226,19 +226,19 @@ private struct WrappedCard: View {
             }
 
             VStack(spacing: 14) {
-                WrappedRow(emoji: "✅", value: "\(stats.totalCheckins)", label: "отметок")
-                WrappedRow(emoji: "📅", value: "\(stats.activeDays)", label: "активных дней")
-                WrappedRow(emoji: "🔥", value: "\(stats.bestStreak)", label: "лучшая серия")
-                WrappedRow(emoji: "🏆", value: "\(stats.completedActivities)", label: "целей выполнено")
-                WrappedRow(emoji: "⭐️", value: "УР. \(level)", label: "достигнут")
+                WrappedRow(emoji: "✅", value: "\(stats.totalCheckins)", label: String(localized: "отметок"))
+                WrappedRow(emoji: "📅", value: "\(stats.activeDays)", label: String(localized: "активных дней"))
+                WrappedRow(emoji: "🔥", value: "\(stats.bestStreak)", label: String(localized: "лучшая серия"))
+                WrappedRow(emoji: "🏆", value: "\(stats.completedActivities)", label: String(localized: "целей выполнено"))
+                WrappedRow(emoji: "⭐️", value: "УР. \(level)", label: String(localized: "достигнут"))
             }
 
             Divider().overlay(.white.opacity(0.3))
 
             VStack(alignment: .leading, spacing: 8) {
-                WrappedFact(label: "Топ-категория", value: stats.topCategory.capitalized)
-                WrappedFact(label: "Активный месяц", value: stats.busiestMonth)
-                WrappedFact(label: "Продуктивный день", value: stats.busiestWeekday)
+                WrappedFact(label: String(localized: "Топ-категория"), value: stats.topCategory.capitalized)
+                WrappedFact(label: String(localized: "Активный месяц"), value: stats.busiestMonth)
+                WrappedFact(label: String(localized: "Продуктивный день"), value: stats.busiestWeekday)
             }
 
             Text("reInspire -- \(String(stats.year))")

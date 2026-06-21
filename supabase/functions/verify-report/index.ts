@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { pickLang } from "../_shared/i18n.ts";
 
 const MODEL = "claude-sonnet-4-5";
 
@@ -30,9 +31,12 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Method not allowed" }, 405);
   }
 
+  let lang: "en" | "ru" = "en";
   try {
     const body = await req.json();
-    const { condition, photo_url, report_id, is_excuse = false } = body;
+    const { condition, photo_url, report_id, is_excuse = false, language } = body;
+    lang = pickLang(language);
+    const langNote = lang === "ru" ? "Write the explanation in Russian." : "Write the explanation in English.";
 
     if (!condition || !photo_url) {
       return json({ error: "Missing condition or photo_url" }, 400);
@@ -87,13 +91,15 @@ Deno.serve(async (req: Request) => {
 
     const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
     if (!anthropicKey) {
-      return json({ approved: false, excused: false, explanation: "AI verification not configured." });
+      const explanation = lang === "ru" ? "AI-проверка не настроена." : "AI verification not configured.";
+      return json({ approved: false, excused: false, explanation });
     }
 
     // 4. Fetch photo
     const photoResponse = await fetch(photo_url);
     if (!photoResponse.ok) {
-      return json({ approved: false, excused: false, explanation: "Could not retrieve the photo." });
+      const explanation = lang === "ru" ? "Не удалось загрузить фото." : "Could not retrieve the photo.";
+      return json({ approved: false, excused: false, explanation });
     }
     const photoBuffer = await photoResponse.arrayBuffer();
     const photoBase64 = arrayBufferToBase64(photoBuffer);
@@ -122,6 +128,8 @@ An INVALID excuse is:
 - Unrelated photos
 - Photos that don't clearly show a reason
 
+${langNote}
+
 Respond ONLY with valid JSON (no markdown):
 {"approved": false, "excused": boolean, "explanation": "1-2 sentence verdict"}`;
     } else {
@@ -134,6 +142,8 @@ Examine the photo carefully. Does it genuinely show the user completing or worki
 - Be strict: the photo must clearly show the activity, not just imply it
 - Look for: relevant equipment, location, body position, completion evidence
 - Reject: unrelated photos, stock images, photos that don't show the activity
+
+${langNote}
 
 Respond ONLY with valid JSON (no markdown):
 {"approved": boolean, "excused": false, "explanation": "1-2 sentence verdict"}`;
@@ -162,7 +172,8 @@ Respond ONLY with valid JSON (no markdown):
     if (!res.ok) {
       const err = await res.text();
       console.error("Anthropic error:", err);
-      return json({ approved: false, excused: false, explanation: "AI verification temporarily unavailable." });
+      const explanation = lang === "ru" ? "AI-проверка временно недоступна." : "AI verification temporarily unavailable.";
+      return json({ approved: false, excused: false, explanation });
     }
 
     const data = await res.json();
@@ -180,7 +191,7 @@ Respond ONLY with valid JSON (no markdown):
       result = {
         approved: approvedMatch?.[1] === "true",
         excused:  excusedMatch?.[1]  === "true",
-        explanation: "Verification completed.",
+        explanation: lang === "ru" ? "Проверка завершена." : "Verification completed.",
       };
     }
 
@@ -198,6 +209,7 @@ Respond ONLY with valid JSON (no markdown):
     return json({ ...result, remaining: quota.remaining });
   } catch (error) {
     console.error("verify-report error:", error);
-    return json({ approved: false, excused: false, explanation: "An error occurred during verification." });
+    const explanation = lang === "ru" ? "Произошла ошибка во время проверки." : "An error occurred during verification.";
+    return json({ approved: false, excused: false, explanation });
   }
 });

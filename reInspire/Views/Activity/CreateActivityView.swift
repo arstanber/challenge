@@ -60,7 +60,7 @@ struct CreateActivityView: View {
                     if vm.frequency == .weekly {
                         HStack(spacing: 8) {
                             ForEach(1...7, id: \.self) { day in
-                                let labels = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
+                                let labels = [String(localized: "Пн"), String(localized: "Вт"), String(localized: "Ср"), String(localized: "Чт"), String(localized: "Пт"), String(localized: "Сб"), String(localized: "Вс")]
                                 let on = vm.scheduleDays.contains(day)
                                 Button {
                                     Haptics.selection()
@@ -79,9 +79,9 @@ struct CreateActivityView: View {
                         .padding(.vertical, 4)
                     }
                     let isAssignment = presetChildName != nil
-                    Toggle(isAssignment ? "Поставить дедлайн" : "Set deadline", isOn: $vm.hasDeadline)
+                    Toggle(isAssignment ? String(localized: "Поставить дедлайн") : "Set deadline", isOn: $vm.hasDeadline)
                     if vm.hasDeadline {
-                        DatePicker(isAssignment ? "Дедлайн" : "Deadline",
+                        DatePicker(isAssignment ? String(localized: "Дедлайн") : "Deadline",
                                    selection: $vm.deadline, in: Date()..., displayedComponents: .date)
                     }
                     Toggle("Daily reminder", isOn: $vm.reminderEnabled)
@@ -102,7 +102,7 @@ struct CreateActivityView: View {
             .hapticFeedback(.selection, trigger: vm.frequency)
             .hapticFeedback(.selection, trigger: vm.hasDeadline)
             .hapticFeedback(.selection, trigger: vm.reminderEnabled)
-            .navigationTitle(presetChildName == nil ? "New activity" : "Новое задание")
+            .navigationTitle(presetChildName == nil ? "New activity" : String(localized: "Новое задание"))
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 if let ids = presetChildIds { vm.assignToChildIds = ids }

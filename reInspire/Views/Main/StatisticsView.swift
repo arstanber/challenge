@@ -232,9 +232,9 @@ struct StatisticsView: View {
     }
 
     private var motivationText: String {
-        if todayCheckins == 0 { return "Начни день 💪" }
-        if todayCheckins >= dailyGoal { return "Цель достигнута ✅" }
-        return "Так держать 🔥"
+        if todayCheckins == 0 { return String(localized: "Начни день 💪") }
+        if todayCheckins >= dailyGoal { return String(localized: "Цель достигнута ✅") }
+        return String(localized: "Так держать 🔥")
     }
 
     private var pendingTitles: [String] {
@@ -272,7 +272,7 @@ struct StatisticsView: View {
     }
 
     private var performanceSubtitle: String {
-        checkins30.prev > 0 ? "За последние 30 дней" : "Отметок за 30 дней"
+        checkins30.prev > 0 ? String(localized: "За последние 30 дней") : String(localized: "Отметок за 30 дней")
     }
 
     // MARK: - Data

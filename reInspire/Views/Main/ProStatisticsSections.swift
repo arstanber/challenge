@@ -41,8 +41,8 @@ struct ProStatisticsSections: View {
     // MARK: Cards
 
     private var weekdayCard: some View {
-        card(title: "Активность по дням недели", emoji: "📆") {
-            let names = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
+        card(title: String(localized: "Активность по дням недели"), emoji: "📆") {
+            let names = [String(localized: "Пн"), String(localized: "Вт"), String(localized: "Ср"), String(localized: "Чт"), String(localized: "Пт"), String(localized: "Сб"), String(localized: "Вс")]
             let maxVal = max(stats.weekdayAverages.max() ?? 1, 0.001)
             HStack(alignment: .bottom, spacing: 8) {
                 ForEach(0..<7, id: \.self) { i in
@@ -62,7 +62,7 @@ struct ProStatisticsSections: View {
     }
 
     private var timeOfDayCard: some View {
-        card(title: "Когда ты активнее", emoji: "🕑") {
+        card(title: String(localized: "Когда ты активнее"), emoji: "🕑") {
             VStack(spacing: 10) {
                 ForEach(ProStats.TimeBucket.allCases, id: \.self) { bucket in
                     let frac = stats.timeOfDay[bucket] ?? 0
@@ -90,7 +90,7 @@ struct ProStatisticsSections: View {
     }
 
     private var trendCard: some View {
-        card(title: "Тренд за 30 дней", emoji: "📈") {
+        card(title: String(localized: "Тренд за 30 дней"), emoji: "📈") {
             VStack(alignment: .leading, spacing: 10) {
                 Sparkline(values: stats.last30, tint: blue)
                     .frame(height: 54)
@@ -107,7 +107,7 @@ struct ProStatisticsSections: View {
     }
 
     private func forecastCard(_ milestone: (days: Int, target: Int)) -> some View {
-        card(title: "Прогноз серии", emoji: "🎯") {
+        card(title: String(localized: "Прогноз серии"), emoji: "🎯") {
             Text("До серии в \(milestone.target) дней осталось \(milestone.days) -- держи темп!")
                 .font(.manrope(.medium, size: 14))
                 .foregroundStyle(.primary)
@@ -117,9 +117,9 @@ struct ProStatisticsSections: View {
 
     private var trendText: String {
         let d = stats.trendDelta
-        if d == 0 { return "Без изменений к прошлому месяцу" }
-        return d > 0 ? "На \(d) отметок больше, чем месяцем ранее"
-                     : "На \(-d) отметок меньше, чем месяцем ранее"
+        if d == 0 { return String(localized: "Без изменений к прошлому месяцу") }
+        return d > 0 ? String(localized: "На \(d) отметок больше, чем месяцем ранее")
+                     : String(localized: "На \(-d) отметок меньше, чем месяцем ранее")
     }
 
     // MARK: Building blocks

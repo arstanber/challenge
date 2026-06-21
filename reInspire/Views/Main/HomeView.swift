@@ -134,6 +134,11 @@ struct HomeView: View {
     // Bumped exactly at 00:00 (NSCalendarDayChanged) so the date label and
     // the today/upcoming buckets recompute without an app restart.
     @State private var today = Date()
+    // Monday morning AI Coach briefing -- generated once per week, only
+    // before noon on Mondays. The banner stays up after the sheet is
+    // dismissed; only opening the sheet is a separate flag.
+    @State private var morningBrief: MorningBrief?
+    @State private var showMorningBriefSheet = false
 
     // iPad (regular width) lays task cards out in a width-adaptive grid:
     // ~2 columns in portrait, ~3 in landscape, chosen from the available width.
@@ -330,6 +335,14 @@ struct HomeView: View {
                         .appearEffect(delay: 0.05)
                     }
 
+                    if let morningBrief {
+                        AICoachBanner(brief: morningBrief) {
+                            Haptics.tap()
+                            showMorningBriefSheet = true
+                        }
+                        .appearEffect(delay: 0.05)
+                    }
+
                     if vm.isLoading && activeTasks.isEmpty && doneTodayTasks.isEmpty {
                         SkeletonTaskList(rows: 4)
                             .padding(.top, 8)
@@ -424,6 +437,7 @@ struct HomeView: View {
             await vm.loadActivities()
             NotificationService.shared.clearLegacyMotivationPlan()
             await syncAllNotifications()
+            await loadMorningBriefIfNeeded()
         }
         // Pending pushes carry the tone they were scheduled with, so flipping
         // zoomer mode must rebuild them all to take effect before next launch.
@@ -499,6 +513,11 @@ struct HomeView: View {
         .sheet(isPresented: $showStreakDetail) {
             StreakDetailView(vm: vm)
                 .presentationDetents([.medium, .large])
+        }
+        .sheet(isPresented: $showMorningBriefSheet) {
+            if let morningBrief {
+                AICoachSheet(brief: morningBrief)
+            }
         }
         .sheet(item: $addSubtaskParent) { parent in
             AddSubtaskSheet(parent: parent, vm: vm, onCreated: reload)
@@ -613,8 +632,9 @@ struct HomeView: View {
     }
 
     /// (Re-)schedules every local push from the current vm state: per-task
-    /// reminders, streak-risk nudges, weekly review and the personal-time
-    /// nudge. Runs on appear and again whenever zoomer mode flips.
+    /// reminders, streak-risk nudges, weekly review, the Monday morning
+    /// briefing and the personal-time nudge. Runs on appear and again
+    /// whenever zoomer mode flips.
     private func syncAllNotifications() async {
         let notifications = NotificationService.shared
         notifications.syncReminders(for: vm.myActivities + vm.parentActivities)
@@ -623,6 +643,7 @@ struct HomeView: View {
             tasksToSave: max(0, vm.dailyStreakGoal - vm.todayDoneTopLevelCount)
         )
         notifications.scheduleWeeklyReview()
+        notifications.scheduleMondayBriefing()
         let minute = await TaskEngine.shared.typicalCompletionMinute()
         // A touch before the habitual time, so the push lands while the
         // usual completion window is still open.
@@ -631,6 +652,34 @@ struct HomeView: View {
             streak: vm.globalStreakCurrent
         )
     }
+    /// Generates the AI Coach's Monday morning briefing, at most once per
+    /// week and only before noon -- this is a kickoff for the week, not a
+    /// daily feature. Silent no-op outside that window, off rate limit, or
+    /// on a network/AI error: the banner just doesn't appear.
+    private func loadMorningBriefIfNeeded() async {
+        let lastShownKey = "lastMorningBriefDate"
+        let cal = Calendar.current
+        guard Activity.isoWeekday(of: today, calendar: cal) == 1,
+              cal.component(.hour, from: Date()) < 12 else { return }
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let todayKey = dateFormatter.string(from: today)
+        guard UserDefaults.standard.string(forKey: lastShownKey) != todayKey else { return }
+        guard RateLimiterService.shared.canUse(.morningBrief) else { return }
+
+        do {
+            let brief = try await AICoachService.shared.morningBrief(
+                streakCurrent: vm.globalStreakCurrent,
+                todayTasks: todayTasks.map(\.title)
+            )
+            UserDefaults.standard.set(todayKey, forKey: lastShownKey)
+            morningBrief = brief
+        } catch {
+            // No streak risk here -- just skip the banner this week.
+        }
+    }
+
     private func after(_ action: @escaping () -> Void) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.35, execute: action)
     }

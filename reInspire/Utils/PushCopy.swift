@@ -29,3 +29,19 @@ enum RuPlural {
         return "дней"
     }
 }
+
+/// English plural forms for the same dynamic push copy -- picked alongside
+/// `RuPlural` based on `AppLanguage.current`, since these strings are built
+/// from runtime data and can't go through the String Catalog like the
+/// static pool entries do.
+enum EnPlural {
+    /// "1 day" / "5 days".
+    static func days(_ n: Int) -> String {
+        "\(n) day\(n == 1 ? "" : "s")"
+    }
+
+    /// "1 day to go" / "5 days to go".
+    static func remainingDays(_ n: Int) -> String {
+        "\(days(n)) to go"
+    }
+}

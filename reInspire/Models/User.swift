@@ -41,9 +41,9 @@ enum FamilyRole: String, Codable, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .mom: return "Мама"
-        case .dad: return "Папа"
-        case .child: return "Ребёнок"
+        case .mom: return String(localized: "Мама")
+        case .dad: return String(localized: "Папа")
+        case .child: return String(localized: "Ребёнок")
         }
     }
 

@@ -8,37 +8,47 @@ enum StandardCopy {
     // MARK: - Time-of-day pools
 
     static let morning: [PushText] = [
-        .init(title: "Новый день", body: "Новый шанс стать лучше. Начни прямо сейчас."),
-        .init(title: "Доброе утро", body: "Сегодня -- ещё один день к твоей цели."),
-        .init(title: "Каждое утро", body: "Ты выбираешь, кем становишься. Сделай задание."),
+        .init(title: String(localized: "Новый день"), body: String(localized: "Новый шанс стать лучше. Начни прямо сейчас.")),
+        .init(title: String(localized: "Доброе утро"), body: String(localized: "Сегодня -- ещё один день к твоей цели.")),
+        .init(title: String(localized: "Каждое утро"), body: String(localized: "Ты выбираешь, кем становишься. Сделай задание.")),
     ]
 
     static let daytime: [PushText] = [
-        .init(title: "Ты справишься", body: "Одно маленькое действие меняет всё."),
-        .init(title: "Не останавливайся", body: "Ты уже так далеко зашёл. Продолжай."),
-        .init(title: "Просто сделай", body: "Через 5 минут будешь рад, что начал."),
-        .init(title: "Твоя цель ждёт", body: "Один шаг сегодня -- большой результат завтра."),
+        .init(title: String(localized: "Ты справишься"), body: String(localized: "Одно маленькое действие меняет всё.")),
+        .init(title: String(localized: "Не останавливайся"), body: String(localized: "Ты уже так далеко зашёл. Продолжай.")),
+        .init(title: String(localized: "Просто сделай"), body: String(localized: "Через 5 минут будешь рад, что начал.")),
+        .init(title: String(localized: "Твоя цель ждёт"), body: String(localized: "Один шаг сегодня -- большой результат завтра.")),
     ]
 
     static let evening: [PushText] = [
-        .init(title: "День ещё не закончился", body: "Успей выполнить задание до полуночи."),
-        .init(title: "Ещё есть время", body: "Заверши день с гордостью за себя."),
-        .init(title: "Сегодня считается", body: "Не дай этому дню пройти впустую."),
+        .init(title: String(localized: "День ещё не закончился"), body: String(localized: "Успей выполнить задание до полуночи.")),
+        .init(title: String(localized: "Ещё есть время"), body: String(localized: "Заверши день с гордостью за себя.")),
+        .init(title: String(localized: "Сегодня считается"), body: String(localized: "Не дай этому дню пройти впустую.")),
     ]
 
     /// Fits any hour.
     static let general: [PushText] = [
-        .init(title: "Маленький прогресс", body: "Всё равно прогресс. Сделай сегодняшнее задание."),
-        .init(title: "Ты можешь", body: "Просто открой приложение и начни."),
-        .init(title: "Для себя", body: "Не для кого-то. Для лучшей версии себя."),
+        .init(title: String(localized: "Маленький прогресс"), body: String(localized: "Всё равно прогресс. Сделай сегодняшнее задание.")),
+        .init(title: String(localized: "Ты можешь"), body: String(localized: "Просто открой приложение и начни.")),
+        .init(title: String(localized: "Для себя"), body: String(localized: "Не для кого-то. Для лучшей версии себя.")),
     ]
 
-    /// Streak praise -- only when there is a real run to point at.
+    /// Streak praise -- only when there is a real run to point at. Built
+    /// from runtime data (the day count), so it branches on `AppLanguage`
+    /// directly rather than going through the String Catalog.
     static func streakPraise(streak: Int) -> [PushText] {
-        [
-            .init(title: "\(RuPlural.days(streak)) подряд", body: "Это не случайность -- это твоя работа. Продолжай."),
-            .init(title: "Серия растёт", body: "Каждый день делает тебя сильнее."),
-            .init(title: "Ты уже \(RuPlural.days(streak))", body: "Не останавливайся -- лучшее впереди."),
+        let days = AppLanguage.current == "ru" ? RuPlural.days(streak) : EnPlural.days(streak)
+        if AppLanguage.current == "ru" {
+            return [
+                .init(title: "\(days) подряд", body: "Это не случайность -- это твоя работа. Продолжай."),
+                .init(title: "Серия растёт", body: "Каждый день делает тебя сильнее."),
+                .init(title: "Ты уже \(days)", body: "Не останавливайся -- лучшее впереди."),
+            ]
+        }
+        return [
+            .init(title: "\(days) in a row", body: "This isn't luck -- it's your work. Keep going."),
+            .init(title: "Your streak is growing", body: "Every day makes you stronger."),
+            .init(title: "You're already at \(days)", body: "Don't stop now -- the best is ahead."),
         ]
     }
 

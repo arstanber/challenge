@@ -166,7 +166,7 @@ final class ProfileViewModel {
                     let child = childByID[act.userId]
                     return AssignmentChildStatus(
                         id: act.userId,
-                        name: child?.displayLabel ?? "Ребёнок",
+                        name: child?.displayLabel ?? (AppLanguage.current == "ru" ? "Ребёнок" : "Child"),
                         avatarURL: child?.avatarURL,
                         state: state,
                         lastReportAt: last
@@ -310,7 +310,7 @@ final class ProfileViewModel {
             leaveCodeRequested = true
             return true
         } catch {
-            errorMessage = "Не удалось отправить запрос. Попробуй ещё раз."
+            errorMessage = AppLanguage.current == "ru" ? "Не удалось отправить запрос. Попробуй ещё раз." : "Couldn't send the request. Please try again."
             return false
         }
     }
@@ -334,7 +334,7 @@ final class ProfileViewModel {
             leaveCodeRequested = false
             return true
         } catch {
-            errorMessage = "Неверный код. Попроси код у родителя."
+            errorMessage = AppLanguage.current == "ru" ? "Неверный код. Попроси код у родителя." : "Incorrect code. Ask your parent for the code."
             return false
         }
     }
@@ -402,7 +402,7 @@ final class ProfileViewModel {
             await loadProfile()
             return true
         } catch {
-            errorMessage = "Не удалось создать аккаунт ребёнка"
+            errorMessage = AppLanguage.current == "ru" ? "Не удалось создать аккаунт ребёнка" : "Couldn't create the child account"
             return false
         }
     }
@@ -428,7 +428,7 @@ final class ProfileViewModel {
             await loadProfile()
             return true
         } catch {
-            errorMessage = "Не удалось изменить вход ребёнка"
+            errorMessage = AppLanguage.current == "ru" ? "Не удалось изменить вход ребёнка" : "Couldn't update the child's login"
             return false
         }
     }

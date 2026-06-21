@@ -3,9 +3,9 @@ import SwiftUI
 // MARK: - "Perfect Day" celebration
 
 struct PerfectDayView: View {
-    var title: String = "Идеальный день!"
-    var message: String = "100% выполнено. Сегодня ты сделал это для себя."
-    var buttonTitle: String = "Это про меня!"
+    var title: String = String(localized: "Идеальный день!")
+    var message: String = String(localized: "100% выполнено. Сегодня ты сделал это для себя.")
+    var buttonTitle: String = String(localized: "Это про меня!")
     var onDismiss: () -> Void
 
     @State private var starScale: CGFloat = 0.4

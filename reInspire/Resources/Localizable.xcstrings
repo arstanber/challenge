@@ -1,0 +1,8588 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ""
+          }
+        }
+      }
+    },
+    " Tasks": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " Tasks"
+          }
+        }
+      }
+    },
+    " и ещё %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " and %lld more"
+          }
+        }
+      }
+    },
+    "\"%@\"": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"%@\""
+          }
+        }
+      }
+    },
+    "#%lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "#%lld"
+          }
+        }
+      }
+    },
+    "%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@"
+          }
+        }
+      }
+    },
+    "%@ / %@%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ / %@%@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ / %2$@%3$@"
+          }
+        }
+      }
+    },
+    "%@ активен": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ active"
+          }
+        }
+      }
+    },
+    "%lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld"
+          }
+        }
+      }
+    },
+    "%lld %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld %2$@"
+          }
+        }
+      }
+    },
+    "%lld / %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld / %lld"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld / %2$lld"
+          }
+        }
+      }
+    },
+    "%lld / %lld XP": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld / %lld XP"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld / %2$lld XP"
+          }
+        }
+      }
+    },
+    "%lld / 10": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld / 10"
+          }
+        }
+      }
+    },
+    "%lld : %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld : %lld"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld : %2$lld"
+          }
+        }
+      }
+    },
+    "%lld XP to level %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld XP to level %lld"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld XP to level %2$lld"
+          }
+        }
+      }
+    },
+    "%lld day streak!": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld day streak!"
+          }
+        }
+      }
+    },
+    "%lld of %lld completed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld of %lld completed"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld of %2$lld completed"
+          }
+        }
+      }
+    },
+    "%lld photos": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld photos"
+          }
+        }
+      }
+    },
+    "%lld дн.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld days"
+          }
+        }
+      }
+    },
+    "%lld м": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld m"
+          }
+        }
+      }
+    },
+    "%lld подряд": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld in a row"
+          }
+        }
+      }
+    },
+    "%lld%%": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld%%"
+          }
+        }
+      }
+    },
+    "%lld-дневная серия": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld-day streak"
+          }
+        }
+      }
+    },
+    "%lld.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld."
+          }
+        }
+      }
+    },
+    "%lld/%lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld/%lld"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld/%2$lld"
+          }
+        }
+      }
+    },
+    "%lld/%lld XP · 🧊 %lld · 🏆 %lld/%lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld/%lld XP · 🧊 %lld · 🏆 %lld/%lld"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld/%2$lld XP · 🧊 %3$lld · 🏆 %4$lld/%5$lld"
+          }
+        }
+      }
+    },
+    "%lld/7": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld/7"
+          }
+        }
+      }
+    },
+    "+%lld XP": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%lld XP"
+          }
+        }
+      }
+    },
+    "/start %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/start %@"
+          }
+        }
+      }
+    },
+    "/год": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/yr"
+          }
+        }
+      }
+    },
+    "/мес": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/mo"
+          }
+        }
+      }
+    },
+    "0000": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "0000"
+          }
+        }
+      }
+    },
+    "1 заморозка серии 🧊": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 streak freeze 🧊"
+          }
+        }
+      }
+    },
+    "1 час": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 hour"
+          }
+        }
+      }
+    },
+    "10 000": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "10,000"
+          }
+        }
+      }
+    },
+    "10 000 шагов": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "10,000 steps"
+          }
+        }
+      }
+    },
+    "10 мин": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "10 min"
+          }
+        }
+      }
+    },
+    "100 AI-проверок фото в месяц": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "100 AI photo checks a month"
+          }
+        }
+      }
+    },
+    "100% выполнено. Сегодня ты сделал это для себя.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "100% done. Today you did this for yourself."
+          }
+        }
+      }
+    },
+    "15 мин": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "15 min"
+          }
+        }
+      }
+    },
+    "2 заморозки серии 🧊": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2 streak freezes 🧊"
+          }
+        }
+      }
+    },
+    "2 л": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2 L"
+          }
+        }
+      }
+    },
+    "3 дня PRO": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3 days of PRO"
+          }
+        }
+      }
+    },
+    "3 заморозки серии 🧊": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3 streak freezes 🧊"
+          }
+        }
+      }
+    },
+    "3 км": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3 km"
+          }
+        }
+      }
+    },
+    "30 AI-проверок фото в месяц": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 AI photo checks a month"
+          }
+        }
+      }
+    },
+    "30 мин": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 min"
+          }
+        }
+      }
+    },
+    "7": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7"
+          }
+        }
+      }
+    },
+    "7 дней PRO": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 days of PRO"
+          }
+        }
+      }
+    },
+    "8 часов": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "8 hours"
+          }
+        }
+      }
+    },
+    "@%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "@%@"
+          }
+        }
+      }
+    },
+    "A": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A"
+          }
+        }
+      }
+    },
+    "ABC123": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ABC123"
+          }
+        }
+      }
+    },
+    "AI broke \"%@\" into %lld steps:": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI broke \"%@\" into %lld steps:"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "new",
+            "value": "AI broke \"%1$@\" into %2$lld steps:"
+          }
+        }
+      }
+    },
+    "AI condition: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI condition: %@"
+          }
+        }
+      }
+    },
+    "AI is splitting your goal…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI is splitting your goal…"
+          }
+        }
+      }
+    },
+    "AI is thinking…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI is thinking…"
+          }
+        }
+      }
+    },
+    "AI verification condition": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI verification condition"
+          }
+        }
+      }
+    },
+    "AI-коуч и планировщик целей": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI coach and goal planner"
+          }
+        }
+      }
+    },
+    "Achievements": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Achievements"
+          }
+        }
+      }
+    },
+    "Active": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active"
+          }
+        }
+      }
+    },
+    "Activity": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activity"
+          }
+        }
+      }
+    },
+    "Add tasks ✦": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add tasks ✦"
+          }
+        }
+      }
+    },
+    "Add these tasks?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add these tasks?"
+          }
+        }
+      }
+    },
+    "Analyze with AI 🤖": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Analyze with AI 🤖"
+          }
+        }
+      }
+    },
+    "Analyzing with AI…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Analyzing with AI…"
+          }
+        }
+      }
+    },
+    "Approved ✅": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approved ✅"
+          }
+        }
+      }
+    },
+    "Assigned by parent": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assigned by parent"
+          }
+        }
+      }
+    },
+    "Assignment": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assignment"
+          }
+        }
+      }
+    },
+    "Before & After": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before & After"
+          }
+        }
+      }
+    },
+    "Block distractions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Block distractions"
+          }
+        }
+      }
+    },
+    "Break it down": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Break it down"
+          }
+        }
+      }
+    },
+    "Break this goal down 🤖": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Break this goal down 🤖"
+          }
+        }
+      }
+    },
+    "By Arslan (dev), his team\nResearch and best moments": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By Arslan (dev), his team\nResearch and best moments"
+          }
+        }
+      }
+    },
+    "By saying": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By saying"
+          }
+        }
+      }
+    },
+    "By yourself": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By yourself"
+          }
+        }
+      }
+    },
+    "Calendar & streak 🔥": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calendar & streak 🔥"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        }
+      }
+    },
+    "Challenge": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Challenge"
+          }
+        }
+      }
+    },
+    "Checking...": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking..."
+          }
+        }
+      }
+    },
+    "Chess.com": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chess.com"
+          }
+        }
+      }
+    },
+    "Choose apps to block": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose apps to block"
+          }
+        }
+      }
+    },
+    "Complete a task to see it here": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Complete a task to see it here"
+          }
+        }
+      }
+    },
+    "Completed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed"
+          }
+        }
+      }
+    },
+    "Continue": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue"
+          }
+        }
+      }
+    },
+    "Continue with Email": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue with Email"
+          }
+        }
+      }
+    },
+    "Create": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create"
+          }
+        }
+      }
+    },
+    "Create %lld sub-tasks": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create %lld sub-tasks"
+          }
+        }
+      }
+    },
+    "Create tasks by sending the bot a message": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create tasks by sending the bot a message"
+          }
+        }
+      }
+    },
+    "Custom": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom"
+          }
+        }
+      }
+    },
+    "Daily": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily"
+          }
+        }
+      }
+    },
+    "Daily Quests": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily Quests"
+          }
+        }
+      }
+    },
+    "Daily reminder": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily reminder"
+          }
+        }
+      }
+    },
+    "Date": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date"
+          }
+        }
+      }
+    },
+    "Deadline": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deadline"
+          }
+        }
+      }
+    },
+    "Describe what the photo should show. Claude AI will verify each submission.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Describe what the photo should show. Claude AI will verify each submission."
+          }
+        }
+      }
+    },
+    "Description (optional)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Description (optional)"
+          }
+        }
+      }
+    },
+    "Disconnect": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect"
+          }
+        }
+      }
+    },
+    "Disconnect Telegram?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect Telegram?"
+          }
+        }
+      }
+    },
+    "Disconnecting stops the bot from creating tasks, accepting photos, or sending you notifications.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnecting stops the bot from creating tasks, accepting photos, or sending you notifications."
+          }
+        }
+      }
+    },
+    "Done": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        }
+      }
+    },
+    "Edit blocked apps": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit blocked apps"
+          }
+        }
+      }
+    },
+    "Edit task": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit task"
+          }
+        }
+      }
+    },
+    "Enable Screen Time access": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable Screen Time access"
+          }
+        }
+      }
+    },
+    "Error": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error"
+          }
+        }
+      }
+    },
+    "Excuse accepted 🙏": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Excuse accepted 🙏"
+          }
+        }
+      }
+    },
+    "Failed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed"
+          }
+        }
+      }
+    },
+    "Focus Mode": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus Mode"
+          }
+        }
+      }
+    },
+    "Frequency": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frequency"
+          }
+        }
+      }
+    },
+    "From parents": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From parents"
+          }
+        }
+      }
+    },
+    "Get Started": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get Started"
+          }
+        }
+      }
+    },
+    "Get reminders and results from the bot": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get reminders and results from the bot"
+          }
+        }
+      }
+    },
+    "Goal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goal"
+          }
+        }
+      }
+    },
+    "Goal target": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goal target"
+          }
+        }
+      }
+    },
+    "Good morning 🤖": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Good morning 🤖"
+          }
+        }
+      }
+    },
+    "Habit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Habit"
+          }
+        }
+      }
+    },
+    "Has deadline": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Has deadline"
+          }
+        }
+      }
+    },
+    "If Telegram didn't open, send this to @%@:": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If Telegram didn't open, send this to @%@:"
+          }
+        }
+      }
+    },
+    "Individual": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Individual"
+          }
+        }
+      }
+    },
+    "Instagram Stories": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instagram Stories"
+          }
+        }
+      }
+    },
+    "LVL": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LVL"
+          }
+        }
+      }
+    },
+    "Linked": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linked"
+          }
+        }
+      }
+    },
+    "Linked as @%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linked as @%@"
+          }
+        }
+      }
+    },
+    "Listening…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listening…"
+          }
+        }
+      }
+    },
+    "Location reminder 📍": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Location reminder 📍"
+          }
+        }
+      }
+    },
+    "MAX": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MAX"
+          }
+        }
+      }
+    },
+    "Mine": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mine"
+          }
+        }
+      }
+    },
+    "My Plans": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My Plans"
+          }
+        }
+      }
+    },
+    "New activity": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New activity"
+          }
+        }
+      }
+    },
+    "New life starts here": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New life starts here"
+          }
+        }
+      }
+    },
+    "No assignments from parents yet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No assignments from parents yet"
+          }
+        }
+      }
+    },
+    "No completed tasks yet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No completed tasks yet"
+          }
+        }
+      }
+    },
+    "No credit card required. Just enjoy!": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No credit card required. Just enjoy!"
+          }
+        }
+      }
+    },
+    "No progress photos yet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No progress photos yet"
+          }
+        }
+      }
+    },
+    "No reports yet. Submit your first one!": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No reports yet. Submit your first one!"
+          }
+        }
+      }
+    },
+    "No tasks in %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No tasks in %@"
+          }
+        }
+      }
+    },
+    "Not approved ❌": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not approved ❌"
+          }
+        }
+      }
+    },
+    "Not linked": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not linked"
+          }
+        }
+      }
+    },
+    "OK": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        }
+      }
+    },
+    "One-time": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One-time"
+          }
+        }
+      }
+    },
+    "Open Telegram to link": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Telegram to link"
+          }
+        }
+      }
+    },
+    "PERFORMANCE": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PERFORMANCE"
+          }
+        }
+      }
+    },
+    "PIN": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN"
+          }
+        }
+      }
+    },
+    "PIN (4-6 цифр)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN (4-6 digits)"
+          }
+        }
+      }
+    },
+    "PRO": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PRO"
+          }
+        }
+      }
+    },
+    "PRO активен до %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PRO active until %@"
+          }
+        }
+      }
+    },
+    "Paused": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paused"
+          }
+        }
+      }
+    },
+    "Pick apps to shield while you focus on your activities.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick apps to shield while you focus on your activities."
+          }
+        }
+      }
+    },
+    "Premium до %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Premium until %@"
+          }
+        }
+      }
+    },
+    "Progress": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Progress"
+          }
+        }
+      }
+    },
+    "Protect your streak on a missed day": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protect your streak on a missed day"
+          }
+        }
+      }
+    },
+    "Register for events, subscribe\nto calendars and manage\nevents you're going to.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Register for events, subscribe\nto calendars and manage\nevents you're going to."
+          }
+        }
+      }
+    },
+    "Remind me": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remind me"
+          }
+        }
+      }
+    },
+    "Reminder": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminder"
+          }
+        }
+      }
+    },
+    "Reminder time": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminder time"
+          }
+        }
+      }
+    },
+    "Repeat": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repeat"
+          }
+        }
+      }
+    },
+    "Reports (%lld)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reports (%lld)"
+          }
+        }
+      }
+    },
+    "Save": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
+        }
+      }
+    },
+    "Schedule": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schedule"
+          }
+        }
+      }
+    },
+    "Set deadline": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set deadline"
+          }
+        }
+      }
+    },
+    "Speak everything you need to do": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speak everything you need to do"
+          }
+        }
+      }
+    },
+    "Start Speaking": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start Speaking"
+          }
+        }
+      }
+    },
+    "Start focus session": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start focus session"
+          }
+        }
+      }
+    },
+    "Start your first challenge": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start your first challenge"
+          }
+        }
+      }
+    },
+    "Stop focus session": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop focus session"
+          }
+        }
+      }
+    },
+    "Streak Freezes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Streak Freezes"
+          }
+        }
+      }
+    },
+    "Submit photo proof for challenges": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Submit photo proof for challenges"
+          }
+        }
+      }
+    },
+    "Submit photo reports to build your before/after timeline": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Submit photo reports to build your before/after timeline"
+          }
+        }
+      }
+    },
+    "Submit report": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Submit report"
+          }
+        }
+      }
+    },
+    "Tab": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tab"
+          }
+        }
+      }
+    },
+    "Tap + to add your first task here": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap + to add your first task here"
+          }
+        }
+      }
+    },
+    "Tap ✦ to let AI build a plan for you": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap ✦ to let AI build a plan for you"
+          }
+        }
+      }
+    },
+    "Target value (e.g. 100 for 100 km)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Target value (e.g. 100 for 100 km)"
+          }
+        }
+      }
+    },
+    "Task": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Task"
+          }
+        }
+      }
+    },
+    "Task title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Task title"
+          }
+        }
+      }
+    },
+    "Telegram bot": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telegram bot"
+          }
+        }
+      }
+    },
+    "Themes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Themes"
+          }
+        }
+      }
+    },
+    "Time": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time"
+          }
+        }
+      }
+    },
+    "Timeline": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timeline"
+          }
+        }
+      }
+    },
+    "Title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Title"
+          }
+        }
+      }
+    },
+    "Today: %lld/%lld to keep streak": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today: %lld/%lld to keep streak"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Today: %1$lld/%2$lld to keep streak"
+          }
+        }
+      }
+    },
+    "Try rescheduling this to tomorrow to set yourself up for success.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try rescheduling this to tomorrow to set yourself up for success."
+          }
+        }
+      }
+    },
+    "Type": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type"
+          }
+        }
+      }
+    },
+    "Upgrade": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upgrade"
+          }
+        }
+      }
+    },
+    "VS": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VS"
+          }
+        }
+      }
+    },
+    "We will fix it .": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We will fix it."
+          }
+        }
+      }
+    },
+    "We'll open Telegram with a one-time code pre-filled. Send it to the bot to link this account — the code expires in 10 minutes.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We'll open Telegram with a one-time code pre-filled. Send it to the bot to link this account -- the code expires in 10 minutes."
+          }
+        }
+      }
+    },
+    "Week on us.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Week on us."
+          }
+        }
+      }
+    },
+    "Weekly": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weekly"
+          }
+        }
+      }
+    },
+    "What happened?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What happened?"
+          }
+        }
+      }
+    },
+    "What made it hard? (optional)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What made it hard? (optional)"
+          }
+        }
+      }
+    },
+    "What you can do once linked": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What you can do once linked"
+          }
+        }
+      }
+    },
+    "Why did I fail? 🔍": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Why did I fail? 🔍"
+          }
+        }
+      }
+    },
+    "Write a new task...": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write a new task..."
+          }
+        }
+      }
+    },
+    "Write up": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write up"
+          }
+        }
+      }
+    },
+    "You can relink anytime from this screen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can relink anytime from this screen."
+          }
+        }
+      }
+    },
+    "You can't \nforget about it. Turn on \nthe Push-notifications.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can't \nforget about it. Turn on \nthe Push-notifications."
+          }
+        }
+      }
+    },
+    "You can't talk yourself out of doing this. Send photo to prove.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can't talk yourself out of doing this. Send photo to prove."
+          }
+        }
+      }
+    },
+    "You have done ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You have done "
+          }
+        }
+      }
+    },
+    "Your AI Coach": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your AI Coach"
+          }
+        }
+      }
+    },
+    "days": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "days"
+          }
+        }
+      }
+    },
+    "e.g. Photo at gym with equipment visible": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "e.g. Photo at gym with equipment visible"
+          }
+        }
+      }
+    },
+    "i": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "i"
+          }
+        }
+      }
+    },
+    "or + to create manually": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "or + to create manually"
+          }
+        }
+      }
+    },
+    "reInspire": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "reInspire"
+          }
+        }
+      }
+    },
+    "reInspire -- %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "reInspire -- %@"
+          }
+        }
+      }
+    },
+    "reInspire -- продолжай в том же духе": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "reInspire -- keep up the momentum"
+          }
+        }
+      }
+    },
+    "reInspire Premium": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "reInspire Premium"
+          }
+        }
+      }
+    },
+    "reInspire.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "reInspire."
+          }
+        }
+      }
+    },
+    "you@example.com": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "you@example.com"
+          }
+        }
+      }
+    },
+    "~%lld day%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "~%lld day%@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "new",
+            "value": "~%1$lld day%2$@"
+          }
+        }
+      }
+    },
+    "«%@»: цель пока не достигнута -- %@ по данным приложений. Завершите цель полностью или отключите строгий режим в настройках.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"%@\": goal not reached yet -- %@ according to app data. Finish the goal completely or turn off strict mode in settings."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "new",
+            "value": "«%1$@»: цель пока не достигнута -- %2$@ по данным приложений. Завершите цель полностью или отключите строгий режим в настройках."
+          }
+        }
+      }
+    },
+    "Аккаунт": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account"
+          }
+        }
+      }
+    },
+    "Аккаунт для %@ готов": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account for %@ is ready"
+          }
+        }
+      }
+    },
+    "Аккаунт ребёнка": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child account"
+          }
+        }
+      }
+    },
+    "Аккаунты детей": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child accounts"
+          }
+        }
+      }
+    },
+    "Активность": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activity"
+          }
+        }
+      }
+    },
+    "Активность по дням недели": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activity by day of week"
+          }
+        }
+      }
+    },
+    "Активные калории": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active calories"
+          }
+        }
+      }
+    },
+    "Активный месяц": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Most active month"
+          }
+        }
+      }
+    },
+    "Активных дней": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active days"
+          }
+        }
+      }
+    },
+    "Анализировать": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Analyze"
+          }
+        }
+      }
+    },
+    "Аналитика Pro": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pro Analytics"
+          }
+        }
+      }
+    },
+    "Без изменений к прошлому месяцу": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No change from last month"
+          }
+        }
+      }
+    },
+    "Без пропущенных встреч": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No missed meetings"
+          }
+        }
+      }
+    },
+    "Без сахара": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No sugar"
+          }
+        }
+      }
+    },
+    "Без телефона перед сном": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No phone before bed"
+          }
+        }
+      }
+    },
+    "Безлимит задач и привычек": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlimited tasks and habits"
+          }
+        }
+      }
+    },
+    "Белая": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "White"
+          }
+        }
+      }
+    },
+    "Бесплатные проверки фото на этот месяц закончились. Отчёт сохранён без проверки. В Premium проверки безлимитные.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You're out of free photo checks this month. Your report was saved without verification. Premium gets you unlimited checks."
+          }
+        }
+      }
+    },
+    "Больше AI-проверок фото": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More AI photo checks"
+          }
+        }
+      }
+    },
+    "Бонус удачи: +%lld XP": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lucky bonus: +%lld XP"
+          }
+        }
+      }
+    },
+    "Бросить": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quit"
+          }
+        }
+      }
+    },
+    "Бросить вызов": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send a challenge"
+          }
+        }
+      }
+    },
+    "Будильник": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alarm"
+          }
+        }
+      }
+    },
+    "В": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wed"
+          }
+        }
+      }
+    },
+    "В выбранное время придёт уведомление со списком задач на день. iOS не даёт ставить системный будильник из приложения, поэтому это локальное напоминание.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You'll get a notification with your task list at the time you pick. iOS doesn't let apps set system alarms, so this is a local reminder instead."
+          }
+        }
+      }
+    },
+    "Введи код друга и получи 3 дня PRO.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a friend's code and get 3 days of PRO."
+          }
+        }
+      }
+    },
+    "Введи код, который прислал друг": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the code your friend sent you"
+          }
+        }
+      }
+    },
+    "Введи свой ник на Chess.com. Мы будем считать сыгранные за день партии через публичный API -- авторизация не нужна.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter your Chess.com username. We'll count games played each day via the public API -- no login needed."
+          }
+        }
+      }
+    },
+    "Ввести код": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter code"
+          }
+        }
+      }
+    },
+    "Версия %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version %@"
+          }
+        }
+      }
+    },
+    "Вести дневник": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep a journal"
+          }
+        }
+      }
+    },
+    "Вечер": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evening"
+          }
+        }
+      }
+    },
+    "Войди данными, которые дал родитель.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in with the details your parent gave you."
+          }
+        }
+      }
+    },
+    "Войти": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log in"
+          }
+        }
+      }
+    },
+    "Войти как ребёнок": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log in as a child"
+          }
+        }
+      }
+    },
+    "Восстановить покупки": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore purchases"
+          }
+        }
+      }
+    },
+    "Время": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time"
+          }
+        }
+      }
+    },
+    "Вручную": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manually"
+          }
+        }
+      }
+    },
+    "Вс": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sun"
+          }
+        }
+      }
+    },
+    "Все ваши привычки, отчёты и профиль будут удалены без возможности восстановления.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All your habits, reports, and profile will be permanently deleted."
+          }
+        }
+      }
+    },
+    "Все участники будут откреплены. Подписки это не затронет.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All members will be unlinked. Subscriptions won't be affected."
+          }
+        }
+      }
+    },
+    "Всего": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total"
+          }
+        }
+      }
+    },
+    "Всего приглашено: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total invited: %lld"
+          }
+        }
+      }
+    },
+    "Вставать по будильнику": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get up with the alarm"
+          }
+        }
+      }
+    },
+    "Вступить": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join"
+          }
+        }
+      }
+    },
+    "Всё готово ✅": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All done ✅"
+          }
+        }
+      }
+    },
+    "Всё из Premium для 5 человек": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everything in Premium for 5 people"
+          }
+        }
+      }
+    },
+    "Всё из Pro + максимум AI-проверок и коннектор Strava.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everything in Pro plus max AI checks and the Strava connector."
+          }
+        }
+      }
+    },
+    "Всё равно прогресс. Сделай сегодняшнее задание.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Still progress. Do today's task."
+          }
+        }
+      }
+    },
+    "Вт": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tue"
+          }
+        }
+      }
+    },
+    "Вход": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log in"
+          }
+        }
+      }
+    },
+    "Вход ребёнка": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child login"
+          }
+        }
+      }
+    },
+    "Вчера спасла заморозка": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A freeze saved you yesterday"
+          }
+        }
+      }
+    },
+    "Выбери длину дуэли и нажми кнопку, затем потрясите оба телефона.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick a duel length and tap the button, then both shake your phones."
+          }
+        }
+      }
+    },
+    "Выберите место и радиус на карте. Когда вы окажетесь рядом, придёт уведомление -- пора сфотографировать и выполнить задачу.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick a spot and radius on the map. When you're nearby, we'll notify you -- time to snap a photo and get it done."
+          }
+        }
+      }
+    },
+    "Выбрать из галереи": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose from gallery"
+          }
+        }
+      }
+    },
+    "Выгода %lld%%": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save %lld%%"
+          }
+        }
+      }
+    },
+    "Вызвать друга": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Challenge a friend"
+          }
+        }
+      }
+    },
+    "Вызови друга на дуэль": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Challenge a friend to a duel"
+          }
+        }
+      }
+    },
+    "Вызываю тебя на дуэль в reInspire ⚔️ Код: %@. Скачай: https://thechallenges.app": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I'm challenging you to a duel in reInspire ⚔️ Code: %@. Download: https://thechallenges.app"
+          }
+        }
+      }
+    },
+    "Вызываю тебя на дуэль в reInspire ⚔️ Кто выполнит больше дел, тот и победил. Код: %@. Скачай: https://thechallenges.app": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I'm challenging you to a duel in reInspire ⚔️ Whoever completes more tasks wins. Code: %@. Download: https://thechallenges.app"
+          }
+        }
+      }
+    },
+    "Выйти": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log out"
+          }
+        }
+      }
+    },
+    "Выйти из аккаунта": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log out"
+          }
+        }
+      }
+    },
+    "Выйти из аккаунта?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log out?"
+          }
+        }
+      }
+    },
+    "Выйти из семьи можно только с кодом, который придёт родителю. Запроси код и попроси его у родителя.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can only leave the family with a code sent to your parent. Request the code and ask your parent for it."
+          }
+        }
+      }
+    },
+    "Выпей стакан воды и сфотографируй. AI проверит и засчитает -- так начинается твоя серия.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drink a glass of water and snap a photo. AI will check it and count it -- that's how your streak starts."
+          }
+        }
+      }
+    },
+    "Выполнено": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        }
+      }
+    },
+    "Выполнено: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed: %lld"
+          }
+        }
+      }
+    },
+    "Выполни первую задачу, чтобы попасть в рейтинг": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Complete your first task to get on the leaderboard"
+          }
+        }
+      }
+    },
+    "Выполнил": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        }
+      }
+    },
+    "Выполнили %lld из %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed %lld of %lld"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Выполнили %1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "Галерея прогресса": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Progress gallery"
+          }
+        }
+      }
+    },
+    "Год": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Year"
+          }
+        }
+      }
+    },
+    "Голосом": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By voice"
+          }
+        }
+      }
+    },
+    "Готовим видео…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparing video…"
+          }
+        }
+      }
+    },
+    "Готово": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        }
+      }
+    },
+    "Готово 🎉": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done 🎉"
+          }
+        }
+      }
+    },
+    "Готово. Можешь закрыть экран.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done. You can close this screen."
+          }
+        }
+      }
+    },
+    "Далее": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next"
+          }
+        }
+      }
+    },
+    "Дата": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date"
+          }
+        }
+      }
+    },
+    "Дать задание всем детям": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assign task to all kids"
+          }
+        }
+      }
+    },
+    "Дедлайн": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deadline"
+          }
+        }
+      }
+    },
+    "Дедлайн цели": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goal deadline"
+          }
+        }
+      }
+    },
+    "Дедлайн: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deadline: %@"
+          }
+        }
+      }
+    },
+    "День": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Day"
+          }
+        }
+      }
+    },
+    "День ещё не закончился": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The day isn't over yet"
+          }
+        }
+      }
+    },
+    "День по календарю": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calendar day"
+          }
+        }
+      }
+    },
+    "Дети (%lld)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kids (%lld)"
+          }
+        }
+      }
+    },
+    "Дистанция за день": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Distance per day"
+          }
+        }
+      }
+    },
+    "Длительность дуэли": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duel duration"
+          }
+        }
+      }
+    },
+    "Для подтверждения мы отправим код на твою почту.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We'll send a code to your email to confirm."
+          }
+        }
+      }
+    },
+    "Для себя": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For yourself"
+          }
+        }
+      }
+    },
+    "Дней:": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Days:"
+          }
+        }
+      }
+    },
+    "Дни с активностью": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Days with activity"
+          }
+        }
+      }
+    },
+    "До месяца PRO": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Until a month of PRO"
+          }
+        }
+      }
+    },
+    "До серии в %lld дней осталось %lld -- держи темп!": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld days left to a %lld-day streak -- keep it up!"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "new",
+            "value": "До серии в %1$lld дней осталось %2$lld -- держи темп!"
+          }
+        }
+      }
+    },
+    "Добавить задачи ✦": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add tasks ✦"
+          }
+        }
+      }
+    },
+    "Добавить место": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a place"
+          }
+        }
+      }
+    },
+    "Добавить новую привычку": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a new habit"
+          }
+        }
+      }
+    },
+    "Добавить подзадачу": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a subtask"
+          }
+        }
+      }
+    },
+    "Добавлено задач в твой список: %lld.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added %lld tasks to your list."
+          }
+        }
+      }
+    },
+    "Добавьте задачу кнопками ниже": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a task using the buttons below"
+          }
+        }
+      }
+    },
+    "Добавьте цель, например \"10 страниц\", \"30 мин\" или \"5 км\".": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a goal, like \"10 pages\", \"30 min\", or \"5 km\"."
+          }
+        }
+      }
+    },
+    "Доброе утро": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Good morning"
+          }
+        }
+      }
+    },
+    "Достигнут лимит в %lld мест.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You've reached the limit of %lld places."
+          }
+        }
+      }
+    },
+    "Доступ не предоставлен.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Access not granted."
+          }
+        }
+      }
+    },
+    "Доступно в reInspire Max": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Available in reInspire Max"
+          }
+        }
+      }
+    },
+    "Друг присоединился": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Friend joined"
+          }
+        }
+      }
+    },
+    "Другие приложения": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other apps"
+          }
+        }
+      }
+    },
+    "Других детей пока нет.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No other kids yet."
+          }
+        }
+      }
+    },
+    "Дуэли": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duels"
+          }
+        }
+      }
+    },
+    "Дуэли с друзьями": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duels with friends"
+          }
+        }
+      }
+    },
+    "Дуэль": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duel"
+          }
+        }
+      }
+    },
+    "Дуэль началась. Можешь закрыть экран.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duel started. You can close this screen."
+          }
+        }
+      }
+    },
+    "Дуэль рядом": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duel nearby"
+          }
+        }
+      }
+    },
+    "Дуэль создана": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duel created"
+          }
+        }
+      }
+    },
+    "Ежедневно": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily"
+          }
+        }
+      }
+    },
+    "Ежедневное напоминание": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily reminder"
+          }
+        }
+      }
+    },
+    "Ежедневное напоминание со списком задач в выбранное время": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily reminder with your task list at a time you choose"
+          }
+        }
+      }
+    },
+    "Ежедневные шаги": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily steps"
+          }
+        }
+      }
+    },
+    "Еженедельно": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weekly"
+          }
+        }
+      }
+    },
+    "Если была веская причина, в следующий раз нажмите \"Отправить как оправдание\"": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you had a good reason, next time tap \"Submit as excuse\""
+          }
+        }
+      }
+    },
+    "Если ты пропустил день, заморозка применяется автоматически -- день засчитывается, и серия не прерывается. Новые заморозки начисляются за каждые 7 дней лучшей серии.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you miss a day, a freeze kicks in automatically -- the day still counts and your streak stays alive. You earn a new freeze for every 7 days of your best streak."
+          }
+        }
+      }
+    },
+    "Ещё есть время": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There's still time"
+          }
+        }
+      }
+    },
+    "Ещё раз": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try again"
+          }
+        }
+      }
+    },
+    "Ждём": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting"
+          }
+        }
+      }
+    },
+    "За каждого друга: 3 дня PRO или 1 заморозка серии. 10 друзей -- целый месяц PRO.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For every friend: 3 days of PRO or 1 streak freeze. 10 friends -- a whole month of PRO."
+          }
+        }
+      }
+    },
+    "За последние 30 дней": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Over the last 30 days"
+          }
+        }
+      }
+    },
+    "За прошлую неделю ты занял %@ -- начислено %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "За прошлую неделю ты занял %1$@ -- начислено %2$@."
+          }
+        }
+      }
+    },
+    "Заведи ребёнку логин и PIN -- он войдёт на своём телефоне этими данными. Можно дать задание одному ребёнку (свайп влево по нему) или сразу всем.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set up a login and PIN for your kid -- they'll use it to sign in on their phone. You can assign a task to one kid (swipe left on them) or to all of them at once."
+          }
+        }
+      }
+    },
+    "Заверши день с гордостью за себя.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End the day proud of yourself."
+          }
+        }
+      }
+    },
+    "Заверши настройку аккаунта": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finish setting up your account"
+          }
+        }
+      }
+    },
+    "Загружаем фото…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uploading photo…"
+          }
+        }
+      }
+    },
+    "Задание": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Task"
+          }
+        }
+      }
+    },
+    "Задание для %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Task for %@"
+          }
+        }
+      }
+    },
+    "Задания": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tasks"
+          }
+        }
+      }
+    },
+    "Задача": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Task"
+          }
+        }
+      }
+    },
+    "Задача\nвыполнена": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Task\ncompleted"
+          }
+        }
+      }
+    },
+    "Задача выполнена в reInspire ✅ %@ %@ #reInspire #привычки": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Задача выполнена в reInspire ✅ %1$@ %2$@ #reInspire #привычки"
+          }
+        }
+      }
+    },
+    "Задача выполнена! 🔥": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Task completed! 🔥"
+          }
+        }
+      }
+    },
+    "Задачи для достижения цели:": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tasks to reach your goal:"
+          }
+        }
+      }
+    },
+    "Закрыть": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        }
+      }
+    },
+    "Заморозить": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Freeze"
+          }
+        }
+      }
+    },
+    "Заморозить вчерашний день": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Freeze yesterday"
+          }
+        }
+      }
+    },
+    "Заморозка": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Freeze"
+          }
+        }
+      }
+    },
+    "Заморозка использована автоматически": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A freeze was used automatically"
+          }
+        }
+      }
+    },
+    "Заморозка серии и бонусы": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Streak freeze and bonuses"
+          }
+        }
+      }
+    },
+    "Заморозь вчерашний день -- осталось %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Freeze yesterday -- %lld left"
+          }
+        }
+      }
+    },
+    "Запросы на выход": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exit requests"
+          }
+        }
+      }
+    },
+    "Запускайте задачи и автоматизации через приложение «Команды» и Siri": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run tasks and automations via the Shortcuts app and Siri"
+          }
+        }
+      }
+    },
+    "Зарядка": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workout"
+          }
+        }
+      }
+    },
+    "Засчитывает сыгранные за день партии на Chess.com": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Counts games played today on Chess.com"
+          }
+        }
+      }
+    },
+    "Здоровый сон": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Healthy sleep"
+          }
+        }
+      }
+    },
+    "Здоровье": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Health"
+          }
+        }
+      }
+    },
+    "Зелёный": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Green"
+          }
+        }
+      }
+    },
+    "Значение прогресса (например, 5 для 5 км)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Progress value (e.g. 5 for 5 km)"
+          }
+        }
+      }
+    },
+    "Значок приложения": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App icon"
+          }
+        }
+      }
+    },
+    "ИИ пошагово": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI step-by-step"
+          }
+        }
+      }
+    },
+    "ИИ проверит: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI will check: %@"
+          }
+        }
+      }
+    },
+    "ИИ проверяет оправдание…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI is checking your excuse…"
+          }
+        }
+      }
+    },
+    "ИИ проверяет фото…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI is checking your photo…"
+          }
+        }
+      }
+    },
+    "ИИ проверяет…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI is checking…"
+          }
+        }
+      }
+    },
+    "ИИ шаг за шагом": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI step by step"
+          }
+        }
+      }
+    },
+    "Идеальный день!": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perfect day!"
+          }
+        }
+      }
+    },
+    "Идёт": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In progress"
+          }
+        }
+      }
+    },
+    "Измени почту и пароль для %@. Этими данными ребёнок входит в приложение.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change the email and password for %@. Your child uses these to log into the app."
+          }
+        }
+      }
+    },
+    "Изменить": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit"
+          }
+        }
+      }
+    },
+    "Изменить фото": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change photo"
+          }
+        }
+      }
+    },
+    "Имя": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name"
+          }
+        }
+      }
+    },
+    "Имя пользователя Chess.com": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chess.com username"
+          }
+        }
+      }
+    },
+    "Имя ребёнка": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child's name"
+          }
+        }
+      }
+    },
+    "Имя, фото и аккаунт": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name, photo, and account"
+          }
+        }
+      }
+    },
+    "Итоги года": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Year in review"
+          }
+        }
+      }
+    },
+    "Ищу рядом...": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Searching nearby..."
+          }
+        }
+      }
+    },
+    "Каждое утро": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every morning"
+          }
+        }
+      }
+    },
+    "Каждую неделю": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every week"
+          }
+        }
+      }
+    },
+    "Каждый день": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every day"
+          }
+        }
+      }
+    },
+    "Каждый десятый друг приносит 30 дней PRO автоматически.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every 10th friend gets you 30 days of PRO automatically."
+          }
+        }
+      }
+    },
+    "Каждый понедельник топ-3 получают заморозки серии: 3 / 2 / 1 🧊": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every Monday the top 3 get streak freezes: 3 / 2 / 1 🧊"
+          }
+        }
+      }
+    },
+    "Как работают заморозки": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How freezes work"
+          }
+        }
+      }
+    },
+    "Как тебя зовут": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What's your name"
+          }
+        }
+      }
+    },
+    "Какое фото нужно сделать, чтобы засчитать выполнение. Фото требуется всегда, если в настройках не выключено.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What photo is needed to count as completed. A photo is always required unless turned off in settings."
+          }
+        }
+      }
+    },
+    "Календарь Apple": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Calendar"
+          }
+        }
+      }
+    },
+    "Камера недоступна": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camera unavailable"
+          }
+        }
+      }
+    },
+    "Класс": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grade"
+          }
+        }
+      }
+    },
+    "Когда ты активнее": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When you're more active"
+          }
+        }
+      }
+    },
+    "Когда? (необязательно)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When? (optional)"
+          }
+        }
+      }
+    },
+    "Код": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code"
+          }
+        }
+      }
+    },
+    "Код дуэли": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duel code"
+          }
+        }
+      }
+    },
+    "Код из письма": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code from the email"
+          }
+        }
+      }
+    },
+    "Код от родителя": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code from parent"
+          }
+        }
+      }
+    },
+    "Код подтверждения": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmation code"
+          }
+        }
+      }
+    },
+    "Код приглашения": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invite code"
+          }
+        }
+      }
+    },
+    "Код приглашения для семьи": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Family invite code"
+          }
+        }
+      }
+    },
+    "Код принят! 🎉": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code accepted! 🎉"
+          }
+        }
+      }
+    },
+    "Код: %@ · %lld дн.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Код: %1$@ · %2$lld дн."
+          }
+        }
+      }
+    },
+    "Кольца активности и тренировки из Apple Фитнес": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activity rings and workouts from Apple Fitness"
+          }
+        }
+      }
+    },
+    "Команды": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shortcuts"
+          }
+        }
+      }
+    },
+    "Комментарий (необязательно)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comment (optional)"
+          }
+        }
+      }
+    },
+    "Коннекторы": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connectors"
+          }
+        }
+      }
+    },
+    "Коннекторы Max и приоритетная обработка": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Max connectors and priority processing"
+          }
+        }
+      }
+    },
+    "Конфиденциальность": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy"
+          }
+        }
+      }
+    },
+    "Кто выполнил": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Who completed it"
+          }
+        }
+      }
+    },
+    "Лимит AI-проверок исчерпан": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI check limit reached"
+          }
+        }
+      }
+    },
+    "Лицензионное соглашение (EULA)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "License agreement (EULA)"
+          }
+        }
+      }
+    },
+    "Логин": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Login"
+          }
+        }
+      }
+    },
+    "Логин: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Login: %@"
+          }
+        }
+      }
+    },
+    "Локации": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Locations"
+          }
+        }
+      }
+    },
+    "Лучшая серия": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Best streak"
+          }
+        }
+      }
+    },
+    "Лучший день (%lld)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Best day (%lld)"
+          }
+        }
+      }
+    },
+    "Маленький прогресс": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Small progress"
+          }
+        }
+      }
+    },
+    "Мама": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mom"
+          }
+        }
+      }
+    },
+    "Медитировать": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meditate"
+          }
+        }
+      }
+    },
+    "Месяц": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Month"
+          }
+        }
+      }
+    },
+    "Минуты тренировки": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workout minutes"
+          }
+        }
+      }
+    },
+    "Мои итоги года": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My year in review"
+          }
+        }
+      }
+    },
+    "Мой %lld год в reInspire": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My %lld year in reInspire"
+          }
+        }
+      }
+    },
+    "Моя неделя": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My week"
+          }
+        }
+      }
+    },
+    "Моя неделя в reInspire": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My week in reInspire"
+          }
+        }
+      }
+    },
+    "Моя серия": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My streak"
+          }
+        }
+      }
+    },
+    "Мы напомним только, если привычка ещё не выполнена.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We'll only remind you if the habit isn't done yet."
+          }
+        }
+      }
+    },
+    "Мы отправили код на ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We sent a code to "
+          }
+        }
+      }
+    },
+    "На %lld отметок больше, чем месяцем ранее": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld more check-ins than last month"
+          }
+        }
+      }
+    },
+    "На %lld отметок меньше, чем месяцем ранее": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld fewer check-ins than last month"
+          }
+        }
+      }
+    },
+    "На завтра": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For tomorrow"
+          }
+        }
+      }
+    },
+    "На проверке": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Under review"
+          }
+        }
+      }
+    },
+    "На прошлой неделе ты не попал в топ-3. Награды (3 / 2 / 1 заморозки) начисляются автоматически по понедельникам.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You didn't make the top 3 last week. Rewards (3 / 2 / 1 freezes) are credited automatically every Monday."
+          }
+        }
+      }
+    },
+    "На сегодня всё": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That's all for today"
+          }
+        }
+      }
+    },
+    "Навсегда": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forever"
+          }
+        }
+      }
+    },
+    "Награды недели": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This week's rewards"
+          }
+        }
+      }
+    },
+    "Награды: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rewards: %lld"
+          }
+        }
+      }
+    },
+    "Нажми, чтобы отменить": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap to cancel"
+          }
+        }
+      }
+    },
+    "Нажмите \"Отправить как оправдание\", если была веская причина (травма, болезнь, форс-мажор)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap \"Submit as excused\" if there was a good reason (injury, illness, force majeure)"
+          }
+        }
+      }
+    },
+    "Нажмите ниже, чтобы отметить %@ выполненной": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap below to mark %@ as completed"
+          }
+        }
+      }
+    },
+    "Нажмите, чтобы открыть камеру": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap to open the camera"
+          }
+        }
+      }
+    },
+    "Назад": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back"
+          }
+        }
+      }
+    },
+    "Название": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name"
+          }
+        }
+      }
+    },
+    "Название места (например, Спортзал)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Place name (e.g. Gym)"
+          }
+        }
+      }
+    },
+    "Название подзадачи": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subtask name"
+          }
+        }
+      }
+    },
+    "Напиши новую задачу...": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write a new task..."
+          }
+        }
+      }
+    },
+    "Напоминание": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminder"
+          }
+        }
+      }
+    },
+    "Напоминание по месту": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Location reminder"
+          }
+        }
+      }
+    },
+    "Напоминания по месту": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Location reminders"
+          }
+        }
+      }
+    },
+    "Например, AB12CD": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E.g. AB12CD"
+          }
+        }
+      }
+    },
+    "Например, Маша": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E.g. Masha"
+          }
+        }
+      }
+    },
+    "Например: фото открытой книги": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E.g. a photo of an open book"
+          }
+        }
+      }
+    },
+    "Настройки": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        }
+      }
+    },
+    "Начать поиск": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start search"
+          }
+        }
+      }
+    },
+    "Начни день 💪": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start your day 💪"
+          }
+        }
+      }
+    },
+    "Не дай этому дню пройти впустую.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Don't let this day pass for nothing."
+          }
+        }
+      }
+    },
+    "Не для кого-то. Для лучшей версии себя.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not for anyone else. For the best version of you."
+          }
+        }
+      }
+    },
+    "Не засчитано": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not counted"
+          }
+        }
+      }
+    },
+    "Не останавливайся": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Don't stop now"
+          }
+        }
+      }
+    },
+    "Не получилось": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Didn't work out"
+          }
+        }
+      }
+    },
+    "Не получилось проверить награду. Попробуй позже.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't verify the reward. Try again later."
+          }
+        }
+      }
+    },
+    "Не принято": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not accepted"
+          }
+        }
+      }
+    },
+    "Не сейчас": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not now"
+          }
+        }
+      }
+    },
+    "Не удалось выгрузить данные": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't export data"
+          }
+        }
+      }
+    },
+    "Не удалось загрузить итоги": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't load your year in review"
+          }
+        }
+      }
+    },
+    "Не удалось загрузить рейтинг": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't load the leaderboard"
+          }
+        }
+      }
+    },
+    "Не удалось отправить код. Попробуй ещё раз.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't send the code. Try again."
+          }
+        }
+      }
+    },
+    "Не удалось подключить приложение.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't connect the app."
+          }
+        }
+      }
+    },
+    "Не удалось сменить значок. Попробуйте ещё раз.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't change the icon. Try again."
+          }
+        }
+      }
+    },
+    "Не удалось соединить": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't connect"
+          }
+        }
+      }
+    },
+    "Не удалось сохранить. Возможно, почта уже занята.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't save. That email might already be taken."
+          }
+        }
+      }
+    },
+    "Неверный код или не удалось изменить пароль. Попробуй ещё раз.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wrong code or couldn't change the password. Try again."
+          }
+        }
+      }
+    },
+    "Нет доступа к геолокации. Разрешите доступ в настройках, чтобы напоминание сработало.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No access to location. Allow access in Settings so the reminder can work."
+          }
+        }
+      }
+    },
+    "Нет доступа к камере": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No access to camera"
+          }
+        }
+      }
+    },
+    "Нет сети -- %lld изм. синхронизируем позже": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No connection -- %lld changes will sync later"
+          }
+        }
+      }
+    },
+    "Нет сети -- изменения сохраняются локально": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No connection -- changes are saved locally"
+          }
+        }
+      }
+    },
+    "Ничья -- оба продержались": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Draw -- both held on"
+          }
+        }
+      }
+    },
+    "Новая подзадача": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New subtask"
+          }
+        }
+      }
+    },
+    "Новая привычка": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New habit"
+          }
+        }
+      }
+    },
+    "Новая цель": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New goal"
+          }
+        }
+      }
+    },
+    "Новое задание": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New task"
+          }
+        }
+      }
+    },
+    "Новое место": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New place"
+          }
+        }
+      }
+    },
+    "Новый день": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New day"
+          }
+        }
+      }
+    },
+    "Новый пароль": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New password"
+          }
+        }
+      }
+    },
+    "Новый пароль (от 6 символов)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New password (6+ characters)"
+          }
+        }
+      }
+    },
+    "Новый шанс стать лучше. Начни прямо сейчас.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A fresh chance to be better. Start right now."
+          }
+        }
+      }
+    },
+    "Ночь": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Night"
+          }
+        }
+      }
+    },
+    "Нужно фото-подтверждение": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo proof required"
+          }
+        }
+      }
+    },
+    "ОК": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        }
+      }
+    },
+    "Обновить напоминание": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update reminder"
+          }
+        }
+      }
+    },
+    "Один раз": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Once"
+          }
+        }
+      }
+    },
+    "Один создаёт дуэль, второй присоединяется. Потом потрясите оба телефона.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One person creates the duel, the other joins. Then shake both phones."
+          }
+        }
+      }
+    },
+    "Один шаг сегодня -- большой результат завтра.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One step today is a big result tomorrow."
+          }
+        }
+      }
+    },
+    "Одно маленькое действие меняет всё.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One small action changes everything."
+          }
+        }
+      }
+    },
+    "Ожидание соперника": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting for opponent"
+          }
+        }
+      }
+    },
+    "Оправдание принято": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Excuse accepted"
+          }
+        }
+      }
+    },
+    "Оранжевый": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Orange"
+          }
+        }
+      }
+    },
+    "Осталось дней: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld days left"
+          }
+        }
+      }
+    },
+    "Осталось дней: %lld. Побеждает тот, кто выполнил больше дел.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld days left. Whoever completes more tasks wins."
+          }
+        }
+      }
+    },
+    "От родителя": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From parent"
+          }
+        }
+      }
+    },
+    "Отключить": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect"
+          }
+        }
+      }
+    },
+    "Открой расширенную аналитику": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock advanced analytics"
+          }
+        }
+      }
+    },
+    "Откройте неограниченные привычки": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock unlimited habits"
+          }
+        }
+      }
+    },
+    "Открывает приложение reInspire.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the reInspire app."
+          }
+        }
+      }
+    },
+    "Открыть": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open"
+          }
+        }
+      }
+    },
+    "Открыть reInspire": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open reInspire"
+          }
+        }
+      }
+    },
+    "Открыть настройки": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open settings"
+          }
+        }
+      }
+    },
+    "Открыть с Премиум": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock with Premium"
+          }
+        }
+      }
+    },
+    "Отлично": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Great"
+          }
+        }
+      }
+    },
+    "Отмазка принята 🙏": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Excuse accepted 🙏"
+          }
+        }
+      }
+    },
+    "Отмена": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        }
+      }
+    },
+    "Отменена": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelled"
+          }
+        }
+      }
+    },
+    "Отменить дуэль": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel duel"
+          }
+        }
+      }
+    },
+    "Отметить": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check off"
+          }
+        }
+      }
+    },
+    "Отметить ${task} выполненной": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark ${task} as done"
+          }
+        }
+      }
+    },
+    "Отметить выполненным": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark as done"
+          }
+        }
+      }
+    },
+    "Отметить задачу": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark task"
+          }
+        }
+      }
+    },
+    "Отметить прогресс": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark progress"
+          }
+        }
+      }
+    },
+    "Отметиться": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check in"
+          }
+        }
+      }
+    },
+    "Отметок": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check-ins"
+          }
+        }
+      }
+    },
+    "Отметок за 30 дней": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check-ins in 30 days"
+          }
+        }
+      }
+    },
+    "Отмечает выбранную задачу выполненной. Задачи с фото-проверкой нужно подтверждать в приложении.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marks the selected task as done. Tasks with photo verification still need to be confirmed in the app."
+          }
+        }
+      }
+    },
+    "Отправить": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send"
+          }
+        }
+      }
+    },
+    "Отправить вызов": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send challenge"
+          }
+        }
+      }
+    },
+    "Отправить как оправдание": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Submit as excuse"
+          }
+        }
+      }
+    },
+    "Отправить код ещё раз": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resend code"
+          }
+        }
+      }
+    },
+    "Отправить код заново": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resend code"
+          }
+        }
+      }
+    },
+    "Отправить фото": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send photo"
+          }
+        }
+      }
+    },
+    "Отправлено!": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sent!"
+          }
+        }
+      }
+    },
+    "Отправь код другу. Дуэль начнётся, как только он вступит.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send the code to a friend. The duel starts as soon as they join."
+          }
+        }
+      }
+    },
+    "Отслеживать автоматически?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Track automatically?"
+          }
+        }
+      }
+    },
+    "Отчёт": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report"
+          }
+        }
+      }
+    },
+    "Отчёт за неделю": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weekly report"
+          }
+        }
+      }
+    },
+    "Ошибка": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error"
+          }
+        }
+      }
+    },
+    "П": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "M"
+          }
+        }
+      }
+    },
+    "Папа": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dad"
+          }
+        }
+      }
+    },
+    "Пароль": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password"
+          }
+        }
+      }
+    },
+    "Пароль (от 6 символов)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password (6+ characters)"
+          }
+        }
+      }
+    },
+    "Пароль изменён": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password changed"
+          }
+        }
+      }
+    },
+    "Первая победа за 2 минуты": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First win in 2 minutes"
+          }
+        }
+      }
+    },
+    "Передай эти данные ребёнку -- он войдёт на своём телефоне через «Войти как ребёнок».": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Give these details to your kid -- they'll sign in on their phone via \"Log in as a child.\""
+          }
+        }
+      }
+    },
+    "Перейдите на Премиум": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upgrade to Premium"
+          }
+        }
+      }
+    },
+    "Перейти": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Go"
+          }
+        }
+      }
+    },
+    "Перейти на Premium": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upgrade to Premium"
+          }
+        }
+      }
+    },
+    "Переснять": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retake"
+          }
+        }
+      }
+    },
+    "Пить воду": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drink water"
+          }
+        }
+      }
+    },
+    "План создан!": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan created!"
+          }
+        }
+      }
+    },
+    "Планировать день": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan the day"
+          }
+        }
+      }
+    },
+    "Пн": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mon"
+          }
+        }
+      }
+    },
+    "По расписанию": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On schedule"
+          }
+        }
+      }
+    },
+    "Победа!": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Victory!"
+          }
+        }
+      }
+    },
+    "Повтор": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repeat"
+          }
+        }
+      }
+    },
+    "Повтори пароль": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm password"
+          }
+        }
+      }
+    },
+    "Повторить": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry"
+          }
+        }
+      }
+    },
+    "Погнали! 🔥": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Let's go! 🔥"
+          }
+        }
+      }
+    },
+    "Поделись кодом или ссылкой, либо потрясите два телефона рядом, чтобы добавить ребёнка.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share the code or link, or shake two phones together to add a child."
+          }
+        }
+      }
+    },
+    "Поделиться": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share"
+          }
+        }
+      }
+    },
+    "Поделиться в ленте и др.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share to feed and more"
+          }
+        }
+      }
+    },
+    "Поделиться данными": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share data"
+          }
+        }
+      }
+    },
+    "Поделиться итогами %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share %@ results"
+          }
+        }
+      }
+    },
+    "Поделиться кодом": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share code"
+          }
+        }
+      }
+    },
+    "Поделиться неделей": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share the week"
+          }
+        }
+      }
+    },
+    "Поделиться отчётом за неделю": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share weekly report"
+          }
+        }
+      }
+    },
+    "Поделиться серией": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share streak"
+          }
+        }
+      }
+    },
+    "Поделиться ссылкой": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share link"
+          }
+        }
+      }
+    },
+    "Подзадача для": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subtask for"
+          }
+        }
+      }
+    },
+    "Подключаюсь к %@...": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connecting to %@..."
+          }
+        }
+      }
+    },
+    "Подключение отменено.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connection cancelled."
+          }
+        }
+      }
+    },
+    "Подключения": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connections"
+          }
+        }
+      }
+    },
+    "Подключено": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connected"
+          }
+        }
+      }
+    },
+    "Подключи источник данных, и прогресс по %@ %@%@ будет засчитываться сам -- без ручных отчётов.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Подключи источник данных, и прогресс по %1$@ %2$@%3$@ будет засчитываться сам -- без ручных отчётов."
+          }
+        }
+      }
+    },
+    "Подключить": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect"
+          }
+        }
+      }
+    },
+    "Поднеси телефоны": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bring the phones together"
+          }
+        }
+      }
+    },
+    "Поднесите телефон к телефону ребёнка и потрясите оба.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bring your phone close to your child's phone and shake both."
+          }
+        }
+      }
+    },
+    "Поднесите телефон к телефону родителя и потрясите оба.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bring your phone close to your parent's phone and shake both."
+          }
+        }
+      }
+    },
+    "Поднесите телефоны ближе и потрясите оба ещё раз.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bring the phones closer and shake both again."
+          }
+        }
+      }
+    },
+    "Подобрать": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick"
+          }
+        }
+      }
+    },
+    "Подписаться": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subscribe"
+          }
+        }
+      }
+    },
+    "Подписка": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subscription"
+          }
+        }
+      }
+    },
+    "Подписка продлевается автоматически. Отменить можно в любой момент в App Store.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subscription renews automatically. Cancel anytime in the App Store."
+          }
+        }
+      }
+    },
+    "Подтверди выход": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm logout"
+          }
+        }
+      }
+    },
+    "Подтвердить": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm"
+          }
+        }
+      }
+    },
+    "Поздравляем!": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Congrats!"
+          }
+        }
+      }
+    },
+    "Позже": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Later"
+          }
+        }
+      }
+    },
+    "Пока не с кем соревноваться": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No one to compete with yet"
+          }
+        }
+      }
+    },
+    "Пока нет детей. Создай аккаунт или пригласи по коду.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No kids yet. Create an account or invite with a code."
+          }
+        }
+      }
+    },
+    "Пока нет заданий. Дай задание ребёнку (свайп влево по нему) или сразу всем.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No tasks yet. Assign one to a kid (swipe left on them) or to everyone at once."
+          }
+        }
+      }
+    },
+    "Пока нет сохранённых мест": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No saved places yet"
+          }
+        }
+      }
+    },
+    "Покинуть": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave"
+          }
+        }
+      }
+    },
+    "Покинуть семью": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave family"
+          }
+        }
+      }
+    },
+    "Покинуть семью?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave family?"
+          }
+        }
+      }
+    },
+    "Политика конфиденциальности": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy Policy"
+          }
+        }
+      }
+    },
+    "Полная статистика и история": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full stats and history"
+          }
+        }
+      }
+    },
+    "Пользователь": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User"
+          }
+        }
+      }
+    },
+    "Понятно": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Got it"
+          }
+        }
+      }
+    },
+    "Попробовать снова": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try again"
+          }
+        }
+      }
+    },
+    "Попробуйте ещё раз позже.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please try again later."
+          }
+        }
+      }
+    },
+    "Популярные": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Popular"
+          }
+        }
+      }
+    },
+    "Поражение": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Defeat"
+          }
+        }
+      }
+    },
+    "Последний день -- не сорвись": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last day -- don't break it now"
+          }
+        }
+      }
+    },
+    "Последний день!": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last day!"
+          }
+        }
+      }
+    },
+    "Пост": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Post"
+          }
+        }
+      }
+    },
+    "Поставить дедлайн": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set a deadline"
+          }
+        }
+      }
+    },
+    "Поставить напоминание здесь": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set a reminder here"
+          }
+        }
+      }
+    },
+    "Потрясите оба телефона рядом, чтобы присоединиться к дуэли друга.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shake both phones close together to join your friend's duel."
+          }
+        }
+      }
+    },
+    "Потрясите телефоны": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shake the phones"
+          }
+        }
+      }
+    },
+    "Почему ты удаляешь «%@»?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Why are you deleting \"%@\"?"
+          }
+        }
+      }
+    },
+    "Почта": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Email"
+          }
+        }
+      }
+    },
+    "Премиум для всей семьи (до 5 человек).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Premium for the whole family (up to 5 people)."
+          }
+        }
+      }
+    },
+    "Преодолеть %lld км в Strava": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cover %lld km on Strava"
+          }
+        }
+      }
+    },
+    "Пригласить друга": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invite a friend"
+          }
+        }
+      }
+    },
+    "Приглашай друзей -- получай PRO": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invite friends -- get PRO"
+          }
+        }
+      }
+    },
+    "Приглашение": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invitation"
+          }
+        }
+      }
+    },
+    "Придумай почту и пароль -- ими ты будешь входить дальше. Родитель сможет их изменить.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick an email and password -- you'll use them to log in next time. A parent can change them later."
+          }
+        }
+      }
+    },
+    "Применить": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply"
+          }
+        }
+      }
+    },
+    "Принято": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accepted"
+          }
+        }
+      }
+    },
+    "Принять вызов": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accept challenge"
+          }
+        }
+      }
+    },
+    "Присоединился %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ joined"
+          }
+        }
+      }
+    },
+    "Присоединиться": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join"
+          }
+        }
+      }
+    },
+    "Присоединиться к семье": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join family"
+          }
+        }
+      }
+    },
+    "Присоединиться к семье?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join family?"
+          }
+        }
+      }
+    },
+    "Присоединиться по коду": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join with a code"
+          }
+        }
+      }
+    },
+    "Пробежки и тренировки из Strava засчитываются автоматически": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Runs and workouts from Strava count automatically"
+          }
+        }
+      }
+    },
+    "Провалено": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed"
+          }
+        }
+      }
+    },
+    "Проверено ✅": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verified ✅"
+          }
+        }
+      }
+    },
+    "Проверить": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check"
+          }
+        }
+      }
+    },
+    "Проверьте почту": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check your email"
+          }
+        }
+      }
+    },
+    "Проверяем оправдание…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking excuse…"
+          }
+        }
+      }
+    },
+    "Проверяем…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking…"
+          }
+        }
+      }
+    },
+    "Провести %lld событий за день": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Have %lld events in a day"
+          }
+        }
+      }
+    },
+    "Прогноз серии": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Streak forecast"
+          }
+        }
+      }
+    },
+    "Прогресс": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Progress"
+          }
+        }
+      }
+    },
+    "Прогресс за месяц": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Monthly progress"
+          }
+        }
+      }
+    },
+    "Прогресс за неделю": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weekly progress"
+          }
+        }
+      }
+    },
+    "Прогресс за сегодня": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today's progress"
+          }
+        }
+      }
+    },
+    "Продуктивность": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Productivity"
+          }
+        }
+      }
+    },
+    "Продуктивный день": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Most productive day"
+          }
+        }
+      }
+    },
+    "Пройти %lld км": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Walk %lld km"
+          }
+        }
+      }
+    },
+    "Пройти %lld шагов": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Walk %lld steps"
+          }
+        }
+      }
+    },
+    "Просто открой приложение и начни.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Just open the app and start."
+          }
+        }
+      }
+    },
+    "Просто сделай": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Just do it"
+          }
+        }
+      }
+    },
+    "Просыпаться рано": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wake up early"
+          }
+        }
+      }
+    },
+    "Против %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vs %@"
+          }
+        }
+      }
+    },
+    "Профиль": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profile"
+          }
+        }
+      }
+    },
+    "Процент выполнения за последнюю завершённую неделю.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completion rate for the last full week."
+          }
+        }
+      }
+    },
+    "Пт": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fri"
+          }
+        }
+      }
+    },
+    "Радиус": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Radius"
+          }
+        }
+      }
+    },
+    "Радиус %lld м": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Radius %lld m"
+          }
+        }
+      }
+    },
+    "Разблокировать": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock"
+          }
+        }
+      }
+    },
+    "Развитие": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Growth"
+          }
+        }
+      }
+    },
+    "Развить": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Level up"
+          }
+        }
+      }
+    },
+    "Разреши уведомления в настройках, чтобы получать напоминание.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow notifications in Settings to get reminders."
+          }
+        }
+      }
+    },
+    "Ранний отбой": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Early bedtime"
+          }
+        }
+      }
+    },
+    "Растяжка": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stretching"
+          }
+        }
+      }
+    },
+    "Расширенная аналитика": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Advanced analytics"
+          }
+        }
+      }
+    },
+    "Расширенные лимиты AI-коуча": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extended AI coach limits"
+          }
+        }
+      }
+    },
+    "Ребёнок": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Child"
+          }
+        }
+      }
+    },
+    "Ребёнок войдёт на своём телефоне по логину (мы его выдадим) и этому PIN. Запиши PIN -- восстановить его нельзя, только пересоздать аккаунт.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your kid signs in on their phone with a login (we'll generate it) and this PIN. Save the PIN -- it can't be recovered, only reset by recreating the account."
+          }
+        }
+      }
+    },
+    "Регистрация": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign up"
+          }
+        }
+      }
+    },
+    "Режим фокуса": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus mode"
+          }
+        }
+      }
+    },
+    "Рейтинг": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leaderboard"
+          }
+        }
+      }
+    },
+    "Рейтинг по сериям": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Streak leaderboard"
+          }
+        }
+      }
+    },
+    "Рекорд: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Best: %lld"
+          }
+        }
+      }
+    },
+    "Родители": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parents"
+          }
+        }
+      }
+    },
+    "Родитель получил код. Введи его, чтобы выйти из семьи.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your parent got a code. Enter it to leave the family."
+          }
+        }
+      }
+    },
+    "С": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "S"
+          }
+        }
+      }
+    },
+    "Самая длинная серия дней в reInspire.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your longest streak in reInspire."
+          }
+        }
+      }
+    },
+    "Сб": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sat"
+          }
+        }
+      }
+    },
+    "Своя привычка": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom habit"
+          }
+        }
+      }
+    },
+    "Сгенерировать": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generate"
+          }
+        }
+      }
+    },
+    "Сделай фото при отметке выполнения": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take a photo when marking it done"
+          }
+        }
+      }
+    },
+    "Сделай фото, подтверждающее выполнение": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take a photo to prove you did it"
+          }
+        }
+      }
+    },
+    "Сделать фото": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take a photo"
+          }
+        }
+      }
+    },
+    "Сегодня": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today"
+          }
+        }
+      }
+    },
+    "Сегодня -- ещё один день к твоей цели.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today is one more day toward your goal."
+          }
+        }
+      }
+    },
+    "Сегодня ещё не выполнено": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not done yet today"
+          }
+        }
+      }
+    },
+    "Сегодня считается": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today still counts"
+          }
+        }
+      }
+    },
+    "Сегодня,": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today,"
+          }
+        }
+      }
+    },
+    "Сейчас: %.0f / %.0f": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Сейчас: %1$.0f / %2$.0f"
+          }
+        }
+      }
+    },
+    "Семейный рейтинг": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Family leaderboard"
+          }
+        }
+      }
+    },
+    "Семья": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Family"
+          }
+        }
+      }
+    },
+    "Серия прервалась?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Streak broken?"
+          }
+        }
+      }
+    },
+    "Серия продолжается! 🔥": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Streak's still alive! 🔥"
+          }
+        }
+      }
+    },
+    "Сжечь %lld ккал": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Burn %lld kcal"
+          }
+        }
+      }
+    },
+    "Синий": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blue"
+          }
+        }
+      }
+    },
+    "Синяя": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blue"
+          }
+        }
+      }
+    },
+    "Система не приняла напоминание: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The system rejected the reminder: %@"
+          }
+        }
+      }
+    },
+    "Скажи напр.: «первое в 7 утра каждый день 2 недели»": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try saying: \"first one at 7am every day for 2 weeks\""
+          }
+        }
+      }
+    },
+    "Сколько задач выполнено сегодня в reInspire.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How many tasks you've finished today in reInspire."
+          }
+        }
+      }
+    },
+    "Скоро": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coming soon"
+          }
+        }
+      }
+    },
+    "Сменить пароль": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change password"
+          }
+        }
+      }
+    },
+    "Смотреть всё": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See all"
+          }
+        }
+      }
+    },
+    "События в календаре за день": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calendar events per day"
+          }
+        }
+      }
+    },
+    "Соединено!": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connected!"
+          }
+        }
+      }
+    },
+    "Соединитесь рядом": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect nearby"
+          }
+        }
+      }
+    },
+    "Соединить рядом (потрясти телефоны)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect nearby (shake phones)"
+          }
+        }
+      }
+    },
+    "Создавайте задачи и отправляйте фото-отчёты боту": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create tasks and send photo proof to the bot"
+          }
+        }
+      }
+    },
+    "Создай дуэль": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a duel"
+          }
+        }
+      }
+    },
+    "Создай семейную группу, чтобы заводить детям аккаунты, давать задания и видеть их рейтинг.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a family group to set up kids' accounts, assign tasks, and see their rankings."
+          }
+        }
+      }
+    },
+    "Создать": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create"
+          }
+        }
+      }
+    },
+    "Создать аккаунт ребёнку": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a kid's account"
+          }
+        }
+      }
+    },
+    "Создать дуэль": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a duel"
+          }
+        }
+      }
+    },
+    "Создать и искать": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create and search"
+          }
+        }
+      }
+    },
+    "Создать семью": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a family"
+          }
+        }
+      }
+    },
+    "Создаю...": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Creating..."
+          }
+        }
+      }
+    },
+    "Создаём %lld задач": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Creating %lld tasks"
+          }
+        }
+      }
+    },
+    "Создаём план": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Building your plan"
+          }
+        }
+      }
+    },
+    "Сообщи код ребёнку, только если согласен отпустить его из семьи.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only share the code with your kid if you're okay letting them leave the family."
+          }
+        }
+      }
+    },
+    "Соперник": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opponent"
+          }
+        }
+      }
+    },
+    "Соперник ещё не вступил": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opponent hasn't joined yet"
+          }
+        }
+      }
+    },
+    "Соревнуйтесь, кто выполнит больше дел за время дуэли. Кто закрыл больше задач -- тот и победил. Себя обмануть легко, друга -- нет.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compete to see who finishes more tasks during the duel. Whoever closes out the most wins. It's easy to fool yourself -- not your friend."
+          }
+        }
+      }
+    },
+    "Соревнуйтесь, кто за это время выполнит больше дел.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compete to see who gets more done in that time."
+          }
+        }
+      }
+    },
+    "Сохранить": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
+        }
+      }
+    },
+    "Сохранить и войти": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save and sign in"
+          }
+        }
+      }
+    },
+    "Сохранить имя": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save name"
+          }
+        }
+      }
+    },
+    "Сохранить место": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save location"
+          }
+        }
+      }
+    },
+    "Список невыполненных задач на сегодня.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "List of today's unfinished tasks."
+          }
+        }
+      }
+    },
+    "Ср": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wed"
+          }
+        }
+      }
+    },
+    "Срок": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deadline"
+          }
+        }
+      }
+    },
+    "Статистика": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stats"
+          }
+        }
+      }
+    },
+    "Сторис": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stories"
+          }
+        }
+      }
+    },
+    "Строгий режим": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Strict mode"
+          }
+        }
+      }
+    },
+    "Строим твой план": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Building your plan"
+          }
+        }
+      }
+    },
+    "Сыгранные партии за день": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Games played per day"
+          }
+        }
+      }
+    },
+    "Сыграть %lld партий на Chess.com": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play %lld games on Chess.com"
+          }
+        }
+      }
+    },
+    "Так держать 🔥": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep it up 🔥"
+          }
+        }
+      }
+    },
+    "Тариф": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan"
+          }
+        }
+      }
+    },
+    "Твой ответ...": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your answer..."
+          }
+        }
+      }
+    },
+    "Твой план": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your plan"
+          }
+        }
+      }
+    },
+    "Твой прогресс": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your progress"
+          }
+        }
+      }
+    },
+    "Твоя серия": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your streak"
+          }
+        }
+      }
+    },
+    "Твоя цель ждёт": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your goal is waiting"
+          }
+        }
+      }
+    },
+    "Тебе доступен план %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You have access to the %@ plan"
+          }
+        }
+      }
+    },
+    "Тебе начислено 3 дня PRO. Другу тоже прилетит награда.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You've earned 3 days of PRO. Your friend gets a reward too."
+          }
+        }
+      }
+    },
+    "Тебя пригласили в семью по коду %@. Присоединиться сейчас?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You've been invited to a family with code %@. Join now?"
+          }
+        }
+      }
+    },
+    "Тебя пригласили?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Got invited?"
+          }
+        }
+      }
+    },
+    "Текущая серия": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current streak"
+          }
+        }
+      }
+    },
+    "Текущая серия дней в reInspire.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your current streak in reInspire."
+          }
+        }
+      }
+    },
+    "Телеграм-бот": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telegram bot"
+          }
+        }
+      }
+    },
+    "Тема": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Theme"
+          }
+        }
+      }
+    },
+    "Тип": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type"
+          }
+        }
+      }
+    },
+    "Топ-категория": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Top category"
+          }
+        }
+      }
+    },
+    "Тренд за 30 дней": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30-day trend"
+          }
+        }
+      }
+    },
+    "Тренд за 6 недель и рост за 30 дней -- на Pro и Max.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6-week trend and 30-day growth -- on Pro and Max."
+          }
+        }
+      }
+    },
+    "Тренироваться %lld минут": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Work out for %lld minutes"
+          }
+        }
+      }
+    },
+    "Тренировка": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workout"
+          }
+        }
+      }
+    },
+    "Ты": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You"
+          }
+        }
+      }
+    },
+    "Ты в семейной группе": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You're in a family group"
+          }
+        }
+      }
+    },
+    "Ты выбираешь, кем становишься. Сделай задание.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You choose who you become. Do the task."
+          }
+        }
+      }
+    },
+    "Ты можешь": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can do it"
+          }
+        }
+      }
+    },
+    "Ты справишься": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You've got this"
+          }
+        }
+      }
+    },
+    "Ты уже так далеко зашёл. Продолжай.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You've already come this far. Keep going."
+          }
+        }
+      }
+    },
+    "Тёмный": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dark"
+          }
+        }
+      }
+    },
+    "УР. %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LVL %lld"
+          }
+        }
+      }
+    },
+    "Убрать": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
+          }
+        }
+      }
+    },
+    "Убрать участника?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove member?"
+          }
+        }
+      }
+    },
+    "Убраться дома": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clean the house"
+          }
+        }
+      }
+    },
+    "Уведомления выключены. Разрешите их в настройках, чтобы напоминание сработало.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications are off. Allow them in Settings for reminders to work."
+          }
+        }
+      }
+    },
+    "Удаление задачи": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deleting task"
+          }
+        }
+      }
+    },
+    "Удалить": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete"
+          }
+        }
+      }
+    },
+    "Удалить аккаунт?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete account?"
+          }
+        }
+      }
+    },
+    "Удалить навсегда": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete forever"
+          }
+        }
+      }
+    },
+    "Удалить напоминание": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete reminder"
+          }
+        }
+      }
+    },
+    "Удалить семью": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete family"
+          }
+        }
+      }
+    },
+    "Удалить семью?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete family?"
+          }
+        }
+      }
+    },
+    "Управление семьёй": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage family"
+          }
+        }
+      }
+    },
+    "Условия": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terms"
+          }
+        }
+      }
+    },
+    "Условия использования": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terms of use"
+          }
+        }
+      }
+    },
+    "Успей выполнить задание до полуночи.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There's still time to finish the task before midnight."
+          }
+        }
+      }
+    },
+    "Утренняя пробежка": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morning run"
+          }
+        }
+      }
+    },
+    "Утро": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morning"
+          }
+        }
+      }
+    },
+    "Участник семьи": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Family member"
+          }
+        }
+      }
+    },
+    "Учитывает события из календаря при планировании задач": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Factors in calendar events when scheduling tasks"
+          }
+        }
+      }
+    },
+    "Учить язык": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learn a language"
+          }
+        }
+      }
+    },
+    "Учиться": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Study"
+          }
+        }
+      }
+    },
+    "Фиолетовый": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purple"
+          }
+        }
+      }
+    },
+    "Фитнес": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fitness"
+          }
+        }
+      }
+    },
+    "Фокус": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus"
+          }
+        }
+      }
+    },
+    "Формат": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Format"
+          }
+        }
+      }
+    },
+    "Фото-отчёт в Telegram": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo report in Telegram"
+          }
+        }
+      }
+    },
+    "Фото-подтверждение": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo proof"
+          }
+        }
+      }
+    },
+    "Холодный душ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cold shower"
+          }
+        }
+      }
+    },
+    "Хорошая задача!\nНужно задать пару вопросов.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Good task!\nJust need to ask a couple questions."
+          }
+        }
+      }
+    },
+    "Цель": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goal"
+          }
+        }
+      }
+    },
+    "Цель достигнута ✅": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goal achieved ✅"
+          }
+        }
+      }
+    },
+    "Ч": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "T"
+          }
+        }
+      }
+    },
+    "Через 5 минут будешь рад, что начал.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In 5 minutes you'll be glad you started."
+          }
+        }
+      }
+    },
+    "Читать": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read"
+          }
+        }
+      }
+    },
+    "Чт": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thu"
+          }
+        }
+      }
+    },
+    "Что осталось сегодня": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What's left today"
+          }
+        }
+      }
+    },
+    "Шаги за день": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steps per day"
+          }
+        }
+      }
+    },
+    "Шаги, калории и тренировки из Apple Здоровье": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steps, calories and workouts from Apple Health"
+          }
+        }
+      }
+    },
+    "Эта неделя": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This week"
+          }
+        }
+      }
+    },
+    "Эта функция недоступна на устройстве.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This feature isn't available on this device."
+          }
+        }
+      }
+    },
+    "Это поможет понять, что не сработало, и не повторить это в будущем.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This'll help us figure out what didn't work so it doesn't happen again."
+          }
+        }
+      }
+    },
+    "Это про меня!": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That's me!"
+          }
+        }
+      }
+    },
+    "Я закрываю цели в reInspire -- AI проверяет фото, не отвертишься 😄 Заходи по моему коду %@, получишь 3 дня PRO: https://thechallenges.app": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I'm crushing my goals in reInspire -- AI checks the photo, no cheating 😄 Use my code %@ and get 3 days of PRO: https://thechallenges.app"
+          }
+        }
+      }
+    },
+    "активных дней": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "active days"
+          }
+        }
+      }
+    },
+    "вне топ-3": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "outside top 3"
+          }
+        }
+      }
+    },
+    "выполнено сегодня": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "done today"
+          }
+        }
+      }
+    },
+    "день подряд": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "day in a row"
+          }
+        }
+      }
+    },
+    "дней": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "days"
+          }
+        }
+      }
+    },
+    "дней подряд": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "days in a row"
+          }
+        }
+      }
+    },
+    "достигнут": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "reached"
+          }
+        }
+      }
+    },
+    "заданию": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "task"
+          }
+        }
+      }
+    },
+    "заданиям": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tasks"
+          }
+        }
+      }
+    },
+    "ккал": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kcal"
+          }
+        }
+      }
+    },
+    "км": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "km"
+          }
+        }
+      }
+    },
+    "лучшая серия": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "best streak"
+          }
+        }
+      }
+    },
+    "мин": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "min"
+          }
+        }
+      }
+    },
+    "отметок": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "check-ins"
+          }
+        }
+      }
+    },
+    "партий": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "games"
+          }
+        }
+      }
+    },
+    "по данным приложений": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "based on app data"
+          }
+        }
+      }
+    },
+    "постоянно": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ongoing"
+          }
+        }
+      }
+    },
+    "разово": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "one-time"
+          }
+        }
+      }
+    },
+    "рекорд %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "best %lld"
+          }
+        }
+      }
+    },
+    "событий": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "events"
+          }
+        }
+      }
+    },
+    "ты": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "you"
+          }
+        }
+      }
+    },
+    "хочет выйти из семьи": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "wants to leave the family"
+          }
+        }
+      }
+    },
+    "целей выполнено": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "goals completed"
+          }
+        }
+      }
+    },
+    "шагов": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "steps"
+          }
+        }
+      }
+    },
+    "шагов / мин / км": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "steps / min / km"
+          }
+        }
+      }
+    },
+    "• %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• %lld"
+          }
+        }
+      }
+    },
+    "⚔️": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⚔️"
+          }
+        }
+      }
+    },
+    "⚠️": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⚠️"
+          }
+        }
+      }
+    },
+    "✨": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "✨"
+          }
+        }
+      }
+    },
+    "⭐️": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⭐️"
+          }
+        }
+      }
+    },
+    "🎁": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "🎁"
+          }
+        }
+      }
+    },
+    "🎉": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "🎉"
+          }
+        }
+      }
+    },
+    "🎯": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "🎯"
+          }
+        }
+      }
+    },
+    "🏅": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "🏅"
+          }
+        }
+      }
+    },
+    "🏆": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "🏆"
+          }
+        }
+      }
+    },
+    "🏆 Победа! Соперник повержен.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "🏆 Victory! Opponent defeated."
+          }
+        }
+      }
+    },
+    "💧": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "💧"
+          }
+        }
+      }
+    },
+    "📸": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "📸"
+          }
+        }
+      }
+    },
+    "🔥": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "🔥"
+          }
+        }
+      }
+    },
+    "🔥 %lld дней подряд в reInspire! Присоединяйся: %@ #reInspire #привычки": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "🔥 %1$lld дней подряд в reInspire! Присоединяйся: %2$@ #reInspire #привычки"
+          }
+        }
+      }
+    },
+    "🔥%lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "🔥%lld"
+          }
+        }
+      }
+    },
+    "😤 Поражение. Реванш расставит всё по местам.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "😤 Defeat. A rematch will settle the score."
+          }
+        }
+      }
+    },
+    "🚀 Перейди на Премиум -- успевай больше": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "🚀 Go Premium -- get more done"
+          }
+        }
+      }
+    },
+    "🤖": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "🤖"
+          }
+        }
+      }
+    },
+    "🤝 Ничья: оба продержались до конца.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "🤝 Tie: both held on to the end."
+          }
+        }
+      }
+    },
+    "🧊": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "🧊"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

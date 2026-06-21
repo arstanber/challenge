@@ -98,24 +98,24 @@ struct NearbyConnectView: View {
     }
 
     private var title: String {
-        if joined { return "Соединено!" }
+        if joined { return String(localized: "Соединено!") }
         switch service.phase {
-        case .idle:       return "Потрясите телефоны"
-        case .searching:  return "Ищу рядом..."
-        case .connecting: return "Подключаюсь к \(service.peerName ?? "устройству")..."
-        case .success:    return "Соединено!"
-        case .failed:     return "Не удалось соединить"
+        case .idle:       return String(localized: "Потрясите телефоны")
+        case .searching:  return String(localized: "Ищу рядом...")
+        case .connecting: return String(localized: "Подключаюсь к \(service.peerName ?? "устройству")...")
+        case .success:    return String(localized: "Соединено!")
+        case .failed:     return String(localized: "Не удалось соединить")
         }
     }
 
     private var subtitle: String {
-        if joined { return "Готово. Можешь закрыть экран." }
+        if joined { return String(localized: "Готово. Можешь закрыть экран.") }
         switch service.phase {
-        case .failed: return "Поднесите телефоны ближе и потрясите оба ещё раз."
+        case .failed: return String(localized: "Поднесите телефоны ближе и потрясите оба ещё раз.")
         default:
             return myCode == nil
-                ? "Поднесите телефон к телефону родителя и потрясите оба."
-                : "Поднесите телефон к телефону ребёнка и потрясите оба."
+                ? String(localized: "Поднесите телефон к телефону родителя и потрясите оба.")
+                : String(localized: "Поднесите телефон к телефону ребёнка и потрясите оба.")
         }
     }
 }

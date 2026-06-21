@@ -48,10 +48,10 @@ enum AssignmentChildState {
 
     var title: String {
         switch self {
-        case .done:     return "Выполнил"
-        case .pending:  return "На проверке"
-        case .rejected: return "Не принято"
-        case .waiting:  return "Ждём"
+        case .done:     return String(localized: "Выполнил")
+        case .pending:  return String(localized: "На проверке")
+        case .rejected: return String(localized: "Не принято")
+        case .waiting:  return String(localized: "Ждём")
         }
     }
 

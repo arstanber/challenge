@@ -298,11 +298,11 @@ private struct PlaceReminderPicker: View {
         switch await service.ensureAuthorized() {
         case .notificationsDenied:
             showOpenSettings = true
-            alertMessage = "Уведомления выключены. Разрешите их в настройках, чтобы напоминание сработало."
+            alertMessage = String(localized: "Уведомления выключены. Разрешите их в настройках, чтобы напоминание сработало.")
             return
         case .locationDenied:
             showOpenSettings = true
-            alertMessage = "Нет доступа к геолокации. Разрешите доступ в настройках, чтобы напоминание сработало."
+            alertMessage = String(localized: "Нет доступа к геолокации. Разрешите доступ в настройках, чтобы напоминание сработало.")
             return
         case .granted:
             break
@@ -317,7 +317,7 @@ private struct PlaceReminderPicker: View {
             Haptics.success()
             dismiss()
         } catch {
-            alertMessage = "Система не приняла напоминание: \(error.localizedDescription)"
+            alertMessage = String(localized: "Система не приняла напоминание: \(error.localizedDescription)")
         }
     }
 }

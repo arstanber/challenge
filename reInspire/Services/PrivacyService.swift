@@ -67,7 +67,7 @@ final class PrivacyService {
             options: [.prettyPrinted, .sortedKeys]
         )
         let url = FileManager.default.temporaryDirectory
-            .appendingPathComponent("reInspire-данные.json")
+            .appendingPathComponent(AppLanguage.current == "ru" ? "reInspire-данные.json" : "reInspire-data.json")
         try json.write(to: url, options: .atomic)
         return url
     }

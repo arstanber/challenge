@@ -99,21 +99,6 @@ struct BySayingView: View {
     private var idleContent: some View {
         VStack {
             Spacer()
-            VStack(spacing: 16) {
-                ZStack {
-                    Circle()
-                        .fill(Color.white)
-                        .frame(width: 140, height: 140)
-                        .overlay(Circle().stroke(Color.gray.opacity(0.2), lineWidth: 2))
-                    Image(systemName: "mic.fill")
-                        .font(.system(size: 48, weight: .medium))
-                        .foregroundColor(.black.opacity(0.4))
-                }
-                Text("Tap the button to start")
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundColor(BSColors.placeholderGray)
-            }
-            Spacer()
 
             if let error = recognizer.errorMessage {
                 Text(error)

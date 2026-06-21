@@ -898,7 +898,7 @@ private struct ChangePasswordSheet: View {
             Haptics.tap()
             step = .code
         } catch {
-            errorMessage = "Не удалось отправить код. Попробуй ещё раз."
+            errorMessage = String(localized: "Не удалось отправить код. Попробуй ещё раз.")
         }
     }
 
@@ -910,7 +910,7 @@ private struct ChangePasswordSheet: View {
             try await AuthService.shared.sendPasswordChangeCode()
             Haptics.tap()
         } catch {
-            errorMessage = "Не удалось отправить код. Попробуй ещё раз."
+            errorMessage = String(localized: "Не удалось отправить код. Попробуй ещё раз.")
         }
     }
 
@@ -924,7 +924,7 @@ private struct ChangePasswordSheet: View {
             try? await Task.sleep(nanoseconds: 700_000_000)
             dismiss()
         } catch {
-            errorMessage = "Неверный код или не удалось изменить пароль. Попробуй ещё раз."
+            errorMessage = String(localized: "Неверный код или не удалось изменить пароль. Попробуй ещё раз.")
         }
     }
 }

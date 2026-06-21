@@ -74,7 +74,7 @@ struct LocationReminderPicker: View {
                             if isSaving {
                                 ProgressView().tint(.white)
                             } else {
-                                Text(existingReminder == nil ? "Поставить напоминание здесь" : "Обновить напоминание")
+                                Text(existingReminder == nil ? String(localized: "Поставить напоминание здесь") : String(localized: "Обновить напоминание"))
                             }
                         }
                         .font(.manrope(.bold, size: 16))
@@ -151,11 +151,11 @@ struct LocationReminderPicker: View {
         switch await service.ensureAuthorized() {
         case .notificationsDenied:
             showOpenSettings = true
-            alertMessage = "Уведомления выключены. Разрешите их в настройках, чтобы напоминание сработало."
+            alertMessage = String(localized: "Уведомления выключены. Разрешите их в настройках, чтобы напоминание сработало.")
             return
         case .locationDenied:
             showOpenSettings = true
-            alertMessage = "Нет доступа к геолокации. Разрешите доступ в настройках, чтобы напоминание сработало."
+            alertMessage = String(localized: "Нет доступа к геолокации. Разрешите доступ в настройках, чтобы напоминание сработало.")
             return
         case .granted:
             break
@@ -172,7 +172,7 @@ struct LocationReminderPicker: View {
             Haptics.success()
             dismiss()
         } catch {
-            alertMessage = "Система не приняла напоминание: \(error.localizedDescription)"
+            alertMessage = String(localized: "Система не приняла напоминание: \(error.localizedDescription)")
         }
     }
 }

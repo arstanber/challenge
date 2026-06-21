@@ -37,7 +37,7 @@ struct WeeklyReportView: View {
             if let img = renderedImage(m) {
                 ShareLink(
                     item: Image(uiImage: img),
-                    preview: SharePreview("Моя неделя в reInspire", image: Image(uiImage: img))
+                    preview: SharePreview(String(localized: "Моя неделя в reInspire"), image: Image(uiImage: img))
                 ) {
                     Text("Поделиться неделей")
                         .font(.manrope(.bold, size: 16))
@@ -118,12 +118,12 @@ private struct ReportCard: View {
             }
 
             HStack(spacing: 12) {
-                ReportStat(value: "\(metrics.activeDays)/7", label: "Активных дней", emoji: "📅", tint: accent)
-                ReportStat(value: "\(metrics.checkins)", label: "Отметок", emoji: "✅", tint: Color(hex: "2FB873"))
+                ReportStat(value: "\(metrics.activeDays)/7", label: String(localized: "Активных дней"), emoji: "📅", tint: accent)
+                ReportStat(value: "\(metrics.checkins)", label: String(localized: "Отметок"), emoji: "✅", tint: Color(hex: "2FB873"))
             }
             HStack(spacing: 12) {
-                ReportStat(value: "\(currentStreak)", label: "Текущая серия", emoji: "🔥", tint: Color(hex: "FF7A00"))
-                ReportStat(value: metrics.bestDayLabel, label: "Лучший день (\(metrics.bestDayCount))", emoji: "⭐️", tint: Color(hex: "FFB200"))
+                ReportStat(value: "\(currentStreak)", label: String(localized: "Текущая серия"), emoji: "🔥", tint: Color(hex: "FF7A00"))
+                ReportStat(value: metrics.bestDayLabel, label: String(localized: "Лучший день (\(metrics.bestDayCount))"), emoji: "⭐️", tint: Color(hex: "FFB200"))
             }
 
             Text("reInspire -- продолжай в том же духе")

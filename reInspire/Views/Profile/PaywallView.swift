@@ -37,38 +37,38 @@ struct PremiumView: View {
     @State private var selected: String = Constants.Store.premiumAnnualID
 
     private let features: [PaywallFeature] = [
-        .init(icon: "infinity",            text: "Безлимит задач и привычек"),
-        .init(icon: "checkmark.seal",      text: "Больше AI-проверок фото"),
-        .init(icon: "sparkles",            text: "AI-коуч и планировщик целей"),
-        .init(icon: "chart.xyaxis.line",   text: "Полная статистика и история"),
-        .init(icon: "snowflake",           text: "Заморозка серии и бонусы")
+        .init(icon: "infinity",            text: String(localized: "Безлимит задач и привычек")),
+        .init(icon: "checkmark.seal",      text: String(localized: "Больше AI-проверок фото")),
+        .init(icon: "sparkles",            text: String(localized: "AI-коуч и планировщик целей")),
+        .init(icon: "chart.xyaxis.line",   text: String(localized: "Полная статистика и история")),
+        .init(icon: "snowflake",           text: String(localized: "Заморозка серии и бонусы"))
     ]
 
     private var proOptions: [PaywallOption] {
         [
-            .init(id: Constants.Store.premiumAnnualID, title: "Год", period: "/год",
+            .init(id: Constants.Store.premiumAnnualID, title: String(localized: "Год"), period: String(localized: "/год"),
                   monthlyForSavings: Constants.Store.premiumMonthlyID),
-            .init(id: Constants.Store.premiumMonthlyID, title: "Месяц", period: "/мес",
+            .init(id: Constants.Store.premiumMonthlyID, title: String(localized: "Месяц"), period: String(localized: "/мес"),
                   monthlyForSavings: nil),
-            .init(id: Constants.Store.premiumForeverID, title: "Навсегда", period: "",
+            .init(id: Constants.Store.premiumForeverID, title: String(localized: "Навсегда"), period: "",
                   monthlyForSavings: nil)
         ]
     }
 
     private var familyOptions: [PaywallOption] {
         [
-            .init(id: Constants.Store.familyAnnualID, title: "Год", period: "/год",
+            .init(id: Constants.Store.familyAnnualID, title: String(localized: "Год"), period: String(localized: "/год"),
                   monthlyForSavings: Constants.Store.familyMonthlyID),
-            .init(id: Constants.Store.familyMonthlyID, title: "Месяц", period: "/мес",
+            .init(id: Constants.Store.familyMonthlyID, title: String(localized: "Месяц"), period: String(localized: "/мес"),
                   monthlyForSavings: nil)
         ]
     }
 
     private var maxOptions: [PaywallOption] {
         [
-            .init(id: Constants.Store.maxAnnualID, title: "Год", period: "/год",
+            .init(id: Constants.Store.maxAnnualID, title: String(localized: "Год"), period: String(localized: "/год"),
                   monthlyForSavings: Constants.Store.maxMonthlyID),
-            .init(id: Constants.Store.maxMonthlyID, title: "Месяц", period: "/мес",
+            .init(id: Constants.Store.maxMonthlyID, title: String(localized: "Месяц"), period: String(localized: "/мес"),
                   monthlyForSavings: nil)
         ]
     }
@@ -320,7 +320,7 @@ struct PremiumView: View {
         let m = NSDecimalNumber(decimal: monthly).doubleValue
         guard m > 0 else { return nil }
         let pct = Int(((m * 12 - a) / (m * 12) * 100).rounded())
-        return pct > 0 ? "Выгода \(pct)%" : nil
+        return pct > 0 ? String(localized: "Выгода \(pct)%") : nil
     }
 }
 

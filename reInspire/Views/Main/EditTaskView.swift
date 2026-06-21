@@ -16,7 +16,7 @@ struct EditTaskView: View {
     @State private var selectedDays: Set<Int>
 
     private let blue = Color(red: 0.0, green: 0.282, blue: 0.886)
-    private let weekdayLabels = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
+    private let weekdayLabels = [String(localized: "Пн"), String(localized: "Вт"), String(localized: "Ср"), String(localized: "Чт"), String(localized: "Пт"), String(localized: "Сб"), String(localized: "Вс")]
 
     init(activity: Activity,
          onSave: @escaping (String, ActivityFrequency, Date?, Date?, [Int]?) -> Void) {

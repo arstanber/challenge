@@ -54,12 +54,12 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
 
     var displayName: String {
         switch self {
-        case .appleHealth:   return "Здоровье"
-        case .appleFitness:  return "Фитнес"
-        case .appleCalendar: return "Календарь Apple"
+        case .appleHealth:   return String(localized: "Здоровье")
+        case .appleFitness:  return String(localized: "Фитнес")
+        case .appleCalendar: return String(localized: "Календарь Apple")
         case .telegram:      return "Telegram"
-        case .appleClock:    return "Будильник"
-        case .appleShortcuts: return "Команды"
+        case .appleClock:    return String(localized: "Будильник")
+        case .appleShortcuts: return String(localized: "Команды")
         case .chessCom:      return "Chess.com"
         case .strava:        return "Strava"
         }
@@ -68,14 +68,14 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
     /// One-line description of what connecting this source gives the user.
     var summary: String {
         switch self {
-        case .appleHealth:   return "Шаги, калории и тренировки из Apple Здоровье"
-        case .appleFitness:  return "Кольца активности и тренировки из Apple Фитнес"
-        case .appleCalendar: return "Учитывает события из календаря при планировании задач"
-        case .telegram:      return "Создавайте задачи и отправляйте фото-отчёты боту"
-        case .appleClock:    return "Ежедневное напоминание со списком задач в выбранное время"
-        case .appleShortcuts: return "Запускайте задачи и автоматизации через приложение «Команды» и Siri"
-        case .chessCom:      return "Засчитывает сыгранные за день партии на Chess.com"
-        case .strava:        return "Пробежки и тренировки из Strava засчитываются автоматически"
+        case .appleHealth:   return String(localized: "Шаги, калории и тренировки из Apple Здоровье")
+        case .appleFitness:  return String(localized: "Кольца активности и тренировки из Apple Фитнес")
+        case .appleCalendar: return String(localized: "Учитывает события из календаря при планировании задач")
+        case .telegram:      return String(localized: "Создавайте задачи и отправляйте фото-отчёты боту")
+        case .appleClock:    return String(localized: "Ежедневное напоминание со списком задач в выбранное время")
+        case .appleShortcuts: return String(localized: "Запускайте задачи и автоматизации через приложение «Команды» и Siri")
+        case .chessCom:      return String(localized: "Засчитывает сыгранные за день партии на Chess.com")
+        case .strava:        return String(localized: "Пробежки и тренировки из Strava засчитываются автоматически")
         }
     }
 
@@ -148,13 +148,13 @@ enum ConnectorError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .unavailable:          return "Эта функция недоступна на устройстве."
-        case .authorizationDenied:  return "Доступ не предоставлен."
-        case .oauthCancelled:       return "Подключение отменено."
-        case .oauthFailed:          return "Не удалось подключить приложение."
+        case .unavailable:          return String(localized: "Эта функция недоступна на устройстве.")
+        case .authorizationDenied:  return String(localized: "Доступ не предоставлен.")
+        case .oauthCancelled:       return String(localized: "Подключение отменено.")
+        case .oauthFailed:          return String(localized: "Не удалось подключить приложение.")
         case .notConfigured(let m): return m
         case .server(let m):        return m
-        case .requiresMax:          return "Доступно в reInspire Max"
+        case .requiresMax:          return String(localized: "Доступно в reInspire Max")
         }
     }
 }

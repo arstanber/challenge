@@ -57,8 +57,10 @@ final class ClockConnector {
         // A repeating notification can't recompute its body each day, so we
         // keep it count-free -- a baked-in number would go stale/wrong.
         let content = UNMutableNotificationContent()
-        content.title = "Доброе утро!"
-        content.body = "Загляни в свои задачи на сегодня и начни с первой 💪"
+        content.title = AppLanguage.current == "ru" ? "Доброе утро!" : "Good morning!"
+        content.body = AppLanguage.current == "ru"
+            ? "Загляни в свои задачи на сегодня и начни с первой 💪"
+            : "Check today's tasks and start with the first one 💪"
         content.sound = .default
 
         var comps = DateComponents()

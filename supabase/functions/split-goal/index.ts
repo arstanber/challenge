@@ -1,6 +1,7 @@
 // Edge Function: split-goal
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { checkRateLimit, CORS_HEADERS } from "../_shared/rateLimiter.ts";
+import { pickLang } from "../_shared/i18n.ts";
 
 const GEMINI_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
 const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
@@ -12,15 +13,18 @@ serve(async (req) => {
   if (rateResult instanceof Response) return rateResult;
 
   try {
-    const { goalTitle, goalDescription, targetValue, deadlineDays } = await req.json();
+    const { goalTitle, goalDescription, targetValue, deadlineDays, language } = await req.json();
+    const lang = pickLang(language);
 
     const targetNote = targetValue ? `Target value: ${targetValue}.` : "";
     const deadlineNote = deadlineDays ? `Deadline: ${deadlineDays} days from now.` : "";
+    const langNote = lang === "ru" ? "Respond in Russian." : "Respond in English.";
 
     const prompt = `You are a productivity expert helping a user break down a goal in a habit-tracking app.
 Goal: "${goalTitle}"
 Description: "${goalDescription || "none"}"
 ${targetNote} ${deadlineNote}
+${langNote}
 
 Break this into 3-6 concrete, actionable subtasks. Each should be completable in 1-5 days.
 Respond ONLY with valid JSON (no markdown):

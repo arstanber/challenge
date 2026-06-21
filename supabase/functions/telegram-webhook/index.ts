@@ -17,6 +17,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { type Lang, pickLang, t } from "../_shared/i18n.ts";
 
 const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN") ?? "";
 const WEBHOOK_SECRET = Deno.env.get("TELEGRAM_WEBHOOK_SECRET") ?? "";
@@ -141,12 +142,8 @@ async function handleStart(chatId: number, username: string | undefined, code: s
   const db = admin();
 
   if (!code) {
-    await sendMessage(
-      chatId,
-      "👋 Welcome to <b>reInspire</b>!\n\n" +
-        "To link this chat to your account, open the app → Profile → Telegram bot, " +
-        "tap <i>Generate code</i>, then send it here as:\n<code>/start YOUR_CODE</code>",
-    );
+    // No linked user to resolve a language for yet -- English default.
+    await sendMessage(chatId, t("en", "startWelcome"));
     return;
   }
 
@@ -157,9 +154,12 @@ async function handleStart(chatId: number, username: string | undefined, code: s
     .maybeSingle();
 
   if (!linkCode || new Date(linkCode.expires_at).getTime() < Date.now()) {
-    await sendMessage(chatId, "❌ That code is invalid or expired. Generate a new one in the app and try again.");
+    await sendMessage(chatId, t("en", "startInvalidCode"));
     return;
   }
+
+  const { data: linkedUser } = await db.from("users").select("language").eq("id", linkCode.user_id).maybeSingle();
+  const lang = pickLang(linkedUser?.language);
 
   await db.from("telegram_links").upsert({
     user_id: linkCode.user_id,
@@ -169,36 +169,14 @@ async function handleStart(chatId: number, username: string | undefined, code: s
   });
   await db.from("telegram_link_codes").delete().eq("code", code);
 
-  await sendMessage(
-    chatId,
-    "✅ Linked! You can now:\n" +
-      "• Send a message to create a new task\n" +
-      "• Send a photo to submit proof for a task (add a caption with the task name if you have several)\n" +
-      "• /today — see today's active tasks\n" +
-      "• /done — mark a task complete\n" +
-      "• /delete — remove a task\n" +
-      "• /history — your recent photo reports\n" +
-      "• /stats — your stats and streaks\n" +
-      "• /help — show this again",
-  );
+  await sendMessage(chatId, t(lang, "startLinked"));
 }
 
-async function handleHelp(chatId: number) {
-  await sendMessage(
-    chatId,
-    "<b>Commands</b>\n" +
-      "• Send any text → creates a new task with that title\n" +
-      "• Send a photo → submits proof for a task (caption = task name if you have several active)\n" +
-      "• /today — list today's active tasks\n" +
-      "• /done — pick a task to mark complete\n" +
-      "• /delete — pick a task to remove\n" +
-      "• /history — your last few photo reports\n" +
-      "• /stats — your stats and streaks\n" +
-      "• /start &lt;code&gt; — link your account",
-  );
+async function handleHelp(chatId: number, lang: Lang) {
+  await sendMessage(chatId, t(lang, "help"));
 }
 
-async function handleToday(chatId: number, userId: string) {
+async function handleToday(chatId: number, userId: string, lang: Lang) {
   const db = admin();
   const { data: activities } = await db
     .from("activities")
@@ -214,7 +192,7 @@ async function handleToday(chatId: number, userId: string) {
     .filter((a) => a.frequency === "once" || isScheduledToday(a.schedule_days, todayDow));
 
   if (todays.length === 0) {
-    await sendMessage(chatId, "You have no tasks scheduled for today. Send me a message to create one!");
+    await sendMessage(chatId, t(lang, "noTasksToday"));
     return;
   }
 
@@ -222,10 +200,10 @@ async function handleToday(chatId: number, userId: string) {
     const streak = a.streak_current > 0 ? ` 🔥${a.streak_current}` : "";
     return `• ${a.title} <i>(${a.type})</i>${streak}`;
   });
-  await sendMessage(chatId, `<b>Today's tasks</b>\n${lines.join("\n")}`);
+  await sendMessage(chatId, `<b>${t(lang, "todayHeader")}</b>\n${lines.join("\n")}`);
 }
 
-async function handleNewTask(chatId: number, userId: string, title: string) {
+async function handleNewTask(chatId: number, userId: string, title: string, lang: Lang) {
   const db = admin();
   const trimmed = title.trim();
   if (!trimmed) return;
@@ -241,11 +219,11 @@ async function handleNewTask(chatId: number, userId: string, title: string) {
 
   if (error) {
     console.error("insert activity failed:", error);
-    await sendMessage(chatId, "⚠️ Couldn't create that task — please try again from the app.");
+    await sendMessage(chatId, t(lang, "taskCreateFailed"));
     return;
   }
 
-  await sendMessage(chatId, `✅ Task created: <b>${escapeHtml(trimmed)}</b>`);
+  await sendMessage(chatId, t(lang, "taskCreated", escapeHtml(trimmed)));
 }
 
 function escapeHtml(s: string) {
@@ -273,7 +251,7 @@ function isScheduledToday(scheduleDays: number[] | null, todayDow: number): bool
 // Task management — /done, /delete, /stats (inline-keyboard driven)
 // ---------------------------------------------------------------------------
 
-async function pickActiveTask(chatId: number, userId: string, prompt: string, prefix: "done" | "delask") {
+async function pickActiveTask(chatId: number, userId: string, prompt: string, prefix: "done" | "delask", lang: Lang) {
   const db = admin();
   const { data: activities } = await db
     .from("activities")
@@ -285,7 +263,7 @@ async function pickActiveTask(chatId: number, userId: string, prompt: string, pr
 
   const list = (activities ?? []) as { id: string; title: string }[];
   if (list.length === 0) {
-    await sendMessage(chatId, "You have no active tasks right now.");
+    await sendMessage(chatId, t(lang, "noActiveTasks"));
     return;
   }
 
@@ -295,11 +273,11 @@ async function pickActiveTask(chatId: number, userId: string, prompt: string, pr
   await sendMessage(chatId, prompt, keyboard);
 }
 
-async function handleDoneList(chatId: number, userId: string) {
-  await pickActiveTask(chatId, userId, "Which task did you complete? 🎉", "done");
+async function handleDoneList(chatId: number, userId: string, lang: Lang) {
+  await pickActiveTask(chatId, userId, t(lang, "doneListPrompt"), "done", lang);
 }
 
-async function handleDoneCallback(chatId: number, messageId: number, userId: string, activityId: string) {
+async function handleDoneCallback(chatId: number, messageId: number, userId: string, activityId: string, lang: Lang) {
   const db = admin();
   const { data: activity } = await db
     .from("activities")
@@ -308,7 +286,7 @@ async function handleDoneCallback(chatId: number, messageId: number, userId: str
     .maybeSingle();
 
   if (!activity || activity.user_id !== userId || activity.status !== "active") {
-    await editMessageText(chatId, messageId, "That task is no longer available.");
+    await editMessageText(chatId, messageId, t(lang, "taskUnavailable"));
     return;
   }
 
@@ -319,20 +297,20 @@ async function handleDoneCallback(chatId: number, messageId: number, userId: str
     .insert({ activity_id: activity.id, comment: "Marked done via Telegram" });
   if (reportError) {
     console.error("done report insert failed:", reportError);
-    await editMessageText(chatId, messageId, "⚠️ Couldn't record that — please try again.");
+    await editMessageText(chatId, messageId, t(lang, "doneRecordFailed"));
     return;
   }
   if (activity.frequency === "once") {
     await db.from("activities").update({ status: "completed" }).eq("id", activity.id);
   }
-  await editMessageText(chatId, messageId, `✅ Marked <b>${escapeHtml(activity.title)}</b> as done. Nice work!`);
+  await editMessageText(chatId, messageId, t(lang, "taskDone", escapeHtml(activity.title)));
 }
 
-async function handleDeleteList(chatId: number, userId: string) {
-  await pickActiveTask(chatId, userId, "Which task do you want to delete?", "delask");
+async function handleDeleteList(chatId: number, userId: string, lang: Lang) {
+  await pickActiveTask(chatId, userId, t(lang, "deleteListPrompt"), "delask", lang);
 }
 
-async function handleDeleteAsk(chatId: number, messageId: number, userId: string, activityId: string) {
+async function handleDeleteAsk(chatId: number, messageId: number, userId: string, activityId: string, lang: Lang) {
   const db = admin();
   const { data: activity } = await db
     .from("activities")
@@ -341,20 +319,20 @@ async function handleDeleteAsk(chatId: number, messageId: number, userId: string
     .maybeSingle();
 
   if (!activity || activity.user_id !== userId) {
-    await editMessageText(chatId, messageId, "That task is no longer available.");
+    await editMessageText(chatId, messageId, t(lang, "taskUnavailable"));
     return;
   }
 
   const keyboard: InlineKeyboard = {
     inline_keyboard: [[
-      { text: "🗑 Yes, delete", callback_data: `delyes:${activity.id}` },
-      { text: "Cancel", callback_data: "delno" },
+      { text: t(lang, "deleteYes"), callback_data: `delyes:${activity.id}` },
+      { text: t(lang, "cancel"), callback_data: "delno" },
     ]],
   };
-  await editMessageText(chatId, messageId, `Delete <b>${escapeHtml(activity.title)}</b>? This can't be undone.`, keyboard);
+  await editMessageText(chatId, messageId, t(lang, "deleteConfirmPrompt", escapeHtml(activity.title)), keyboard);
 }
 
-async function handleDeleteConfirm(chatId: number, messageId: number, userId: string, activityId: string) {
+async function handleDeleteConfirm(chatId: number, messageId: number, userId: string, activityId: string, lang: Lang) {
   const db = admin();
   const { data: activity } = await db
     .from("activities")
@@ -363,15 +341,15 @@ async function handleDeleteConfirm(chatId: number, messageId: number, userId: st
     .maybeSingle();
 
   if (!activity || activity.user_id !== userId) {
-    await editMessageText(chatId, messageId, "That task is no longer available.");
+    await editMessageText(chatId, messageId, t(lang, "taskUnavailable"));
     return;
   }
 
   await db.from("activities").delete().eq("id", activity.id);
-  await editMessageText(chatId, messageId, `🗑 Deleted <b>${escapeHtml(activity.title)}</b>.`);
+  await editMessageText(chatId, messageId, t(lang, "taskDeleted", escapeHtml(activity.title)));
 }
 
-async function handleStats(chatId: number, userId: string) {
+async function handleStats(chatId: number, userId: string, lang: Lang) {
   const db = admin();
   const { data: activities } = await db
     .from("activities")
@@ -380,7 +358,7 @@ async function handleStats(chatId: number, userId: string) {
 
   const list = (activities ?? []) as { id: string; status: string; streak_current: number; streak_best: number }[];
   if (list.length === 0) {
-    await sendMessage(chatId, "No tasks yet — send me a message to create one!");
+    await sendMessage(chatId, t(lang, "noTasksYet"));
     return;
   }
 
@@ -399,15 +377,14 @@ async function handleStats(chatId: number, userId: string) {
       const approved = rows.filter((r) => r.ai_result === "approved").length;
       const rejected = rows.filter((r) => r.ai_result === "rejected").length;
       const excused = rows.filter((r) => r.ai_result === "excused").length;
-      reportLine = `\n\n<b>Photo proofs</b>\n✅ Approved: ${approved} · ❌ Rejected: ${rejected} · 🙏 Excused: ${excused}`;
+      reportLine = t(lang, "statsReportLine", String(approved), String(rejected), String(excused));
     }
   }
 
   await sendMessage(
     chatId,
-    "<b>Your stats</b>\n" +
-      `📋 Active: ${active} · ✅ Completed: ${completed} · ❌ Failed: ${failed}\n` +
-      `🔥 Current streak: ${currentStreak} · 🏆 Best streak: ${bestStreak}` +
+    `<b>${t(lang, "statsHeader")}</b>\n` +
+      t(lang, "statsBody", String(active), String(completed), String(failed), String(currentStreak), String(bestStreak)) +
       reportLine,
   );
 }
@@ -416,14 +393,14 @@ async function handleStats(chatId: number, userId: string) {
 // /history — recent photo reports
 // ---------------------------------------------------------------------------
 
-async function handleHistory(chatId: number, userId: string) {
+async function handleHistory(chatId: number, userId: string, lang: Lang) {
   const db = admin();
   const { data: activities } = await db.from("activities").select("id, title").eq("user_id", userId);
-  const titleById = new Map((activities ?? []).map((a: { id: string; title: string }) => [a.id, a.title]));
+  const titleById = new Map((activities ?? []).map((a: { id: string; title: string }): [string, string] => [a.id, a.title]));
   const ids = [...titleById.keys()];
 
   if (ids.length === 0) {
-    await sendMessage(chatId, "No reports yet — submit a photo to get started.");
+    await sendMessage(chatId, t(lang, "noReportsYet"));
     return;
   }
 
@@ -436,18 +413,19 @@ async function handleHistory(chatId: number, userId: string) {
 
   const rows = (reports ?? []) as { activity_id: string; ai_result: string; ai_explanation: string | null; created_at: string }[];
   if (rows.length === 0) {
-    await sendMessage(chatId, "No reports yet — submit a photo to get started.");
+    await sendMessage(chatId, t(lang, "noReportsYet"));
     return;
   }
 
+  const dateLocale = lang === "ru" ? "ru-RU" : "en-US";
   const lines = rows.map((r) => {
     const icon = r.ai_result === "approved" ? "✅" : r.ai_result === "rejected" ? "❌" : r.ai_result === "excused" ? "🙏" : "📝";
-    const title = escapeHtml(titleById.get(r.activity_id) ?? "Task");
-    const when = new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    const title = escapeHtml(titleById.get(r.activity_id) ?? t(lang, "taskFallbackTitle"));
+    const when = new Date(r.created_at).toLocaleDateString(dateLocale, { month: "short", day: "numeric" });
     const note = r.ai_explanation ? ` — ${escapeHtml(r.ai_explanation)}` : "";
     return `${icon} <b>${title}</b> <i>(${when})</i>${note}`;
   });
-  await sendMessage(chatId, `<b>Recent reports</b>\n${lines.join("\n")}`);
+  await sendMessage(chatId, `<b>${t(lang, "recentReportsHeader")}</b>\n${lines.join("\n")}`);
 }
 
 interface ActivityRow {
@@ -458,7 +436,7 @@ interface ActivityRow {
   frequency: string;
 }
 
-async function handlePhoto(chatId: number, userId: string, fileId: string, caption: string | undefined) {
+async function handlePhoto(chatId: number, userId: string, fileId: string, caption: string | undefined, lang: Lang) {
   const db = admin();
 
   // Any active task accepts photo proof (mirrors the in-app flow, which
@@ -473,7 +451,7 @@ async function handlePhoto(chatId: number, userId: string, fileId: string, capti
 
   const list = (candidates ?? []) as ActivityRow[];
   if (list.length === 0) {
-    await sendMessage(chatId, "You don't have any active tasks yet. Send a text message to create one.");
+    await sendMessage(chatId, t(lang, "noActiveTasksCreate"));
     return;
   }
 
@@ -482,7 +460,8 @@ async function handlePhoto(chatId: number, userId: string, fileId: string, capti
     const needle = caption.trim().toLowerCase();
     activity = list.find((a) => a.title.toLowerCase().includes(needle));
     if (!activity) {
-      await sendMessage(chatId, `Couldn't find an active task matching "${escapeHtml(caption.trim())}". Your active tasks:\n${list.map((a) => `• ${a.title}`).join("\n")}`);
+      const listText = list.map((a) => `• ${a.title}`).join("\n");
+      await sendMessage(chatId, t(lang, "taskNotFoundByCaption", escapeHtml(caption.trim()), listText));
       return;
     }
   } else if (list.length === 1) {
@@ -493,20 +472,20 @@ async function handlePhoto(chatId: number, userId: string, fileId: string, capti
     const keyboard: InlineKeyboard = {
       inline_keyboard: list.map((a) => [{ text: a.title.slice(0, 60), callback_data: `photopick:${a.id}` }]),
     };
-    await sendMessage(chatId, "📸 Got it — which task is this photo for?", keyboard);
+    await sendMessage(chatId, t(lang, "photoPickPrompt"), keyboard);
     return;
   }
 
-  await sendMessage(chatId, `📸 Got it — verifying <b>${escapeHtml(activity.title)}</b>...`);
-  await runVerification(chatId, activity, fileId, caption);
+  await sendMessage(chatId, t(lang, "verifying", escapeHtml(activity.title)));
+  await runVerification(chatId, activity, fileId, caption, lang);
 }
 
-async function handlePhotoPick(chatId: number, messageId: number, userId: string, activityId: string) {
+async function handlePhotoPick(chatId: number, messageId: number, userId: string, activityId: string, lang: Lang) {
   const db = admin();
   const { data: link } = await db.from("telegram_links").select("pending_photo").eq("chat_id", chatId).maybeSingle();
   const pending = link?.pending_photo as { file_id: string; caption: string | null } | null;
   if (!pending?.file_id) {
-    await editMessageText(chatId, messageId, "That photo prompt expired — please resend the photo.");
+    await editMessageText(chatId, messageId, t(lang, "photoPromptExpired"));
     return;
   }
 
@@ -517,16 +496,16 @@ async function handlePhotoPick(chatId: number, messageId: number, userId: string
     .maybeSingle();
 
   if (!activity || activity.user_id !== userId || activity.status !== "active") {
-    await editMessageText(chatId, messageId, "That task is no longer available — please resend the photo.");
+    await editMessageText(chatId, messageId, t(lang, "taskUnavailableResend"));
     return;
   }
 
   await db.from("telegram_links").update({ pending_photo: null }).eq("chat_id", chatId);
-  await editMessageText(chatId, messageId, `📸 Got it — verifying <b>${escapeHtml(activity.title)}</b>...`);
-  await runVerification(chatId, activity, pending.file_id, pending.caption ?? undefined);
+  await editMessageText(chatId, messageId, t(lang, "verifying", escapeHtml(activity.title)));
+  await runVerification(chatId, activity, pending.file_id, pending.caption ?? undefined, lang);
 }
 
-async function runVerification(chatId: number, activity: ActivityRow, fileId: string, caption: string | undefined) {
+async function runVerification(chatId: number, activity: ActivityRow, fileId: string, caption: string | undefined, lang: Lang) {
   const db = admin();
   try {
     const jpeg = await downloadPhoto(fileId);
@@ -564,11 +543,11 @@ async function runVerification(chatId: number, activity: ActivityRow, fileId: st
       const icon = result === "approved" ? "✅" : result === "excused" ? "🙏" : "❌";
       await sendMessage(chatId, `${icon} <b>${escapeHtml(activity.title)}</b>\n${escapeHtml(ai.explanation)}`);
     } else {
-      await sendMessage(chatId, `✅ Proof submitted for <b>${escapeHtml(activity.title)}</b>.`);
+      await sendMessage(chatId, t(lang, "proofSubmitted", escapeHtml(activity.title)));
     }
   } catch (err) {
     console.error("photo handling failed:", err);
-    await sendMessage(chatId, "⚠️ Something went wrong while verifying that photo — please try again.");
+    await sendMessage(chatId, t(lang, "verifyError"));
   }
 }
 
@@ -594,6 +573,8 @@ async function handleCallbackQuery(callback: any) {
     await answerCallbackQuery(id, "This chat isn't linked anymore.");
     return;
   }
+  const { data: linkedUser } = await db.from("users").select("language").eq("id", link.user_id).maybeSingle();
+  const lang = pickLang(linkedUser?.language);
 
   const sep = data.indexOf(":");
   const action = sep === -1 ? data : data.slice(0, sep);
@@ -602,19 +583,19 @@ async function handleCallbackQuery(callback: any) {
   try {
     switch (action) {
       case "done":
-        await handleDoneCallback(chatId, messageId, link.user_id, arg);
+        await handleDoneCallback(chatId, messageId, link.user_id, arg, lang);
         break;
       case "delask":
-        await handleDeleteAsk(chatId, messageId, link.user_id, arg);
+        await handleDeleteAsk(chatId, messageId, link.user_id, arg, lang);
         break;
       case "delyes":
-        await handleDeleteConfirm(chatId, messageId, link.user_id, arg);
+        await handleDeleteConfirm(chatId, messageId, link.user_id, arg, lang);
         break;
       case "delno":
-        await editMessageText(chatId, messageId, "Cancelled — that task is still there.");
+        await editMessageText(chatId, messageId, t(lang, "deleteCancelled"));
         break;
       case "photopick":
-        await handlePhotoPick(chatId, messageId, link.user_id, arg);
+        await handlePhotoPick(chatId, messageId, link.user_id, arg, lang);
         break;
     }
   } finally {
@@ -660,6 +641,7 @@ serve(async (req) => {
   const caption: string | undefined = message.caption;
   const photos: Array<{ file_id: string }> | undefined = message.photo;
 
+  let lang: Lang = "en";
   try {
     // "/start" works before linking; everything else requires a linked account.
     if (text?.startsWith("/start")) {
@@ -676,31 +658,35 @@ serve(async (req) => {
       .maybeSingle();
 
     if (!link) {
+      // No linked user to resolve a language for -- English default.
       await sendMessage(chatId, "This chat isn't linked to a reInspire account yet. Open the app → Profile → Telegram bot to get a linking code, then send <code>/start YOUR_CODE</code>.");
       return ok();
     }
 
+    const { data: linkedUser } = await db.from("users").select("language").eq("id", link.user_id).maybeSingle();
+    lang = pickLang(linkedUser?.language);
+
     if (photos && photos.length > 0) {
       const best = photos[photos.length - 1]; // largest resolution is last
-      await handlePhoto(chatId, link.user_id, best.file_id, caption);
+      await handlePhoto(chatId, link.user_id, best.file_id, caption, lang);
     } else if (text === "/help") {
-      await handleHelp(chatId);
+      await handleHelp(chatId, lang);
     } else if (text === "/today" || text === "/tasks") {
-      await handleToday(chatId, link.user_id);
+      await handleToday(chatId, link.user_id, lang);
     } else if (text === "/done") {
-      await handleDoneList(chatId, link.user_id);
+      await handleDoneList(chatId, link.user_id, lang);
     } else if (text === "/delete" || text === "/remove") {
-      await handleDeleteList(chatId, link.user_id);
+      await handleDeleteList(chatId, link.user_id, lang);
     } else if (text === "/history") {
-      await handleHistory(chatId, link.user_id);
+      await handleHistory(chatId, link.user_id, lang);
     } else if (text === "/stats") {
-      await handleStats(chatId, link.user_id);
+      await handleStats(chatId, link.user_id, lang);
     } else if (text && text.trim()) {
-      await handleNewTask(chatId, link.user_id, text);
+      await handleNewTask(chatId, link.user_id, text, lang);
     }
   } catch (err) {
     console.error("telegram-webhook error:", err);
-    try { await sendMessage(chatId, "⚠️ Something went wrong handling that — please try again."); } catch { /* ignore */ }
+    try { await sendMessage(chatId, t(lang, "genericError")); } catch { /* ignore */ }
   }
 
   return ok();

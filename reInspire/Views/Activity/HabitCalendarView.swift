@@ -78,7 +78,7 @@ struct HabitCalendarView: View {
         }
         .overlay {
             if showPerfect {
-                PerfectDayView(message: "Серия продолжается! 🔥") { showPerfect = false }
+                PerfectDayView(message: String(localized: "Серия продолжается! 🔥")) { showPerfect = false }
                     .transition(.opacity)
             }
         }
@@ -147,10 +147,10 @@ struct HabitCalendarView: View {
 
     private var frequencyLabel: String {
         switch vm.activity.frequency {
-        case .daily:  return "Каждый день"
-        case .weekly: return "Каждую неделю"
-        case .once:   return "Один раз"
-        case .custom: return "По расписанию"
+        case .daily:  return String(localized: "Каждый день")
+        case .weekly: return String(localized: "Каждую неделю")
+        case .once:   return String(localized: "Один раз")
+        case .custom: return String(localized: "По расписанию")
         }
     }
 
@@ -158,9 +158,9 @@ struct HabitCalendarView: View {
 
     private var statsRow: some View {
         HStack(spacing: 0) {
-            laurelTile(value: vm.bestStreak, caption: "Лучшая серия")
+            laurelTile(value: vm.bestStreak, caption: String(localized: "Лучшая серия"))
             Rectangle().fill(Color.primary.opacity(0.08)).frame(width: 1, height: 56)
-            statTile(emoji: "📆", value: vm.totalDaysDone, caption: "Всего")
+            statTile(emoji: "📆", value: vm.totalDaysDone, caption: String(localized: "Всего"))
         }
         .padding(.vertical, 8)
     }
@@ -332,7 +332,7 @@ struct HabitCalendarView: View {
                 Text("\(grouped(current)) / \(grouped(target))\(unitSuffix)")
                     .font(.manrope(.extraBold, size: 22))
                     .foregroundColor(.primary)
-                Text(liveToday != nil ? "по данным приложений" : "выполнено сегодня")
+                Text(liveToday != nil ? String(localized: "по данным приложений") : String(localized: "выполнено сегодня"))
                     .font(.manrope(.medium, size: 12))
                     .foregroundColor(.primary.opacity(0.45))
             }
@@ -361,7 +361,7 @@ struct HabitCalendarView: View {
     private var photoRequirementBanner: some View {
         let line: String = {
             if let c = vm.activity.condition, !c.trimmingCharacters(in: .whitespaces).isEmpty { return c }
-            return "Сделай фото при отметке выполнения"
+            return String(localized: "Сделай фото при отметке выполнения")
         }()
         return HStack(spacing: 12) {
             Image(systemName: "camera.viewfinder")
@@ -415,7 +415,7 @@ struct HabitCalendarView: View {
                         .foregroundColor(vm.isDoneToday ? .white : .primary.opacity(0.3))
                 }
             }
-            Text(vm.isDoneToday ? "Нажми, чтобы отменить" : "Отметить выполненным")
+            Text(vm.isDoneToday ? String(localized: "Нажми, чтобы отменить") : String(localized: "Отметить выполненным"))
                 .font(.manrope(.medium, size: 12))
                 .foregroundColor(.primary.opacity(0.4))
         }
@@ -479,7 +479,7 @@ private struct ConnectorChip: View {
                     .font(.manrope(.semiBold, size: 12))
                     .foregroundColor(.primary)
                     .lineLimit(1)
-                Text(connected ? "Подключено" : "Подключить")
+                Text(connected ? String(localized: "Подключено") : String(localized: "Подключить"))
                     .font(.manrope(.medium, size: 10))
                     .foregroundColor(connected ? green : .primary.opacity(0.4))
             }

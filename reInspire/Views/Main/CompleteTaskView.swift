@@ -36,7 +36,7 @@ struct CompleteTaskView: View {
         if let c = activity.condition, !c.trimmingCharacters(in: .whitespaces).isEmpty {
             return c
         }
-        return "Сделай фото, подтверждающее выполнение"
+        return String(localized: "Сделай фото, подтверждающее выполнение")
     }
 
     var body: some View {
@@ -69,15 +69,15 @@ struct CompleteTaskView: View {
             } else if camera.permissionDenied {
                 unavailableView(
                     icon: "lock.fill",
-                    text: "Нет доступа к камере",
-                    primary: "Открыть настройки",
+                    text: String(localized: "Нет доступа к камере"),
+                    primary: String(localized: "Открыть настройки"),
                     action: { if let u = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(u) } }
                 )
             } else {
                 unavailableView(
                     icon: "camera.fill",
-                    text: "Камера недоступна",
-                    primary: "Выбрать из галереи",
+                    text: String(localized: "Камера недоступна"),
+                    primary: String(localized: "Выбрать из галереи"),
                     action: { showLibrary = true }
                 )
             }
@@ -323,11 +323,11 @@ private struct VerdictOverlay: View {
     }
     private var headline: String {
         switch info.result {
-        case .approved:      return "Проверено ✅"
-        case .excused:       return "Отмазка принята 🙏"
-        case .notApplicable: return "Готово"
-        case .rejected:      return "Не засчитано"
-        case .pending:       return "Проверяем…"
+        case .approved:      return String(localized: "Проверено ✅")
+        case .excused:       return String(localized: "Отмазка принята 🙏")
+        case .notApplicable: return String(localized: "Готово")
+        case .rejected:      return String(localized: "Не засчитано")
+        case .pending:       return String(localized: "Проверяем…")
         }
     }
 

@@ -9,6 +9,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { pickLang } from "../_shared/i18n.ts";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -62,6 +63,13 @@ serve(async (req) => {
       .maybeSingle();
     if (!fam?.parent_user_id) return json({ error: "no_parent" }, 400);
 
+    const { data: parent } = await admin
+      .from("users")
+      .select("language")
+      .eq("id", fam.parent_user_id)
+      .maybeSingle();
+    const lang = pickLang(parent?.language);
+
     const code = genCode();
     const { error: upErr } = await admin
       .from("family_leave_requests")
@@ -69,17 +77,18 @@ serve(async (req) => {
     if (upErr) return json({ error: upErr.message }, 500);
 
     // Push the code to the parent (reuse the authenticated send-push function;
-    // the child's JWT is a valid authenticated caller).
+    // the child's JWT is a valid authenticated caller). Localized in the
+    // PARENT's language -- the push goes to them, not to the child caller.
     const childName = (me.display_name && me.display_name.trim())
-      || (me.email ? me.email.split("@")[0] : "Ребёнок");
+      || (me.email ? me.email.split("@")[0] : (lang === "ru" ? "Ребёнок" : "Child"));
+    const title = lang === "ru" ? "Запрос на выход из семьи" : "Request to leave the family";
+    const body = lang === "ru"
+      ? `${childName} хочет выйти из семьи. Код для подтверждения: ${code}. Сообщи его ребёнку, если согласен.`
+      : `${childName} wants to leave the family. Confirmation code: ${code}. Share it with them if you agree.`;
     const pushRes = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-push`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: authHeader },
-      body: JSON.stringify({
-        user_id: fam.parent_user_id,
-        title: "Запрос на выход из семьи",
-        body: `${childName} хочет выйти из семьи. Код для подтверждения: ${code}. Сообщи его ребёнку, если согласен.`,
-      }),
+      body: JSON.stringify({ user_id: fam.parent_user_id, title, body }),
     });
     // A missing parent push token is not fatal -- the request row still exists
     // and the parent can read the code elsewhere; report it so the client can

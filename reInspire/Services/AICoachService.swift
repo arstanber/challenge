@@ -7,11 +7,16 @@ import Supabase
 
 // MARK: #10 — Morning Brief
 
-struct MorningBrief: Decodable {
+struct MorningBrief: Decodable, Identifiable {
+    let id = UUID()              // synthetic, stable -- not from server
     let greeting: String        // "You're on a 7-day streak — keep it up!"
     let topTasks: [String]      // up to 3 activity titles to focus on today
     let motivationTip: String   // one-liner tip
     let error: String?
+
+    private enum CodingKeys: String, CodingKey {
+        case greeting, topTasks, motivationTip, error
+    }
 }
 
 // MARK: #11 — Failure Analysis
@@ -50,6 +55,7 @@ final class AICoachService {
         let userId: String
         let streakCurrent: Int
         let todayTasks: [String]    // titles of active activities
+        let language: String
     }
 
     func morningBrief(streakCurrent: Int, todayTasks: [String]) async throws -> MorningBrief {
@@ -58,7 +64,8 @@ final class AICoachService {
         }
         let req = BriefRequest(userId: userId.uuidString,
                                streakCurrent: streakCurrent,
-                               todayTasks: todayTasks)
+                               todayTasks: todayTasks,
+                               language: AppLanguage.current)
         let response: MorningBrief = try await supabase.functions
             .invoke("morning-brief", options: FunctionInvokeOptions(body: req))
         if let e = response.error { throw CoachError.server(e) }
@@ -72,13 +79,15 @@ final class AICoachService {
         let activityType: String
         let streakBefore: Int
         let userReason: String?     // optional text from user
+        let language: String
     }
 
     func analyzeFailure(activity: reInspire.Activity, userReason: String? = nil) async throws -> FailureAnalysis {
         let req = FailureRequest(activityTitle: activity.title,
                                  activityType: activity.type.rawValue,
                                  streakBefore: activity.streakCurrent,
-                                 userReason: userReason)
+                                 userReason: userReason,
+                                 language: AppLanguage.current)
         let response: FailureAnalysis = try await supabase.functions
             .invoke("analyze-failure", options: FunctionInvokeOptions(body: req))
         if let e = response.error { throw CoachError.server(e) }
@@ -92,6 +101,7 @@ final class AICoachService {
         let goalDescription: String
         let targetValue: Double?
         let deadlineDays: Int?
+        let language: String
     }
 
     func splitGoal(activity: reInspire.Activity) async throws -> GoalSplit {
@@ -101,7 +111,8 @@ final class AICoachService {
         let req = SplitRequest(goalTitle: activity.title,
                                goalDescription: activity.description,
                                targetValue: activity.goalTarget,
-                               deadlineDays: deadline)
+                               deadlineDays: deadline,
+                               language: AppLanguage.current)
         let response: GoalSplit = try await supabase.functions
             .invoke("split-goal", options: FunctionInvokeOptions(body: req))
         if let e = response.error { throw CoachError.server(e) }

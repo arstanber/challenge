@@ -49,7 +49,7 @@ final class ReferralService {
             info = try await supabase.rpc("get_referral_info").execute().value
         } catch {
             logger.error("get_referral_info failed: \(error)")
-            errorMessage = "Не удалось загрузить данные"
+            errorMessage = AppLanguage.current == "ru" ? "Не удалось загрузить данные" : "Couldn't load referral data"
         }
     }
 
@@ -71,19 +71,38 @@ final class ReferralService {
                 .execute()
                 .value
             AnalyticsService.shared.track(.referralRedeemed)
-            await NotificationService.shared.sendPush(
-                toUserId: result.referrerId,
-                title: result.milestone ? "10 друзей -- месяц PRO! 🏆" : "+1 друг по твоему коду 🎉",
-                body: result.milestone
+            let lang = await recipientLanguage(result.referrerId)
+            let title = lang == "ru"
+                ? (result.milestone ? "10 друзей -- месяц PRO! 🏆" : "+1 друг по твоему коду 🎉")
+                : (result.milestone ? "10 friends -- a month of PRO! 🏆" : "+1 friend via your code 🎉")
+            let body = lang == "ru"
+                ? (result.milestone
                     ? "Юбилейный реферал: тебе начислено 30 дней PRO."
-                    : "Друг присоединился. Забери награду: 3 дня PRO или заморозка."
-            )
+                    : "Друг присоединился. Забери награду: 3 дня PRO или заморозка.")
+                : (result.milestone
+                    ? "Milestone referral: you've earned 30 days of PRO."
+                    : "A friend joined. Claim your reward: 3 days of PRO or a streak freeze.")
+            await NotificationService.shared.sendPush(toUserId: result.referrerId, title: title, body: body)
             await AuthService.shared.refreshProfile()
             return true
         } catch {
             logger.error("redeem_referral_code failed: \(error)")
-            errorMessage = "Код не найден или уже использован"
+            errorMessage = AppLanguage.current == "ru" ? "Код не найден или уже использован" : "Code not found, or already used"
             return false
+        }
+    }
+
+    /// Looks up another user's language for a cross-user push (the
+    /// referrer, not the redeemer) -- mirrors `DuelService.recipientLanguage`.
+    private func recipientLanguage(_ userId: UUID) async -> String {
+        do {
+            return try await supabase
+                .rpc("get_user_language", params: ["p_user_id": userId.uuidString])
+                .execute()
+                .value
+        } catch {
+            logger.error("get_user_language failed: \(error)")
+            return "ru"
         }
     }
 
@@ -101,7 +120,7 @@ final class ReferralService {
             await load()
         } catch {
             logger.error("claim_referral_reward failed: \(error)")
-            errorMessage = "Не удалось получить награду"
+            errorMessage = AppLanguage.current == "ru" ? "Не удалось получить награду" : "Couldn't claim the reward"
         }
     }
 }

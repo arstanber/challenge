@@ -132,7 +132,7 @@ struct Duel: Codable, Identifiable, Hashable {
     /// "arslan@gmail.com"); placeholder while nobody joined yet.
     func opponentName(for userId: UUID?) -> String {
         let email = isChallenger(userId) ? opponentEmail : challengerEmail
-        guard let email, let name = email.split(separator: "@").first else { return "Соперник" }
+        guard let email, let name = email.split(separator: "@").first else { return String(localized: "Соперник") }
         return String(name)
     }
 

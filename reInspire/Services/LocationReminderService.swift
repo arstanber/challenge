@@ -144,7 +144,9 @@ final class LocationReminderService: NSObject, CLLocationManagerDelegate {
 
         let content = UNMutableNotificationContent()
         content.title = "📍 \(title)"
-        content.body = "Вы рядом с \(placeName) -- самое время сделать задачу!"
+        content.body = AppLanguage.current == "ru"
+            ? "Вы рядом с \(placeName) -- самое время сделать задачу!"
+            : "You're near \(placeName) -- perfect time to do the task!"
         content.sound = NotificationService.chime
 
         let trigger = UNLocationNotificationTrigger(region: region, repeats: true)
@@ -212,7 +214,9 @@ final class LocationReminderService: NSObject, CLLocationManagerDelegate {
 
         let content = UNMutableNotificationContent()
         content.title = "📍 \(name)"
-        content.body = "Вы рядом с \(name) -- пора сфотографировать и выполнить задачу!"
+        content.body = AppLanguage.current == "ru"
+            ? "Вы рядом с \(name) -- пора сфотографировать и выполнить задачу!"
+            : "You're near \(name) -- time to snap a photo and finish the task!"
         content.sound = NotificationService.chime
 
         let trigger = UNLocationNotificationTrigger(region: region, repeats: true)

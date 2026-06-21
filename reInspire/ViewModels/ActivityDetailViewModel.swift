@@ -86,7 +86,9 @@ final class ActivityDetailViewModel {
             TaskEngine.shared.markDoneLocally(activity.id)
             if activity.frequency == .once { await markCompleted() }
             lastAIResult = .notApplicable
-            lastAIExplanation = "Нет интернета -- проверим фото, как только появится сеть."
+            lastAIExplanation = AppLanguage.current == "ru"
+                ? "Нет интернета -- проверим фото, как только появится сеть."
+                : "No internet -- we'll check the photo as soon as you're back online."
             LiveActivityService.shared.resolveVerifying(taskId: activity.id, approved: true)
             onReportSubmitted?()
             await TaskEngine.shared.noteReportChanged(activityId: activity.id)

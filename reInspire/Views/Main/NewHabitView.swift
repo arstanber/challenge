@@ -23,8 +23,8 @@ struct NewHabitView: View {
     @State private var title: String
     @State private var icon: String
     @State private var tint: Color
-    @State private var polarity = "Развить"          // Развить / Бросить
-    @State private var repeatMode = "Ежедневно"      // Ежедневно / Еженедельно
+    @State private var polarity = String(localized: "Развить")          // Развить / Бросить
+    @State private var repeatMode = String(localized: "Ежедневно")      // Ежедневно / Еженедельно
     @State private var selectedDays: Set<Int> = Set(0..<7)
     @State private var goalOn: Bool
     @State private var goalValue: String
@@ -58,7 +58,7 @@ struct NewHabitView: View {
                          "cup.and.saucer.fill", "moon.zzz.fill", "star.fill"]
     private let palette = ["F5A623", "FF4D4D", "2FB873", "3D9BFF", "A86CFF",
                            "18C29C", "FF7AB6", "FFD93D", "FF8A3D", "5B7CFF"]
-    private let weekdays = ["П", "В", "С", "Ч", "П", "С", "В"]
+    private let weekdays = [String(localized: "П"), String(localized: "В"), String(localized: "С"), String(localized: "Ч"), String(localized: "П"), String(localized: "С"), String(localized: "В")]
 
     private var canCreate: Bool { !title.trimmingCharacters(in: .whitespaces).isEmpty }
 
@@ -183,8 +183,8 @@ struct NewHabitView: View {
             Text("Тип").font(.system(size: 19, weight: .medium)).foregroundStyle(.primary)
             Spacer()
             Menu {
-                Button("Развить") { polarity = "Развить" }
-                Button("Бросить") { polarity = "Бросить" }
+                Button("Развить") { polarity = String(localized: "Развить") }
+                Button("Бросить") { polarity = String(localized: "Бросить") }
             } label: { valueLabel(polarity) }
         }
         .padding(18)
@@ -199,8 +199,8 @@ struct NewHabitView: View {
                 Text("Повтор").font(.system(size: 19, weight: .medium)).foregroundStyle(.primary)
                 Spacer()
                 Menu {
-                    Button("Ежедневно") { repeatMode = "Ежедневно"; selectedDays = Set(0..<7) }
-                    Button("Еженедельно") { repeatMode = "Еженедельно" }
+                    Button("Ежедневно") { repeatMode = String(localized: "Ежедневно"); selectedDays = Set(0..<7) }
+                    Button("Еженедельно") { repeatMode = String(localized: "Еженедельно") }
                 } label: { valueLabel(repeatMode) }
             }
             Rectangle().fill(Color.primary.opacity(0.1)).frame(height: 1)
@@ -212,7 +212,7 @@ struct NewHabitView: View {
                     Button {
                         Haptics.selection()
                         if on { selectedDays.remove(i) } else { selectedDays.insert(i) }
-                        repeatMode = selectedDays.count == 7 ? "Ежедневно" : "Еженедельно"
+                        repeatMode = selectedDays.count == 7 ? String(localized: "Ежедневно") : String(localized: "Еженедельно")
                     } label: {
                         Text(weekdays[i])
                             .font(.system(size: 17, weight: .bold))

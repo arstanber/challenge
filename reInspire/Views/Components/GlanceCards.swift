@@ -56,7 +56,7 @@ struct ProgressTodayCard: View {
 struct TodayTasksCard: View {
     let subtitle: String
     let titles: [String]
-    var emptyText: String = "Всё готово ✅"
+    var emptyText: String = String(localized: "Всё готово ✅")
     var brand: String = "reInspire"
 
     var body: some View {
@@ -100,7 +100,7 @@ struct PerformanceCard: View {
     let rates: [Double]
     let headline: String
     let subtitle: String
-    var footer: String = "Смотреть всё"
+    var footer: String = String(localized: "Смотреть всё")
     var brand: String = "reInspire"
 
     private let barBlue = Color(hex: "0047E2")

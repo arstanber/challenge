@@ -80,7 +80,7 @@ struct ChildSetCredentialsView: View {
             try await auth.setOwnChildCredentials(email: email, password: password)
             Haptics.success()
         } catch {
-            errorMessage = "Не удалось сохранить. Возможно, почта уже занята."
+            errorMessage = String(localized: "Не удалось сохранить. Возможно, почта уже занята.")
         }
     }
 }

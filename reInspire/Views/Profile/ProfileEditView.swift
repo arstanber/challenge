@@ -27,7 +27,7 @@ struct ProfileEditView: View {
                 let f = DateFormatter()
                 f.dateFormat = "d MMM"
                 f.locale = Locale(identifier: "ru_RU")
-                return "Premium до \(f.string(from: until))"
+                return String(localized: "Premium до \(f.string(from: until))")
             }
             return "Premium"
         }

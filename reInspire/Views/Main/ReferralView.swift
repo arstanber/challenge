@@ -97,7 +97,7 @@ struct ReferralView: View {
     }
 
     private func shareText(code: String) -> String {
-        "Я закрываю цели в reInspire -- AI проверяет фото, не отвертишься 😄 Заходи по моему коду \(code), получишь 3 дня PRO: https://thechallenges.app"
+        String(localized: "Я закрываю цели в reInspire -- AI проверяет фото, не отвертишься 😄 Заходи по моему коду \(code), получишь 3 дня PRO: https://thechallenges.app")
     }
 
     // MARK: Unclaimed rewards

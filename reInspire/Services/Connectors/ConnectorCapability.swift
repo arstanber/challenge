@@ -33,17 +33,17 @@ struct ConnectorCapability: Identifiable, Hashable {
     func taskTitle(target: Double) -> String {
         let n = Int(target)
         switch connector {
-        case .chessCom:    return "Сыграть \(n) партий на Chess.com"
+        case .chessCom:    return String(localized: "Сыграть \(n) партий на Chess.com")
         case .appleHealth, .appleFitness:
             switch metric {
-            case .steps:           return "Пройти \(n) шагов"
-            case .activeEnergy:    return "Сжечь \(n) ккал"
-            case .distance:        return "Пройти \(n) км"
-            case .exerciseMinutes: return "Тренироваться \(n) минут"
+            case .steps:           return String(localized: "Пройти \(n) шагов")
+            case .activeEnergy:    return String(localized: "Сжечь \(n) ккал")
+            case .distance:        return String(localized: "Пройти \(n) км")
+            case .exerciseMinutes: return String(localized: "Тренироваться \(n) минут")
             case .itemsToday:      return title
             }
-        case .strava:      return "Преодолеть \(n) км в Strava"
-        case .appleCalendar: return "Провести \(n) событий за день"
+        case .strava:      return String(localized: "Преодолеть \(n) км в Strava")
+        case .appleCalendar: return String(localized: "Провести \(n) событий за день")
         default:           return title
         }
     }
@@ -72,25 +72,25 @@ extension DataConnector {
         switch self {
         case .appleHealth:
             return [
-                ConnectorCapability(connector: self, title: "Шаги за день", metric: .steps, unit: "шагов", defaultTarget: 8000),
-                ConnectorCapability(connector: self, title: "Активные калории", metric: .activeEnergy, unit: "ккал", defaultTarget: 500),
-                ConnectorCapability(connector: self, title: "Дистанция за день", metric: .distance, unit: "км", defaultTarget: 5)
+                ConnectorCapability(connector: self, title: String(localized: "Шаги за день"), metric: .steps, unit: String(localized: "шагов"), defaultTarget: 8000),
+                ConnectorCapability(connector: self, title: String(localized: "Активные калории"), metric: .activeEnergy, unit: String(localized: "ккал"), defaultTarget: 500),
+                ConnectorCapability(connector: self, title: String(localized: "Дистанция за день"), metric: .distance, unit: String(localized: "км"), defaultTarget: 5)
             ]
         case .appleFitness:
             return [
-                ConnectorCapability(connector: self, title: "Минуты тренировки", metric: .exerciseMinutes, unit: "мин", defaultTarget: 30)
+                ConnectorCapability(connector: self, title: String(localized: "Минуты тренировки"), metric: .exerciseMinutes, unit: String(localized: "мин"), defaultTarget: 30)
             ]
         case .strava:
             return [
-                ConnectorCapability(connector: self, title: "Дистанция за день", metric: .distance, unit: "км", defaultTarget: 5)
+                ConnectorCapability(connector: self, title: String(localized: "Дистанция за день"), metric: .distance, unit: String(localized: "км"), defaultTarget: 5)
             ]
         case .appleCalendar:
             return [
-                ConnectorCapability(connector: self, title: "События в календаре за день", metric: .itemsToday, unit: "событий", defaultTarget: 1)
+                ConnectorCapability(connector: self, title: String(localized: "События в календаре за день"), metric: .itemsToday, unit: String(localized: "событий"), defaultTarget: 1)
             ]
         case .chessCom:
             return [
-                ConnectorCapability(connector: self, title: "Сыгранные партии за день", metric: .itemsToday, unit: "партий", defaultTarget: 10)
+                ConnectorCapability(connector: self, title: String(localized: "Сыгранные партии за день"), metric: .itemsToday, unit: String(localized: "партий"), defaultTarget: 10)
             ]
         case .telegram, .appleClock, .appleShortcuts:
             return []

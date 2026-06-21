@@ -16,8 +16,8 @@ struct OfflineBanner: View {
                     Image(systemName: "wifi.slash")
                         .font(.system(size: 13, weight: .semibold))
                     Text(pending > 0
-                         ? "Нет сети -- \(pending) изм. синхронизируем позже"
-                         : "Нет сети -- изменения сохраняются локально")
+                         ? String(localized: "Нет сети -- \(pending) изм. синхронизируем позже")
+                         : String(localized: "Нет сети -- изменения сохраняются локально"))
                         .font(.manrope(.semiBold, size: 13))
                         .lineLimit(1)
                         .minimumScaleFactor(0.8)

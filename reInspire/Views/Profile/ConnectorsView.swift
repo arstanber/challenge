@@ -294,7 +294,7 @@ private struct ClockReminderSheet: View {
             Haptics.success()
             dismiss()
         } catch ConnectorError.authorizationDenied {
-            errorMessage = "Разреши уведомления в настройках, чтобы получать напоминание."
+            errorMessage = String(localized: "Разреши уведомления в настройках, чтобы получать напоминание.")
         } catch {
             errorMessage = error.localizedDescription
         }

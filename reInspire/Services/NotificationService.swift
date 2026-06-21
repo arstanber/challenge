@@ -73,7 +73,7 @@ final class NotificationService: NSObject {
             ? ZoomerCopy.taskReminder(createdAt: activity.createdAt)
             : StandardCopy.push(hour: components.hour ?? 12, streak: activity.streakCurrent)
         content.title = pick.title
-        content.subtitle = "«\(activity.title)»"
+        content.subtitle = AppLanguage.current == "ru" ? "«\(activity.title)»" : "\"\(activity.title)\""
         content.body = pick.body
         content.sound = NotificationService.chime
         content.userInfo = ["activity_id": activity.id.uuidString]
@@ -123,10 +123,12 @@ final class NotificationService: NSObject {
         cancelStreakNudge()
         guard streak >= 1, tasksToSave >= 1 else { return }
 
-        let remaining = Self.remainingPhrase(tasksToSave)
         if AppPrefs.zoomerMode {
             // Rotating meme intro, but the concrete numbers stay: the whole
             // point of the evening pushes is "what exactly do I lose tonight".
+            // Zoomer-tone copy is Russian-only for now (separate creative pass
+            // needed for an English meme voice, not a mechanical translation).
+            let remaining = Self.remainingPhrase(tasksToSave)
             let pick = ZoomerCopy.streakRisk(streak: streak)
             scheduleOnceToday(
                 id: "streak-nudge", hour: 20, minute: 0,
@@ -138,7 +140,8 @@ final class NotificationService: NSObject {
                 title: "🚨 Вообще не рофл: стрик \(streak) дн.",
                 body: "Полтора часа и день закрыт навсегда. Ещё успеваешь: \(remaining). Погнали!"
             )
-        } else {
+        } else if AppLanguage.current == "ru" {
+            let remaining = Self.remainingPhrase(tasksToSave)
             scheduleOnceToday(
                 id: "streak-nudge", hour: 20, minute: 0,
                 title: "🔥 Серия \(streak) дн. сгорит в полночь",
@@ -148,6 +151,18 @@ final class NotificationService: NSObject {
                 id: "streak-nudge-final", hour: 22, minute: 30,
                 title: "🚨 Последний шанс: серия \(streak) дн.",
                 body: "Через полтора часа день закроется навсегда. Ещё успеваешь: \(remaining)."
+            )
+        } else {
+            let remaining = Self.remainingPhraseEn(tasksToSave)
+            scheduleOnceToday(
+                id: "streak-nudge", hour: 20, minute: 0,
+                title: "🔥 \(streak)-day streak burns out at midnight",
+                body: "To lock in the day, \(remaining). Close it out before 00:00 and the streak lives."
+            )
+            scheduleOnceToday(
+                id: "streak-nudge-final", hour: 22, minute: 30,
+                title: "🚨 Last call: \(streak)-day streak",
+                body: "In 90 minutes the day closes for good. Still time: \(remaining)."
             )
         }
     }
@@ -184,6 +199,11 @@ final class NotificationService: NSObject {
         return "осталось \(n) задач"
     }
 
+    /// "1 task left" / "5 tasks left".
+    private static func remainingPhraseEn(_ n: Int) -> String {
+        "\(n) task\(n == 1 ? "" : "s") left"
+    }
+
     // MARK: - Personal-time nudge
 
     /// One repeating daily reminder at the time the user usually completes
@@ -205,8 +225,10 @@ final class NotificationService: NSObject {
             // the only variant that says why the push fires at this minute.
             var pool = StandardCopy.pool(hour: minuteOfDay / 60, streak: streak)
             pool.append(PushText(
-                title: "Твоё обычное время 🎯",
-                body: "Обычно ты закрываешь задачи примерно сейчас. Один отчёт, и день уже не зря."
+                title: AppLanguage.current == "ru" ? "Твоё обычное время 🎯" : "Your usual time 🎯",
+                body: AppLanguage.current == "ru"
+                    ? "Обычно ты закрываешь задачи примерно сейчас. Один отчёт, и день уже не зря."
+                    : "You usually wrap up tasks around now. One report, and the day isn't wasted."
             ))
             pick = pool.randomElement() ?? StandardCopy.general[0]
         }
@@ -232,14 +254,47 @@ final class NotificationService: NSObject {
         if AppPrefs.zoomerMode {
             content.title = "Недельный рекап 📊"
             content.body = "Глянь, сколько ты затащил за неделю. Спойлер: есть чем флексить (или нет)."
-        } else {
+        } else if AppLanguage.current == "ru" {
             content.title = "Твоя неделя в цифрах 📊"
             content.body = "Посмотри, сколько задач закрыто за неделю, и спланируй следующую."
+        } else {
+            content.title = "Your week in numbers 📊"
+            content.body = "See how many tasks you closed this week, and plan the next one."
         }
         content.sound = NotificationService.chime
 
         var comps = DateComponents()
         comps.weekday = 1 // Sunday
+        comps.hour = hour
+        comps.minute = 0
+        let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: true)
+        center.add(UNNotificationRequest(identifier: id, content: content, trigger: trigger))
+    }
+
+    // MARK: - Monday morning briefing
+
+    /// Repeating local nudge every Monday at `hour`, pointing back at the
+    /// AI Coach banner on Home (which generates the actual brief on open --
+    /// this push just gets people there at the right moment).
+    func scheduleMondayBriefing(hour: Int = 9) {
+        let id = "monday-briefing"
+        let center = UNUserNotificationCenter.current()
+
+        let content = UNMutableNotificationContent()
+        if AppPrefs.zoomerMode {
+            content.title = "Новая неделя, новый рывок 🤖"
+            content.body = "AI-коуч уже разобрал твою неделю -- глянь брифинг на главном экране."
+        } else if AppLanguage.current == "ru" {
+            content.title = "Утренний брифинг 🤖"
+            content.body = "AI-коуч составил план на неделю -- открой главный экран."
+        } else {
+            content.title = "Morning briefing 🤖"
+            content.body = "Your AI coach has a plan for the week -- open the home screen."
+        }
+        content.sound = NotificationService.chime
+
+        var comps = DateComponents()
+        comps.weekday = 2 // Monday
         comps.hour = hour
         comps.minute = 0
         let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: true)

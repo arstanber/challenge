@@ -649,9 +649,9 @@ struct ShareComposerView: View {
         let tag = "@\(Constants.App.instagramHandle)"
         switch kind {
         case let .streak(days, _):
-            return "🔥 \(days) дней подряд в reInspire! Присоединяйся: \(tag) #reInspire #привычки"
+            return String(localized: "🔥 \(days) дней подряд в reInspire! Присоединяйся: \(tag) #reInspire #привычки")
         case let .taskDone(title, _, _):
-            return "Задача выполнена в reInspire ✅ \(title) \(tag) #reInspire #привычки"
+            return String(localized: "Задача выполнена в reInspire ✅ \(title) \(tag) #reInspire #привычки")
         }
     }
 

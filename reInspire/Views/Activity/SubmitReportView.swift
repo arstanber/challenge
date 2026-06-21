@@ -38,7 +38,7 @@ struct SubmitReportView: View {
                     formContent
                 }
             }
-            .navigationTitle(showResult ? "" : "Отчёт")
+            .navigationTitle(showResult ? "" : String(localized: "Отчёт"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 if !showResult {
@@ -138,7 +138,7 @@ struct SubmitReportView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Отметить прогресс").font(.headline)
                 if let target = activity.goalTarget {
-                    Text(String(format: "Сейчас: %.0f / %.0f", activity.goalProgress, target))
+                    Text(String(format: String(localized: "Сейчас: %.0f / %.0f"), activity.goalProgress, target))
                         .font(.subheadline).foregroundStyle(.secondary)
                     ProgressView(value: activity.progressFraction).tint(Color(hex: "0048E2"))
                 }
@@ -247,17 +247,17 @@ struct SubmitReportView: View {
 
     private var submitLabel: String {
         switch activity.type {
-        case .challenge, .assignment: return "Отправить фото"
-        case .goal:                   return "Отметить"
-        case .task:                   return "Готово"
-        case .habit:                  return "Отметиться"
+        case .challenge, .assignment: return String(localized: "Отправить фото")
+        case .goal:                   return String(localized: "Отметить")
+        case .task:                   return String(localized: "Готово")
+        case .habit:                  return String(localized: "Отметиться")
         }
     }
 
     private var loadingLabel: String {
         switch vm.submissionStage {
-        case .uploading: return "Загружаем фото…"
-        default:         return "ИИ проверяет…"
+        case .uploading: return String(localized: "Загружаем фото…")
+        default:         return String(localized: "ИИ проверяет…")
         }
     }
 
@@ -361,8 +361,8 @@ private struct AIVerificationResultScreen: View {
     }
 
     private var scanText: String {
-        if stage == .uploading { return "Загружаем фото…" }
-        return wasExcuse ? "ИИ проверяет оправдание…" : "ИИ проверяет фото…"
+        if stage == .uploading { return String(localized: "Загружаем фото…") }
+        return wasExcuse ? String(localized: "ИИ проверяет оправдание…") : String(localized: "ИИ проверяет фото…")
     }
 
     // MARK: Verdict
@@ -421,7 +421,7 @@ private struct AIVerificationResultScreen: View {
     private var actionButtons: some View {
         VStack(spacing: 10) {
             Button { Haptics.tap(); onDone() } label: {
-                Text(r == .approved || r == .excused ? "Готово 🎉" : "Закрыть")
+                Text(r == .approved || r == .excused ? String(localized: "Готово 🎉") : String(localized: "Закрыть"))
                     .fontWeight(.semibold)
                     .frame(maxWidth: .infinity).frame(height: 50)
             }
@@ -535,11 +535,11 @@ private struct AIVerificationResultScreen: View {
 
     private var title: String {
         switch r {
-        case .approved:      return "Задача выполнена! 🔥"
-        case .rejected:      return "Не засчитано"
-        case .excused:       return wasExcuse ? "Оправдание принято" : "Принято"
-        case .notApplicable: return "Отправлено!"
-        case .pending:       return "Проверяем…"
+        case .approved:      return String(localized: "Задача выполнена! 🔥")
+        case .rejected:      return String(localized: "Не засчитано")
+        case .excused:       return wasExcuse ? String(localized: "Оправдание принято") : String(localized: "Принято")
+        case .notApplicable: return String(localized: "Отправлено!")
+        case .pending:       return String(localized: "Проверяем…")
         }
     }
 }

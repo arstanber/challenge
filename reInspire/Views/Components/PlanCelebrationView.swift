@@ -18,21 +18,21 @@ struct PlanCelebrationView: View {
         switch plan {
         case .premium:
             return [
-                "Безлимит задач и привычек",
-                "30 AI-проверок фото в месяц",
-                "AI-коуч и планировщик целей"
+                String(localized: "Безлимит задач и привычек"),
+                String(localized: "30 AI-проверок фото в месяц"),
+                String(localized: "AI-коуч и планировщик целей")
             ]
         case .family:
             return [
-                "Всё из Premium для 5 человек",
-                "Семейный рейтинг",
-                "Код приглашения для семьи"
+                String(localized: "Всё из Premium для 5 человек"),
+                String(localized: "Семейный рейтинг"),
+                String(localized: "Код приглашения для семьи")
             ]
         case .max:
             return [
-                "100 AI-проверок фото в месяц",
-                "Расширенные лимиты AI-коуча",
-                "Коннекторы Max и приоритетная обработка"
+                String(localized: "100 AI-проверок фото в месяц"),
+                String(localized: "Расширенные лимиты AI-коуча"),
+                String(localized: "Коннекторы Max и приоритетная обработка")
             ]
         case .free:
             return []

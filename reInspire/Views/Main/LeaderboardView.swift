@@ -23,7 +23,7 @@ struct LeaderboardEntry: Decodable, Identifiable {
     var name: String {
         if let displayName, !displayName.isEmpty { return displayName }
         if let email { return email.components(separatedBy: "@").first ?? email }
-        return "Пользователь"
+        return String(localized: "Пользователь")
     }
 
     enum CodingKeys: String, CodingKey {
@@ -51,21 +51,21 @@ struct LeaderboardClaim: Decodable {
     /// Human message for the result alert. Rewards are granted automatically by
     /// the Monday distribution job, so this only reports the outcome.
     var message: String {
-        let rankText = rank.map { "#\($0)" } ?? "вне топ-3"
+        let rankText = rank.map { "#\($0)" } ?? String(localized: "вне топ-3")
         // New freeze rewards + legacy PRO codes for any pre-existing rows.
         let prize: String?
         switch reward {
-        case "freeze3":          prize = "3 заморозки серии 🧊"
-        case "freeze2":          prize = "2 заморозки серии 🧊"
-        case "freeze1", "freeze": prize = "1 заморозка серии 🧊"
-        case "pro7d":            prize = "7 дней PRO"
-        case "pro3d":            prize = "3 дня PRO"
+        case "freeze3":          prize = String(localized: "3 заморозки серии 🧊")
+        case "freeze2":          prize = String(localized: "2 заморозки серии 🧊")
+        case "freeze1", "freeze": prize = String(localized: "1 заморозка серии 🧊")
+        case "pro7d":            prize = String(localized: "7 дней PRO")
+        case "pro3d":            prize = String(localized: "3 дня PRO")
         default:                 prize = nil
         }
         if let prize {
-            return "За прошлую неделю ты занял \(rankText) -- начислено \(prize)."
+            return String(localized: "За прошлую неделю ты занял \(rankText) -- начислено \(prize).")
         }
-        return "На прошлой неделе ты не попал в топ-3. Награды (3 / 2 / 1 заморозки) начисляются автоматически по понедельникам."
+        return String(localized: "На прошлой неделе ты не попал в топ-3. Награды (3 / 2 / 1 заморозки) начисляются автоматически по понедельникам.")
     }
 }
 
@@ -105,7 +105,7 @@ final class LeaderboardViewModel {
             // A granted PRO/freeze changes entitlements -- refresh the session.
             await AuthService.shared.refreshProfile()
         } catch {
-            claimMessage = "Не получилось проверить награду. Попробуй позже."
+            claimMessage = String(localized: "Не получилось проверить награду. Попробуй позже.")
         }
     }
 }

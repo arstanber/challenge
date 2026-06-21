@@ -20,8 +20,8 @@ final class CloudSyncService {
 
         var title: String {
             switch self {
-            case .synced:      return "Синхронизировано"
-            case .unavailable: return "Недоступно"
+            case .synced:      return AppLanguage.current == "ru" ? "Синхронизировано" : "Synced"
+            case .unavailable: return AppLanguage.current == "ru" ? "Недоступно" : "Unavailable"
             }
         }
     }

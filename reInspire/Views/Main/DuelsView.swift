@@ -182,28 +182,28 @@ private struct DuelRowView: View {
 
     private var title: String {
         switch duel.status {
-        case .pending: return "Ожидание соперника"
-        default:       return "Против \(duel.opponentName(for: myId))"
+        case .pending: return String(localized: "Ожидание соперника")
+        default:       return String(localized: "Против \(duel.opponentName(for: myId))")
         }
     }
 
     private var subtitle: String {
         switch duel.status {
         case .pending:
-            return "Код: \(duel.inviteCode) · \(duel.days) дн."
+            return String(localized: "Код: \(duel.inviteCode) · \(duel.days) дн.")
         case .active:
             if let left = duel.daysLeft {
-                return left == 1 ? "Последний день!" : "Осталось дней: \(left)"
+                return left == 1 ? String(localized: "Последний день!") : String(localized: "Осталось дней: \(left)")
             }
-            return "Идёт"
+            return String(localized: "Идёт")
         case .finished:
             switch duel.didWin(myId) {
-            case true?:  return "Победа!"
-            case false?: return "Поражение"
-            default:     return "Ничья -- оба продержались"
+            case true?:  return String(localized: "Победа!")
+            case false?: return String(localized: "Поражение")
+            default:     return String(localized: "Ничья -- оба продержались")
             }
         case .cancelled:
-            return "Отменена"
+            return String(localized: "Отменена")
         }
     }
 
@@ -223,7 +223,7 @@ private struct DuelInviteSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     private var shareText: String {
-        "Вызываю тебя на дуэль в reInspire ⚔️ Кто выполнит больше дел, тот и победил. Код: \(code). Скачай: https://thechallenges.app"
+        String(localized: "Вызываю тебя на дуэль в reInspire ⚔️ Кто выполнит больше дел, тот и победил. Код: \(code). Скачай: https://thechallenges.app")
     }
 
     var body: some View {
@@ -362,7 +362,7 @@ struct DuelDetailView: View {
 
     private var scoreHeader: some View {
         HStack(spacing: 18) {
-            sideColumn(name: "Ты", score: current.myTasks(myId), highlight: true)
+            sideColumn(name: String(localized: "Ты"), score: current.myTasks(myId), highlight: true)
             Text("VS")
                 .font(.system(size: 15, weight: .heavy, design: .rounded))
                 .foregroundStyle(.secondary)
@@ -401,7 +401,7 @@ struct DuelDetailView: View {
                     UIPasteboard.general.string = current.inviteCode
                     Haptics.success()
                 }
-            ShareLink(item: "Вызываю тебя на дуэль в reInspire ⚔️ Код: \(current.inviteCode). Скачай: https://thechallenges.app") {
+            ShareLink(item: String(localized: "Вызываю тебя на дуэль в reInspire ⚔️ Код: \(current.inviteCode). Скачай: https://thechallenges.app")) {
                 Label("Отправить вызов", systemImage: "paperplane.fill")
                     .frame(maxWidth: .infinity)
                     .frame(height: 46)
@@ -428,7 +428,7 @@ struct DuelDetailView: View {
             Text("Дни с активностью")
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(.tertiary)
-            dayRow(label: "Ты", done: Set(current.myDone(myId)))
+            dayRow(label: String(localized: "Ты"), done: Set(current.myDone(myId)))
             dayRow(label: current.opponentName(for: myId), done: Set(current.theirDone(myId)))
         }
         .padding(18)

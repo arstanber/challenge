@@ -86,9 +86,9 @@ struct ConnectorSuggestionSheet: View {
 
     private var subtitle: String {
         let shown = suggestion.taskTitles.prefix(2).map { "«\($0)»" }.joined(separator: ", ")
-        let tail = suggestion.taskTitles.count > 2 ? " и ещё \(suggestion.taskTitles.count - 2)" : ""
-        let noun = suggestion.taskTitles.count > 1 ? "заданиям" : "заданию"
-        return "Подключи источник данных, и прогресс по \(noun) \(shown)\(tail) будет засчитываться сам -- без ручных отчётов."
+        let tail = suggestion.taskTitles.count > 2 ? String(localized: " и ещё \(suggestion.taskTitles.count - 2)") : ""
+        let noun = suggestion.taskTitles.count > 1 ? String(localized: "заданиям") : String(localized: "заданию")
+        return String(localized: "Подключи источник данных, и прогресс по \(noun) \(shown)\(tail) будет засчитываться сам -- без ручных отчётов.")
     }
 
     // MARK: - Row

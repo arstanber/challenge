@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { pickLang } from "../_shared/i18n.ts";
 
 // Weekly leaderboard distribution + winner push.
 //
@@ -18,14 +19,30 @@ interface Winner {
   freezes: number;
 }
 
-const PLACE: Record<number, string> = { 1: "1 место", 2: "2 место", 3: "3 место" };
+const PLACE_RU: Record<number, string> = { 1: "1 место", 2: "2 место", 3: "3 место" };
 
 // Russian plural for "заморозка" (1), "заморозки" (2-4), "заморозок" (5+).
-function freezeWord(n: number): string {
+function freezeWordRu(n: number): string {
   const mod10 = n % 10, mod100 = n % 100;
   if (mod10 === 1 && mod100 !== 11) return "заморозку";
   if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "заморозки";
   return "заморозок";
+}
+
+function pushText(w: Winner, lang: "en" | "ru"): { title: string; body: string } {
+  if (lang === "ru") {
+    const place = PLACE_RU[w.rank] ?? `#${w.rank}`;
+    return {
+      title: "🏆 Ты в топе недели!",
+      body: `${place} в рейтинге -- тебе начислено ${w.freezes} ${freezeWordRu(w.freezes)} серии 🧊`,
+    };
+  }
+  const place = w.rank === 1 ? "1st place" : w.rank === 2 ? "2nd place" : w.rank === 3 ? "3rd place" : `#${w.rank}`;
+  const freezeWord = w.freezes === 1 ? "freeze" : "freezes";
+  return {
+    title: "🏆 You're a top performer this week!",
+    body: `${place} on the leaderboard -- you earned ${w.freezes} streak ${freezeWord} 🧊`,
+  };
 }
 
 serve(async () => {
@@ -42,8 +59,14 @@ serve(async () => {
   const winners: Winner[] = Array.isArray(data) ? data : [];
   let pushed = 0;
 
+  const { data: langRows } = winners.length
+    ? await supabase.from("users").select("id, language").in("id", winners.map((w) => w.user_id))
+    : { data: [] as { id: string; language: string }[] };
+  const langById = new Map((langRows ?? []).map((r): [string, "en" | "ru"] => [r.id, pickLang(r.language)]));
+
   for (const w of winners) {
-    const place = PLACE[w.rank] ?? `#${w.rank}`;
+    const lang: "en" | "ru" = langById.get(w.user_id) ?? "ru";
+    const { title, body } = pushText(w, lang);
     try {
       const res = await fetch(`${URL}/functions/v1/send-push`, {
         method: "POST",
@@ -53,8 +76,8 @@ serve(async () => {
         },
         body: JSON.stringify({
           user_id: w.user_id,
-          title: "🏆 Ты в топе недели!",
-          body: `${place} в рейтинге -- тебе начислено ${w.freezes} ${freezeWord(w.freezes)} серии 🧊`,
+          title,
+          body,
           data: { type: "leaderboard_reward", rank: String(w.rank) },
         }),
       });

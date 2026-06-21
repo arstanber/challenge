@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { pickLang } from "../_shared/i18n.ts";
 
 // Suggests a photo-proof condition for a task from its title/description, so the
 // user does not have to write "what should I photograph" themselves. Fast model,
@@ -30,6 +31,7 @@ Deno.serve(async (req: Request) => {
     const body = await req.json();
     const title = String(body.title ?? "").trim();
     const description = String(body.description ?? "").trim();
+    const lang = pickLang(body.language);
     if (!title) return json({ error: "Missing title" }, 400);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -62,14 +64,23 @@ Deno.serve(async (req: Request) => {
     const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
     if (!anthropicKey) return json({ error: "AI not configured" }, 500);
 
-    const prompt = `Пользователь создаёт задачу в трекере привычек, где выполнение подтверждается фотографией.
+    const prompt = lang === "ru"
+      ? `Пользователь создаёт задачу в трекере привычек, где выполнение подтверждается фотографией.
 
 Задача: "${title}"${description ? `\nОписание: "${description}"` : ""}
 
 Сформулируй одно короткое условие на русском языке: что именно должно быть видно на фото, чтобы доказать выполнение этой задачи. Начни со слов "На фото". Пиши конкретно и естественно, без тире (используй обычные запятые).
 
 Ответь ТОЛЬКО валидным JSON (без markdown):
-{"condition":"На фото ..."}`;
+{"condition":"На фото ..."}`
+      : `A user is creating a task in a habit tracker where completion is verified by a photo.
+
+Task: "${title}"${description ? `\nDescription: "${description}"` : ""}
+
+Write one short condition in English: exactly what should be visible in the photo to prove this task was completed. Start with the words "The photo should show". Write it concretely and naturally, without em-dashes (use plain commas).
+
+Respond ONLY with valid JSON (no markdown):
+{"condition":"The photo should show ..."}`;
 
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",

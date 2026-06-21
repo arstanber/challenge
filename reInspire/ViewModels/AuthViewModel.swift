@@ -39,7 +39,7 @@ final class AuthViewModel {
         do {
             try await authService.signInChild(loginCode: childLoginCode, pin: childPin)
         } catch {
-            errorMessage = "Неверный код или PIN"
+            errorMessage = AppLanguage.current == "ru" ? "Неверный код или PIN" : "Incorrect code or PIN"
         }
         isLoading = false
     }
@@ -87,7 +87,7 @@ final class AuthViewModel {
         do {
             try await authService.confirmSignUp(email: pendingEmail, code: code)
         } catch {
-            errorMessage = "Неверный или просроченный код. Попробуйте ещё раз."
+            errorMessage = AppLanguage.current == "ru" ? "Неверный или просроченный код. Попробуйте ещё раз." : "Incorrect or expired code. Please try again."
         }
         isLoading = false
     }

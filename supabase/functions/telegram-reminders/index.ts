@@ -14,6 +14,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { pickLang } from "../_shared/i18n.ts";
 
 const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN") ?? "";
 const TG_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
@@ -71,10 +72,11 @@ serve(async (req) => {
     try {
       const { data: userRow } = await db
         .from("users")
-        .select("timezone")
+        .select("timezone, language")
         .eq("id", link.user_id)
         .maybeSingle();
       const tz = userRow?.timezone || "UTC";
+      const lang = pickLang(userRow?.language);
       const today = localDateStr(now, tz);
       const todayDow = isoDowNow(tz);
 
@@ -119,12 +121,14 @@ serve(async (req) => {
         return `• ${escapeHtml(a.title)}${streak}`;
       });
 
-      await sendMessage(
-        link.chat_id,
-        "<b>⏰ Don't forget today</b>\n" +
+      const text = lang === "ru"
+        ? "<b>⏰ Не забудь сегодня</b>\n" +
           `${lines.join("\n")}\n\n` +
-          "Send a photo or message here to log it, or open the app.",
-      );
+          "Отправь сюда фото или сообщение, чтобы отметить, или открой приложение."
+        : "<b>⏰ Don't forget today</b>\n" +
+          `${lines.join("\n")}\n\n` +
+          "Send a photo or message here to log it, or open the app.";
+      await sendMessage(link.chat_id, text);
       sent++;
     } catch (err) {
       console.error(`reminder failed for user ${link.user_id}:`, err);

@@ -12,11 +12,11 @@ struct AppIconPickerView: View {
 
     /// nil iconName = the primary icon.
     private let options: [(iconName: String?, preview: String, title: String)] = [
-        (nil,             "icon_preview_blue",   "Синий"),
-        ("AppIconDark",   "icon_preview_dark",   "Тёмный"),
-        ("AppIconViolet", "icon_preview_violet", "Фиолетовый"),
-        ("AppIconOrange", "icon_preview_orange", "Оранжевый"),
-        ("AppIconGreen",  "icon_preview_green",  "Зелёный"),
+        (nil,             "icon_preview_blue",   String(localized: "Синий")),
+        ("AppIconDark",   "icon_preview_dark",   String(localized: "Тёмный")),
+        ("AppIconViolet", "icon_preview_violet", String(localized: "Фиолетовый")),
+        ("AppIconOrange", "icon_preview_orange", String(localized: "Оранжевый")),
+        ("AppIconGreen",  "icon_preview_green",  String(localized: "Зелёный")),
     ]
 
     var body: some View {
@@ -110,7 +110,7 @@ struct AppIconPickerView: View {
                 Haptics.success()
             } catch {
                 logger.error("setAlternateIconName failed: \(error.localizedDescription)")
-                errorMessage = "Не удалось сменить значок. Попробуйте ещё раз."
+                errorMessage = String(localized: "Не удалось сменить значок. Попробуйте ещё раз.")
             }
         }
     }
