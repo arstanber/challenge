@@ -9,6 +9,7 @@ struct ConnectorsView: View {
     @State private var showPremium = false
     @State private var showClockSettings = false
     @State private var showChessSettings = false
+    @State private var healthSheet: DataConnector?
     @State private var errorMessage: String?
 
     private var plan: UserPlan { auth.currentUser?.plan ?? .free }
@@ -46,6 +47,9 @@ struct ConnectorsView: View {
         }
         .sheet(isPresented: $showChessSettings) {
             ChessUsernameSheet(service: service)
+        }
+        .sheet(item: $healthSheet) { connector in
+            HealthConnectSheet(connector: connector, service: service)
         }
         .alert("Ошибка", isPresented: .init(
             get: { errorMessage != nil },
@@ -118,6 +122,14 @@ struct ConnectorsView: View {
         // Chess.com connects by username (public API, no OAuth).
         if connector == .chessCom {
             showChessSettings = true
+            return
+        }
+
+        // Apple Health / Fitness open an explainer that clearly identifies the
+        // HealthKit data we read (and that we never write) before the system
+        // permission sheet -- required for App Store guideline 2.5.1.
+        if connector.kind == .health {
+            healthSheet = connector
             return
         }
 
@@ -297,6 +309,148 @@ private struct ClockReminderSheet: View {
             errorMessage = String(localized: "Разреши уведомления в настройках, чтобы получать напоминание.")
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+}
+
+// MARK: - Apple Health / Fitness explainer
+
+/// Clearly identifies the HealthKit integration before the system permission
+/// sheet: what data reInspire reads, and that it never writes to Apple Health.
+/// Satisfies App Store guideline 2.5.1 ("clearly identify HealthKit functionality
+/// in the app's user interface").
+private struct HealthConnectSheet: View {
+    let connector: DataConnector
+    let service: ConnectorService
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var working = false
+    @State private var errorMessage: String?
+
+    private var isConnected: Bool { service.isConnected(connector) }
+
+    /// The exact HealthKit data types reInspire reads (mirrors HealthKitConnector).
+    private let dataTypes: [(icon: String, label: String)] = [
+        ("figure.walk",          String(localized: "Шаги")),
+        ("flame.fill",           String(localized: "Активная энергия (калории)")),
+        ("timer",                String(localized: "Минуты тренировок")),
+        ("ruler",                String(localized: "Дистанция ходьбы и бега"))
+    ]
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    header
+
+                    Text("reInspire читает указанные ниже данные из приложения «Здоровье» (Apple Health через HealthKit), чтобы автоматически засчитывать выполнение целей -- например, шаги или тренировки. Подключение не обязательно: цели всегда можно подтвердить фото.")
+                        .font(.system(size: 15))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    VStack(alignment: .leading, spacing: 14) {
+                        Text("Что reInspire читает из Здоровья")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                        ForEach(dataTypes, id: \.label) { item in
+                            HStack(spacing: 12) {
+                                Image(systemName: item.icon)
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundStyle(Color(hex: "FF2D55"))
+                                    .frame(width: 24)
+                                Text(item.label)
+                                    .font(.system(size: 16))
+                                    .foregroundStyle(.primary)
+                            }
+                        }
+                    }
+                    .padding(16)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color(.secondarySystemBackground)))
+
+                    Label("reInspire не записывает никакие данные в Здоровье -- доступ только на чтение.", systemImage: "lock.shield.fill")
+                        .font(.system(size: 13))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    if let errorMessage {
+                        Text(errorMessage).font(.caption).foregroundStyle(.red)
+                    }
+                }
+                .padding(20)
+            }
+            .safeAreaInset(edge: .bottom) { bottomBar }
+            .navigationTitle(connector.displayName)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Закрыть") { dismiss() }
+                }
+            }
+        }
+    }
+
+    private var header: some View {
+        HStack(spacing: 14) {
+            ConnectorGlyph(connector: connector, size: 52, cornerRadius: 14)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(connector.displayName)
+                    .font(.system(size: 20, weight: .semibold))
+                Text(connector.summary)
+                    .font(.system(size: 13))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var bottomBar: some View {
+        if isConnected {
+            VStack(spacing: 10) {
+                HStack(spacing: 6) {
+                    Image(systemName: "checkmark.circle.fill").foregroundStyle(Color(hex: "30D158"))
+                    Text("Подключено").font(.system(size: 15, weight: .medium))
+                }
+                Button(role: .destructive) {
+                    Task { await service.disconnect(connector); Haptics.tap(); dismiss() }
+                } label: {
+                    Text("Отключить").font(.system(size: 15, weight: .medium))
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(16)
+            .background(.bar)
+        } else {
+            Button(action: connect) {
+                Group {
+                    if working { ProgressView().tint(.white) }
+                    else { Text("Подключить Здоровье").font(.system(size: 17, weight: .semibold)) }
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity).frame(height: 50)
+                .background(RoundedRectangle(cornerRadius: 14).fill(Color(hex: "FF2D55")))
+            }
+            .disabled(working)
+            .padding(16)
+            .background(.bar)
+        }
+    }
+
+    private func connect() {
+        working = true
+        Task {
+            defer { working = false }
+            do {
+                try await service.connect(connector)
+                Haptics.success()
+                dismiss()
+            } catch ConnectorError.unavailable {
+                errorMessage = String(localized: "Здоровье недоступно на этом устройстве.")
+            } catch {
+                errorMessage = error.localizedDescription
+            }
         }
     }
 }

@@ -54,8 +54,8 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
 
     var displayName: String {
         switch self {
-        case .appleHealth:   return String(localized: "Здоровье")
-        case .appleFitness:  return String(localized: "Фитнес")
+        case .appleHealth:   return String(localized: "Apple Здоровье")
+        case .appleFitness:  return String(localized: "Apple Фитнес")
         case .appleCalendar: return String(localized: "Календарь Apple")
         case .telegram:      return "Telegram"
         case .appleClock:    return String(localized: "Будильник")
