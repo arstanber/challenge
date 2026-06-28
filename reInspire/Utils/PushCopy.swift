@@ -45,3 +45,86 @@ enum EnPlural {
         "\(days(n)) to go"
     }
 }
+
+/// German plural forms ("1 Tag" / "5 Tage").
+enum DePlural {
+    static func days(_ n: Int) -> String {
+        "\(n) Tag\(n == 1 ? "" : "e")"
+    }
+
+    /// "noch 1 Tag" / "noch 5 Tage".
+    static func remainingDays(_ n: Int) -> String {
+        "noch \(days(n))"
+    }
+}
+
+/// Kazakh plural forms. Counted nouns stay in the singular form ("1 күн" /
+/// "5 күн"), so the word never changes -- only the number does.
+enum KkPlural {
+    static func days(_ n: Int) -> String {
+        "\(n) күн"
+    }
+
+    /// "1 күн қалды" / "5 күн қалды".
+    static func remainingDays(_ n: Int) -> String {
+        "\(days(n)) қалды"
+    }
+}
+
+/// French plural forms ("1 jour" / "5 jours").
+enum FrPlural {
+    static func days(_ n: Int) -> String {
+        "\(n) jour\(n == 1 ? "" : "s")"
+    }
+
+    /// "encore 1 jour" / "encore 5 jours".
+    static func remainingDays(_ n: Int) -> String {
+        "encore \(days(n))"
+    }
+}
+
+/// Arabic plural forms. Arabic counts in singular/dual/paucal/plural; this
+/// covers the common cases: 1 ("يوم واحد"), 2 ("يومان"), 3-10 ("{n} أيام"),
+/// 11+ ("{n} يومًا").
+enum ArPlural {
+    static func days(_ n: Int) -> String {
+        switch n {
+        case 1:      return "يوم واحد"
+        case 2:      return "يومان"
+        case 3...10: return "\(n) أيام"
+        default:     return "\(n) يومًا"
+        }
+    }
+
+    /// "بقي يوم واحد" / "بقيت 5 أيام".
+    static func remainingDays(_ n: Int) -> String {
+        let verb = (n == 1 || n > 10) ? "بقي" : "بقيت"
+        return "\(verb) \(days(n))"
+    }
+}
+
+/// Unified plural picker -- routes to the right language's forms based on
+/// `AppLanguage.current`, so callers don't branch by hand.
+enum Plural {
+    static func days(_ n: Int) -> String {
+        switch AppLanguage.current {
+        case "ru": return RuPlural.days(n)
+        case "de": return DePlural.days(n)
+        case "kk": return KkPlural.days(n)
+        case "fr": return FrPlural.days(n)
+        case "ar": return ArPlural.days(n)
+        default:   return EnPlural.days(n)
+        }
+    }
+
+    static func remainingDays(_ n: Int) -> String {
+        switch AppLanguage.current {
+        case "ru": return RuPlural.remainingDays(n)
+        case "de": return DePlural.remainingDays(n)
+        case "kk": return KkPlural.remainingDays(n)
+        case "fr": return FrPlural.remainingDays(n)
+        case "ar": return ArPlural.remainingDays(n)
+        default:   return EnPlural.remainingDays(n)
+        }
+    }
+}
