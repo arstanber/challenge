@@ -45,7 +45,7 @@ struct StreakWidgetView: View {
             HStack(spacing: 4) {
                 Image(systemName: "flame.fill")
                     .foregroundStyle(atRisk ? .red : .orange)
-                Text(atRisk ? "At risk!" : "Streak")
+                (atRisk ? Text("At risk!") : Text("Streak"))
                     .font(.system(.caption, design: .rounded).weight(.semibold))
                     .foregroundStyle(atRisk ? .red : .secondary)
             }
@@ -55,7 +55,7 @@ struct StreakWidgetView: View {
                 .foregroundStyle(atRisk ? .red : .orange)
                 .minimumScaleFactor(0.5)
                 .lineLimit(1)
-            Text(snapshot.streakCurrent == 1 ? "day" : "days")
+            (snapshot.streakCurrent == 1 ? Text("day") : Text("days"))
                 .font(.system(.subheadline, design: .rounded).weight(.medium))
                 .foregroundStyle(.secondary)
             Spacer(minLength: 0)

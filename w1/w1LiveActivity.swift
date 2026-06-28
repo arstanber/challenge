@@ -237,7 +237,9 @@ struct w1LiveActivity: Widget {
                             HStack(spacing: 8) {
                                 Image(systemName: "arrow.right.circle.fill")
                                     .foregroundStyle(DI.accent)
-                                Text(context.state.nextTaskTitle.isEmpty ? "Открой приложение" : context.state.nextTaskTitle)
+                                (context.state.nextTaskTitle.isEmpty
+                                    ? Text("Открой приложение")
+                                    : Text(context.state.nextTaskTitle))
                                     .font(.system(.subheadline, design: .rounded))
                                     .lineLimit(1)
                                 Spacer(minLength: 0)
@@ -289,7 +291,9 @@ private struct LockScreenBanner: View {
                         .font(.system(.subheadline, design: .rounded).weight(.bold))
                         .foregroundStyle(.green)
                 } else {
-                    Text(state.nextTaskTitle.isEmpty ? "Открой приложение, чтобы продолжить" : state.nextTaskTitle)
+                    (state.nextTaskTitle.isEmpty
+                        ? Text("Открой приложение, чтобы продолжить")
+                        : Text(state.nextTaskTitle))
                         .font(.system(.subheadline, design: .rounded).weight(.semibold))
                         .lineLimit(1)
                 }

@@ -1,0 +1,254 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%lld active activities" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld aktive Aktivitäten" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld active activities" } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "%lld белсенді әрекет" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%lld активных дел" } }
+      }
+    },
+    "%lld day streak" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld-Tage-Serie" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld day streak" } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "%lld күндік серия" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "серия %lld дней" } }
+      }
+    },
+    "%lld из %lld выполнено · стрик %lld 🔥" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld von %lld erledigt · Serie %lld 🔥" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld of %lld done · streak %lld 🔥" } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "%lld / %lld орындалды · серия %lld 🔥" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%lld из %lld выполнено · стрик %lld 🔥" } }
+      }
+    },
+    "%lld of %lld done today" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld von %lld heute erledigt" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld of %lld done today" } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "бүгін %lld / %lld орындалды" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "%lld из %lld сделано сегодня" } }
+      }
+    },
+    "+%lld more" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "+%lld weitere" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "+%lld more" } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "+%lld тағы" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "+%lld ещё" } }
+      }
+    },
+    "A Pro feature" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Eine Pro-Funktion" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "A Pro feature" } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "Pro мүмкіндігі" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Функция Pro" } }
+      }
+    },
+    "All clear!" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Alles erledigt!" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "All clear!" } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "Бәрі таза!" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Всё чисто!" } }
+      }
+    },
+    "All done ✅" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Alles erledigt ✅" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "All done ✅" } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "Бәрі дайын ✅" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Всё готово ✅" } }
+      }
+    },
+    "At risk!" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "In Gefahr!" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "At risk!" } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "Қауіп төнді!" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Под угрозой!" } }
+      }
+    },
+    "Best %lld" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Rekord %lld" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Best %lld" } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "Рекорд %lld" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Рекорд %lld" } }
+      }
+    },
+    "Best %lld · %lld active" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Rekord %lld · %lld aktiv" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Best %lld · %lld active" } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "Рекорд %lld · %lld белсенді" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Рекорд %lld · %lld активно" } }
+      }
+    },
+    "day" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Tag" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "day" } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "күн" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "день" } }
+      }
+    },
+    "days" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Tage" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "days" } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "күн" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "дней" } }
+      }
+    },
+    "For today" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Für heute" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "For today" } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "Бүгінге" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "На сегодня" } }
+      }
+    },
+    "No active activities" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Keine aktiven Aktivitäten" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No active activities" } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "Белсенді әрекет жоқ" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Нет активных дел" } }
+      }
+    },
+    "No tasks yet" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Noch keine Aufgaben" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No tasks yet" } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "Әзірге тапсырма жоқ" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Задач пока нет" } }
+      }
+    },
+    "Off" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aus" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Off" } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "Өшірулі" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Выкл" } }
+      }
+    },
+    "On" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "An" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "On" } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "Қосулы" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Вкл" } }
+      }
+    },
+    "Open the app to start tracking" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Öffne die App, um mit dem Tracking zu beginnen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open the app to start tracking" } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "Бақылауды бастау үшін қолданбаны аш" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Открой приложение, чтобы начать отслеживание" } }
+      }
+    },
+    "PERFORMANCE" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "LEISTUNG" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "PERFORMANCE" } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "НӘТИЖЕ" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "ПОКАЗАТЕЛИ" } }
+      }
+    },
+    "Progress" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Fortschritt" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Progress" } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "Прогресс" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Прогресс" } }
+      }
+    },
+    "SEE ALL" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "ALLE" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "SEE ALL" } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "БАРЛЫҒЫ" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "ВСЁ" } }
+      }
+    },
+    "Streak" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Serie" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Streak" } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "Серия" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Серия" } }
+      }
+    },
+    "Tasks Progress in Month" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aufgaben-Fortschritt im Monat" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tasks Progress in Month" } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "Айдағы тапсырма прогресі" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Прогресс задач за месяц" } }
+      }
+    },
+    "Today" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Heute" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Today" } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "Бүгін" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сегодня" } }
+      }
+    },
+    "Unlock your 6-week trend and 30-day growth with Pro or Max." : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Schalte deinen 6-Wochen-Trend und 30-Tage-Wachstum mit Pro oder Max frei." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Unlock your 6-week trend and 30-day growth with Pro or Max." } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "Pro немесе Max-пен 6 апталық тренд пен 30 күндік өсімді аш." } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Открой тренд за 6 недель и рост за 30 дней с Pro или Max." } }
+      }
+    },
+    "until 00:00!" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "bis 00:00!" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "until 00:00!" } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "00:00-ге дейін!" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "до 00:00!" } }
+      }
+    },
+    "of %lld" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "von %lld" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "of %lld" } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "/ %lld" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "из %lld" } }
+      }
+    },
+    "Открой приложение" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Öffne die App" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open the app" } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "Қолданбаны аш" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Открой приложение" } }
+      }
+    },
+    "Открой приложение, чтобы продолжить" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Öffne die App, um fortzufahren" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open the app to continue" } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "Жалғастыру үшін қолданбаны аш" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Открой приложение, чтобы продолжить" } }
+      }
+    },
+    "Цель дня выполнена!" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Tagesziel erreicht!" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Daily goal reached!" } },
+        "kk" : { "stringUnit" : { "state" : "translated", "value" : "Күндік мақсат орындалды!" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Цель дня выполнена!" } }
+      }
+    }
+  },
+  "version" : "1.0"
+}

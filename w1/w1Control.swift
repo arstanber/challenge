@@ -22,7 +22,11 @@ struct w1Control: ControlWidget {
                 isOn: value.isRunning,
                 action: StartTimerIntent(value.name)
             ) { isRunning in
-                Label(isRunning ? "On" : "Off", systemImage: "timer")
+                // Per-branch Label so each literal hits the LocalizedStringKey
+                // initializer (a ternary of String literals stays verbatim).
+                isRunning
+                    ? Label("On", systemImage: "timer")
+                    : Label("Off", systemImage: "timer")
             }
         }
         .displayName("Timer")

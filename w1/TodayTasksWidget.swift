@@ -30,7 +30,7 @@ struct TodayTasksWidgetView: View {
 
             if pending.isEmpty {
                 Spacer(minLength: 0)
-                Text(snapshot.tasks.isEmpty ? "No tasks yet" : "All done ✅")
+                (snapshot.tasks.isEmpty ? Text("No tasks yet") : Text("All done ✅"))
                     .font(.system(size: 18, weight: .bold, design: .rounded))
                     .foregroundStyle(.primary)
             } else {
