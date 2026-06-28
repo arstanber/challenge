@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { pickLang } from "../_shared/i18n.ts";
+import { type Lang, pickLang } from "../_shared/i18n.ts";
 
 // Weekly leaderboard distribution + winner push.
 //
@@ -29,12 +29,30 @@ function freezeWordRu(n: number): string {
   return "заморозок";
 }
 
-function pushText(w: Winner, lang: "en" | "ru"): { title: string; body: string } {
+const PLACE_DE: Record<number, string> = { 1: "1. Platz", 2: "2. Platz", 3: "3. Platz" };
+const PLACE_KK: Record<number, string> = { 1: "1-орын", 2: "2-орын", 3: "3-орын" };
+
+function pushText(w: Winner, lang: Lang): { title: string; body: string } {
   if (lang === "ru") {
     const place = PLACE_RU[w.rank] ?? `#${w.rank}`;
     return {
       title: "🏆 Ты в топе недели!",
       body: `${place} в рейтинге -- тебе начислено ${w.freezes} ${freezeWordRu(w.freezes)} серии 🧊`,
+    };
+  }
+  if (lang === "de") {
+    const place = PLACE_DE[w.rank] ?? `#${w.rank}`;
+    const freezeWord = w.freezes === 1 ? "Freeze" : "Freezes";
+    return {
+      title: "🏆 Du gehörst diese Woche zur Spitze!",
+      body: `${place} in der Rangliste -- du hast ${w.freezes} Serien-${freezeWord} erhalten 🧊`,
+    };
+  }
+  if (lang === "kk") {
+    const place = PLACE_KK[w.rank] ?? `#${w.rank}`;
+    return {
+      title: "🏆 Сен осы аптаның үздігісің!",
+      body: `Рейтингте ${place} -- саған ${w.freezes} серия тоңазытқышы есептелді 🧊`,
     };
   }
   const place = w.rank === 1 ? "1st place" : w.rank === 2 ? "2nd place" : w.rank === 3 ? "3rd place" : `#${w.rank}`;
@@ -62,10 +80,10 @@ serve(async () => {
   const { data: langRows } = winners.length
     ? await supabase.from("users").select("id, language").in("id", winners.map((w) => w.user_id))
     : { data: [] as { id: string; language: string }[] };
-  const langById = new Map((langRows ?? []).map((r): [string, "en" | "ru"] => [r.id, pickLang(r.language)]));
+  const langById = new Map((langRows ?? []).map((r): [string, Lang] => [r.id, pickLang(r.language)]));
 
   for (const w of winners) {
-    const lang: "en" | "ru" = langById.get(w.user_id) ?? "ru";
+    const lang: Lang = langById.get(w.user_id) ?? "ru";
     const { title, body } = pushText(w, lang);
     try {
       const res = await fetch(`${URL}/functions/v1/send-push`, {

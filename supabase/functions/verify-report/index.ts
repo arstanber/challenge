@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { pickLang } from "../_shared/i18n.ts";
+import { type Lang, pickLang, writeExplanationIn } from "../_shared/i18n.ts";
 
 const MODEL = "claude-sonnet-4-5";
 
@@ -31,12 +31,20 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Method not allowed" }, 405);
   }
 
-  let lang: "en" | "ru" = "en";
+  let lang: Lang = "en";
   try {
     const body = await req.json();
     const { condition, photo_url, report_id, is_excuse = false, language } = body;
     lang = pickLang(language);
-    const langNote = lang === "ru" ? "Write the explanation in Russian." : "Write the explanation in English.";
+    const langNote = writeExplanationIn(lang);
+    // Localized fallback explanations for paths that don't run the model.
+    const EXPL = {
+      notConfigured: { en: "AI verification not configured.", ru: "AI-проверка не настроена.", de: "KI-Verifizierung nicht konfiguriert.", kk: "AI тексеру бапталмаған." },
+      noPhoto: { en: "Could not retrieve the photo.", ru: "Не удалось загрузить фото.", de: "Foto konnte nicht abgerufen werden.", kk: "Фотоны жүктеу мүмкін болмады." },
+      unavailable: { en: "AI verification temporarily unavailable.", ru: "AI-проверка временно недоступна.", de: "KI-Verifizierung vorübergehend nicht verfügbar.", kk: "AI тексеру уақытша қолжетімсіз." },
+      completed: { en: "Verification completed.", ru: "Проверка завершена.", de: "Verifizierung abgeschlossen.", kk: "Тексеру аяқталды." },
+      error: { en: "An error occurred during verification.", ru: "Произошла ошибка во время проверки.", de: "Bei der Verifizierung ist ein Fehler aufgetreten.", kk: "Тексеру кезінде қате орын алды." },
+    } as const;
 
     if (!condition || !photo_url) {
       return json({ error: "Missing condition or photo_url" }, 400);
@@ -91,14 +99,14 @@ Deno.serve(async (req: Request) => {
 
     const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
     if (!anthropicKey) {
-      const explanation = lang === "ru" ? "AI-проверка не настроена." : "AI verification not configured.";
+      const explanation = EXPL.notConfigured[lang];
       return json({ approved: false, excused: false, explanation });
     }
 
     // 4. Fetch photo
     const photoResponse = await fetch(photo_url);
     if (!photoResponse.ok) {
-      const explanation = lang === "ru" ? "Не удалось загрузить фото." : "Could not retrieve the photo.";
+      const explanation = EXPL.noPhoto[lang];
       return json({ approved: false, excused: false, explanation });
     }
     const photoBuffer = await photoResponse.arrayBuffer();
@@ -172,7 +180,7 @@ Respond ONLY with valid JSON (no markdown):
     if (!res.ok) {
       const err = await res.text();
       console.error("Anthropic error:", err);
-      const explanation = lang === "ru" ? "AI-проверка временно недоступна." : "AI verification temporarily unavailable.";
+      const explanation = EXPL.unavailable[lang];
       return json({ approved: false, excused: false, explanation });
     }
 
@@ -191,7 +199,7 @@ Respond ONLY with valid JSON (no markdown):
       result = {
         approved: approvedMatch?.[1] === "true",
         excused:  excusedMatch?.[1]  === "true",
-        explanation: lang === "ru" ? "Проверка завершена." : "Verification completed.",
+        explanation: EXPL.completed[lang],
       };
     }
 
@@ -209,7 +217,12 @@ Respond ONLY with valid JSON (no markdown):
     return json({ ...result, remaining: quota.remaining });
   } catch (error) {
     console.error("verify-report error:", error);
-    const explanation = lang === "ru" ? "Произошла ошибка во время проверки." : "An error occurred during verification.";
+    const explanation = ({
+      en: "An error occurred during verification.",
+      ru: "Произошла ошибка во время проверки.",
+      de: "Bei der Verifizierung ist ein Fehler aufgetreten.",
+      kk: "Тексеру кезінде қате орын алды.",
+    })[lang];
     return json({ approved: false, excused: false, explanation });
   }
 });

@@ -79,12 +79,21 @@ serve(async (req) => {
     // Push the code to the parent (reuse the authenticated send-push function;
     // the child's JWT is a valid authenticated caller). Localized in the
     // PARENT's language -- the push goes to them, not to the child caller.
+    const fallbackChild = { en: "Child", ru: "Ребёнок", de: "Kind", kk: "Бала" }[lang];
     const childName = (me.display_name && me.display_name.trim())
-      || (me.email ? me.email.split("@")[0] : (lang === "ru" ? "Ребёнок" : "Child"));
-    const title = lang === "ru" ? "Запрос на выход из семьи" : "Request to leave the family";
-    const body = lang === "ru"
-      ? `${childName} хочет выйти из семьи. Код для подтверждения: ${code}. Сообщи его ребёнку, если согласен.`
-      : `${childName} wants to leave the family. Confirmation code: ${code}. Share it with them if you agree.`;
+      || (me.email ? me.email.split("@")[0] : fallbackChild);
+    const title = {
+      en: "Request to leave the family",
+      ru: "Запрос на выход из семьи",
+      de: "Antrag, die Familie zu verlassen",
+      kk: "Отбасынан шығу сұрауы",
+    }[lang];
+    const body = ({
+      en: `${childName} wants to leave the family. Confirmation code: ${code}. Share it with them if you agree.`,
+      ru: `${childName} хочет выйти из семьи. Код для подтверждения: ${code}. Сообщи его ребёнку, если согласен.`,
+      de: `${childName} möchte die Familie verlassen. Bestätigungscode: ${code}. Teile ihn mit dem Kind, wenn du einverstanden bist.`,
+      kk: `${childName} отбасынан шыққысы келеді. Растау коды: ${code}. Келіссең, оны балаға айт.`,
+    })[lang];
     const pushRes = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-push`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: authHeader },

@@ -17,7 +17,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { type Lang, pickLang, t } from "../_shared/i18n.ts";
+import { type Lang, localeTag, pickLang, t } from "../_shared/i18n.ts";
 
 const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN") ?? "";
 const WEBHOOK_SECRET = Deno.env.get("TELEGRAM_WEBHOOK_SECRET") ?? "";
@@ -417,7 +417,7 @@ async function handleHistory(chatId: number, userId: string, lang: Lang) {
     return;
   }
 
-  const dateLocale = lang === "ru" ? "ru-RU" : "en-US";
+  const dateLocale = localeTag(lang);
   const lines = rows.map((r) => {
     const icon = r.ai_result === "approved" ? "✅" : r.ai_result === "rejected" ? "❌" : r.ai_result === "excused" ? "🙏" : "📝";
     const title = escapeHtml(titleById.get(r.activity_id) ?? t(lang, "taskFallbackTitle"));

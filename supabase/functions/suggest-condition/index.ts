@@ -64,23 +64,40 @@ Deno.serve(async (req: Request) => {
     const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
     if (!anthropicKey) return json({ error: "AI not configured" }, 500);
 
-    const prompt = lang === "ru"
-      ? `Пользователь создаёт задачу в трекере привычек, где выполнение подтверждается фотографией.
-
-Задача: "${title}"${description ? `\nОписание: "${description}"` : ""}
-
-Сформулируй одно короткое условие на русском языке: что именно должно быть видно на фото, чтобы доказать выполнение этой задачи. Начни со слов "На фото". Пиши конкретно и естественно, без тире (используй обычные запятые).
-
-Ответь ТОЛЬКО валидным JSON (без markdown):
-{"condition":"На фото ..."}`
-      : `A user is creating a task in a habit tracker where completion is verified by a photo.
+    const prompt = ({
+      en: `A user is creating a task in a habit tracker where completion is verified by a photo.
 
 Task: "${title}"${description ? `\nDescription: "${description}"` : ""}
 
 Write one short condition in English: exactly what should be visible in the photo to prove this task was completed. Start with the words "The photo should show". Write it concretely and naturally, without em-dashes (use plain commas).
 
 Respond ONLY with valid JSON (no markdown):
-{"condition":"The photo should show ..."}`;
+{"condition":"The photo should show ..."}`,
+      ru: `Пользователь создаёт задачу в трекере привычек, где выполнение подтверждается фотографией.
+
+Задача: "${title}"${description ? `\nОписание: "${description}"` : ""}
+
+Сформулируй одно короткое условие на русском языке: что именно должно быть видно на фото, чтобы доказать выполнение этой задачи. Начни со слов "На фото". Пиши конкретно и естественно, без тире (используй обычные запятые).
+
+Ответь ТОЛЬКО валидным JSON (без markdown):
+{"condition":"На фото ..."}`,
+      de: `Ein Nutzer erstellt eine Aufgabe in einem Gewohnheits-Tracker, bei dem die Erledigung per Foto bestätigt wird.
+
+Aufgabe: "${title}"${description ? `\nBeschreibung: "${description}"` : ""}
+
+Formuliere eine kurze Bedingung auf Deutsch: was genau auf dem Foto zu sehen sein muss, um die Erledigung dieser Aufgabe zu beweisen. Beginne mit den Worten "Das Foto sollte zeigen". Schreibe es konkret und natürlich, ohne Gedankenstriche (verwende normale Kommas).
+
+Antworte NUR mit gültigem JSON (kein Markdown):
+{"condition":"Das Foto sollte zeigen ..."}`,
+      kk: `Пайдаланушы әдет трекерінде тапсырма жасап жатыр, онда орындалу фотомен расталады.
+
+Тапсырма: "${title}"${description ? `\nСипаттама: "${description}"` : ""}
+
+Қазақ тілінде бір қысқа шарт жаз: осы тапсырманың орындалғанын дәлелдеу үшін фотода нақты не көрінуі керек. "Фотода" деген сөзден баста. Нақты әрі табиғи жаз, сызықшасыз (қарапайым үтір қолдан).
+
+ТЕК жарамды JSON-мен жауап бер (markdown-сыз):
+{"condition":"Фотода ..."}`,
+    } as const)[lang];
 
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",

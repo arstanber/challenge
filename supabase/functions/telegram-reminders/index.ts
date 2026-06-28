@@ -121,13 +121,17 @@ serve(async (req) => {
         return `• ${escapeHtml(a.title)}${streak}`;
       });
 
-      const text = lang === "ru"
-        ? "<b>⏰ Не забудь сегодня</b>\n" +
-          `${lines.join("\n")}\n\n` +
-          "Отправь сюда фото или сообщение, чтобы отметить, или открой приложение."
-        : "<b>⏰ Don't forget today</b>\n" +
-          `${lines.join("\n")}\n\n` +
-          "Send a photo or message here to log it, or open the app.";
+      const body = lines.join("\n");
+      const text = ({
+        en: "<b>⏰ Don't forget today</b>\n" + `${body}\n\n` +
+          "Send a photo or message here to log it, or open the app.",
+        ru: "<b>⏰ Не забудь сегодня</b>\n" + `${body}\n\n` +
+          "Отправь сюда фото или сообщение, чтобы отметить, или открой приложение.",
+        de: "<b>⏰ Vergiss heute nicht</b>\n" + `${body}\n\n` +
+          "Sende hier ein Foto oder eine Nachricht, um es zu erfassen, oder öffne die App.",
+        kk: "<b>⏰ Бүгін ұмытпа</b>\n" + `${body}\n\n` +
+          "Белгілеу үшін осында фото не хабарлама жібер, немесе қолданбаны аш.",
+      })[lang];
       await sendMessage(link.chat_id, text);
       sent++;
     } catch (err) {
