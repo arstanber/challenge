@@ -81,7 +81,7 @@ struct TelegramLinkView: View {
                         }
                     }
                 } footer: {
-                    Text("We'll open Telegram with a one-time code pre-filled. Send it to the bot to link this account — the code expires in 10 minutes.")
+                    Text("We'll open Telegram with a one-time code pre-filled. Send it to the bot to link this account -- the code expires in 10 minutes.")
                 }
 
                 Section("What you can do once linked") {

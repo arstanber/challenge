@@ -168,7 +168,7 @@ final class StoreService {
     @discardableResult
     func purchase(productID: String) async -> Bool {
         guard Purchases.isConfigured else {
-            errorMessage = String(localized: "Магазин недоступен. Попробуйте позже.")
+            errorMessage = String(localized: "The store is unavailable. Please try again later.")
             storeLogger.error("purchase: Purchases not configured")
             return false
         }
@@ -192,7 +192,7 @@ final class StoreService {
                 // or not yet Ready to Submit in App Store Connect. Surfaced
                 // rather than swallowed: a silent false reads as "the button
                 // did nothing", which is indistinguishable from a hung app.
-                errorMessage = String(localized: "Этот тариф сейчас недоступен. Попробуйте позже.")
+                errorMessage = String(localized: "This plan is unavailable right now. Please try again later.")
                 storeLogger.error("purchase: unknown product \(productID)")
                 return false
             }
