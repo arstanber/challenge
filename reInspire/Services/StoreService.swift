@@ -70,6 +70,22 @@ final class StoreService {
         }
     }
 
+    /// Makes sure RevenueCat is aliased onto the signed-in user before a
+    /// purchase is allowed to start.
+    ///
+    /// configure() begins anonymous and identify() only runs once the Supabase
+    /// profile has loaded, which leaves a window on cold start where a purchase
+    /// would attach to $RCAnonymousID. Those events reach the webhook with an
+    /// app_user_id that resolves to no users row, so it skips them: the customer
+    /// is charged and never receives the tier. Observed in sandbox, where a
+    /// purchase made in that window pulled the existing subscription over to the
+    /// anonymous ID with it.
+    private func ensureIdentified() async {
+        guard let userId = AuthService.shared.currentUser?.id else { return }
+        guard Purchases.shared.appUserID != userId.uuidString else { return }
+        await identify(userId: userId)
+    }
+
     /// Returns RevenueCat to an anonymous identity so the next account on this
     /// device does not inherit the previous user's entitlements.
     func resetIdentity() async {
@@ -160,6 +176,8 @@ final class StoreService {
         errorMessage = nil
         defer { isPurchasing = false }
 
+        await ensureIdentified()
+
         do {
             let result: PurchaseResultData
             if let package = packages[productID] {
@@ -206,6 +224,7 @@ final class StoreService {
         isPurchasing = true
         errorMessage = nil
         defer { isPurchasing = false }
+        await ensureIdentified()
         do {
             let info = try await Purchases.shared.restorePurchases()
             await applyOptimisticPlan(from: info)
