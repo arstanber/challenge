@@ -31,6 +31,15 @@ function freezeWordRu(n: number): string {
 
 const PLACE_DE: Record<number, string> = { 1: "1. Platz", 2: "2. Platz", 3: "3. Platz" };
 const PLACE_KK: Record<number, string> = { 1: "1-орын", 2: "2-орын", 3: "3-орын" };
+const PLACE_FR: Record<number, string> = { 1: "1re place", 2: "2e place", 3: "3e place" };
+const PLACE_AR: Record<number, string> = { 1: "المركز الأول", 2: "المركز الثاني", 3: "المركز الثالث" };
+
+// Arabic counts 1 / 2 / 3-10 differently; ranks only ever grant 1-3 freezes.
+function freezeWordAr(n: number): string {
+  if (n === 1) return "تجميدة واحدة";
+  if (n === 2) return "تجميدتين";
+  return `${n} تجميدات`;
+}
 
 function pushText(w: Winner, lang: Lang): { title: string; body: string } {
   if (lang === "ru") {
@@ -53,6 +62,21 @@ function pushText(w: Winner, lang: Lang): { title: string; body: string } {
     return {
       title: "🏆 Сен осы аптаның үздігісің!",
       body: `Рейтингте ${place} -- саған ${w.freezes} серия тоңазытқышы есептелді 🧊`,
+    };
+  }
+  if (lang === "fr") {
+    const place = PLACE_FR[w.rank] ?? `#${w.rank}`;
+    const freezeWord = w.freezes === 1 ? "gel de série" : "gels de série";
+    return {
+      title: "🏆 Tu es dans le top de la semaine !",
+      body: `${place} au classement -- tu as gagné ${w.freezes} ${freezeWord} 🧊`,
+    };
+  }
+  if (lang === "ar") {
+    const place = PLACE_AR[w.rank] ?? `#${w.rank}`;
+    return {
+      title: "🏆 أنت من الأفضل هذا الأسبوع!",
+      body: `${place} في الترتيب -- حصلت على ${freezeWordAr(w.freezes)} للسلسلة 🧊`,
     };
   }
   const place = w.rank === 1 ? "1st place" : w.rank === 2 ? "2nd place" : w.rank === 3 ? "3rd place" : `#${w.rank}`;
