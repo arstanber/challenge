@@ -80,8 +80,13 @@ enum Constants {
         static let defaultOffering = "default"
 
         /// Which plan an entitlement unlocks. nil = unknown entitlement.
+        ///
+        /// Matched case-insensitively on purpose: these identifiers are typed by
+        /// hand in the RevenueCat dashboard, and a mismatch in case alone would
+        /// silently leave every paying user on the free tier -- no error, no log,
+        /// just no entitlement. Not worth trusting anyone's shift key.
         static func plan(forEntitlement id: String) -> UserPlan? {
-            switch id {
+            switch id.lowercased() {
             case premiumEntitlement: return .premium
             case familyEntitlement:  return .family
             case maxEntitlement:     return .max

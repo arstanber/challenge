@@ -53,7 +53,10 @@ function planFromEntitlements(entitlements: Record<string, any>): string {
   const now = Date.now();
   let best = "free";
   for (const [id, ent] of Object.entries(entitlements ?? {})) {
-    const plan = ENTITLEMENT_PLANS[id];
+    // Case-insensitive: the identifiers are typed by hand in the RevenueCat
+    // dashboard, and a case-only mismatch would silently leave paying users
+    // on the free tier. Must stay in sync with Constants.RevenueCat.plan().
+    const plan = ENTITLEMENT_PLANS[id.toLowerCase()];
     if (!plan) continue;
     // A null expires_date means a non-expiring (lifetime) entitlement.
     const expires = ent?.expires_date ? Date.parse(ent.expires_date) : Infinity;
