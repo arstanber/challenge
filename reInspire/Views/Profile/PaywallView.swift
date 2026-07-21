@@ -1,5 +1,5 @@
 import SwiftUI
-import StoreKit
+import RevenueCat
 
 // MARK: - Design tokens
 
@@ -19,7 +19,7 @@ private struct PaywallFeature: Identifiable {
     let text: String
 }
 
-/// A purchasable option backed by a real StoreKit product id.
+/// A purchasable option backed by a real store product id.
 private struct PaywallOption: Identifiable {
     let id: String          // product id
     let title: String
@@ -125,6 +125,11 @@ struct PremiumView: View {
         .preferredColorScheme(.dark)
         .toolbar(.hidden, for: .navigationBar)
         .onAppear { AnalyticsService.shared.track(.premiumPaywallShown) }
+        // Retry the load if the one at launch failed (offline, StoreKit hiccup);
+        // otherwise a single early failure leaves the rows skeletoned forever.
+        .task {
+            if store.products.isEmpty { await store.loadProducts() }
+        }
     }
 
     // MARK: Hero
@@ -303,15 +308,15 @@ struct PremiumView: View {
 
     // MARK: Pricing helpers
 
-    /// Localized App Store price, or nil until the StoreKit product loads.
+    /// Localized App Store price, or nil until the offering loads.
     /// No hardcoded fallback -- the row shows a redacted skeleton instead of a
     /// wrong (and wrong-currency) number while products are loading.
     private func priceText(for productID: String) -> String? {
-        store.product(for: productID)?.displayPrice
+        store.product(for: productID)?.localizedPriceString
     }
 
     /// "Выгода X%" for a yearly option vs 12× its monthly counterpart.
-    /// Returns nil until both real StoreKit prices are available.
+    /// Returns nil until both real store prices are available.
     private func savingsBadge(for option: PaywallOption) -> String? {
         guard let monthlyID = option.monthlyForSavings,
               let annual = store.product(for: option.id)?.price,

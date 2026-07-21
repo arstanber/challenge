@@ -13,6 +13,7 @@ struct ReInspireApp: App {
     init() {
         AnalyticsService.shared.start()
         AnalyticsService.shared.track(.appLaunched)
+        storeService.configure()
     }
 
     /// Parse a family invite deep link and stash the code for the join prompt.

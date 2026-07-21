@@ -140,6 +140,9 @@ final class AuthService {
         isAuthenticated = true
         syncTimezone(userId: id)
         syncLanguage(userId: id)
+        // Alias RevenueCat onto the Supabase user ID so entitlements follow the
+        // account and webhook events resolve to this users row.
+        Task { await StoreService.shared.identify(userId: id) }
     }
 
     /// Re-pull the users row; plan, pro_until and bonus_freezes change
@@ -413,6 +416,7 @@ final class AuthService {
     func signOut() {
         Task {
             try? await supabase.auth.signOut()
+            await StoreService.shared.resetIdentity()
             currentUser = nil
             isAuthenticated = false
             AnalyticsService.shared.track(.signedOut)

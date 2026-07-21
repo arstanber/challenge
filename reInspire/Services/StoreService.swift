@@ -1,19 +1,30 @@
 import Foundation
-import StoreKit
 import Observation
-import Supabase
-import PostgREST
+import RevenueCat
+import StoreKit
 import os.log
 
 private let storeLogger = Logger(subsystem: "com.reinspire", category: "StoreService")
 
+/// Purchase layer. RevenueCat owns the StoreKit plumbing; this type is the
+/// app-facing surface (offerings, purchase, restore, current tier).
+///
+/// `users.plan` is written by the `revenuecat-webhook` edge function, never by
+/// this client. After a purchase we set the in-memory plan optimistically so
+/// the UI unlocks immediately, then re-read the server row once the webhook
+/// has landed.
 @Observable
 @MainActor
 final class StoreService {
     static let shared = StoreService()
 
-    /// All loaded StoreKit products keyed by product ID.
-    private(set) var products: [String: Product] = [:]
+    /// Products from the current offering, keyed by store product ID.
+    private(set) var products: [String: StoreProduct] = [:]
+
+    /// Packages from the current offering, keyed by store product ID.
+    /// Purchasing a package (rather than a bare product) is what lets
+    /// RevenueCat attribute the sale to an offering for paywall A/B tests.
+    private(set) var packages: [String: Package] = [:]
 
     var isPurchasing = false
     var errorMessage: String?
@@ -21,60 +32,151 @@ final class StoreService {
     var currentPlan: UserPlan { AuthService.shared.currentUser?.plan ?? .free }
 
     // Backward-compatible accessors
-    var product: Product? { products[Constants.Store.premiumMonthlyID] }
-    var familyProduct: Product? { products[Constants.Store.familyMonthlyID] }
+    var product: StoreProduct? { products[Constants.Store.premiumMonthlyID] }
+    var familyProduct: StoreProduct? { products[Constants.Store.familyMonthlyID] }
 
-    /// Set once this install has observed its own StoreKit entitlement.
-    /// Guards against downgrading users whose plan was granted server-side
-    /// (family members upgraded by the buyer have no local transaction).
-    private let hadLocalEntitlementKey = "store_had_local_entitlement_v1"
+    private init() {}
 
-    private init() {
+    // MARK: - Configure
+
+    /// Call once, as early as possible in the app lifecycle.
+    /// Configuring with no appUserID starts RevenueCat in anonymous mode; the
+    /// identity is upgraded to the Supabase user ID by `identify(userId:)`
+    /// once a profile is loaded.
+    func configure() {
+        guard !Purchases.isConfigured else { return }
+        #if DEBUG
+        Purchases.logLevel = .info
+        #else
+        Purchases.logLevel = .warn
+        #endif
+        Purchases.configure(withAPIKey: Constants.RevenueCat.apiKey)
+        observeCustomerInfo()
         Task { await loadProducts() }
-        Task { await recomputeEntitlements() }
-        listenForTransactions()
+    }
+
+    // MARK: - Identity
+
+    /// Aliases the anonymous RevenueCat user onto the Supabase user ID so the
+    /// same subscription follows the account across devices, and so webhook
+    /// events carry an app_user_id we can resolve to a `users` row.
+    func identify(userId: UUID) async {
+        guard Purchases.isConfigured else { return }
+        do {
+            let (info, _) = try await Purchases.shared.logIn(userId.uuidString)
+            await applyOptimisticPlan(from: info)
+        } catch {
+            storeLogger.error("RevenueCat logIn failed: \(error)")
+        }
+    }
+
+    /// Returns RevenueCat to an anonymous identity so the next account on this
+    /// device does not inherit the previous user's entitlements.
+    func resetIdentity() async {
+        guard Purchases.isConfigured else { return }
+        do {
+            _ = try await Purchases.shared.logOut()
+        } catch {
+            storeLogger.error("RevenueCat logOut failed: \(error)")
+        }
     }
 
     // MARK: - Products
 
+    /// Loads prices through three fallbacks so the paywall shows real,
+    /// correctly-localized prices in every configuration state:
+    ///
+    ///   1. the current RevenueCat offering  -- full attribution, A/B testing
+    ///   2. RevenueCat product lookup by ID  -- offering missing or incomplete
+    ///   3. StoreKit directly                -- RevenueCat not configured yet
+    ///
+    /// Step 3 matters because prices must never depend on dashboard setup being
+    /// finished. Every path returns App Store prices in the user's own
+    /// currency; nothing here is ever hardcoded.
     func loadProducts() async {
-        do {
-            let loaded = try await Product.products(for: Constants.Store.allProductIDs)
-            products = Dictionary(uniqueKeysWithValues: loaded.map { ($0.id, $0) })
-        } catch {
-            storeLogger.error("loadProducts error: \(error)")
+        var loadedProducts: [String: StoreProduct] = [:]
+        var loadedPackages: [String: Package] = [:]
+
+        if Purchases.isConfigured {
+            do {
+                let offerings = try await Purchases.shared.offerings()
+                let offering = offerings.current
+                    ?? offerings.offering(identifier: Constants.RevenueCat.defaultOffering)
+                if let offering {
+                    for package in offering.availablePackages {
+                        let id = package.storeProduct.productIdentifier
+                        loadedProducts[id] = package.storeProduct
+                        loadedPackages[id] = package
+                    }
+                } else {
+                    storeLogger.error("No current RevenueCat offering configured")
+                }
+            } catch {
+                storeLogger.error("offerings error: \(error)")
+            }
+
+            // Products sold but not attached to the current offering.
+            let missing = Constants.Store.allProductIDs.subtracting(loadedProducts.keys)
+            if !missing.isEmpty {
+                for product in await Purchases.shared.products(Array(missing)) {
+                    loadedProducts[product.productIdentifier] = product
+                }
+            }
         }
+
+        // Last resort: ask StoreKit itself. Works with zero RevenueCat setup,
+        // so the paywall still shows live prices before the dashboard is wired.
+        let stillMissing = Constants.Store.allProductIDs.subtracting(loadedProducts.keys)
+        if !stillMissing.isEmpty {
+            do {
+                let skProducts = try await Product.products(for: stillMissing)
+                for skProduct in skProducts {
+                    loadedProducts[skProduct.id] = StoreProduct(sk2Product: skProduct)
+                }
+            } catch {
+                storeLogger.error("StoreKit product fallback error: \(error)")
+            }
+        }
+
+        products = loadedProducts
+        packages = loadedPackages
     }
 
     // Keep backward-compatible alias
     func loadProduct() async { await loadProducts() }
 
-    func product(for id: String) -> Product? { products[id] }
-
-    /// Which plan a product ID unlocks. nil = unknown/foreign product.
-    static func plan(for productID: String) -> UserPlan? {
-        switch productID {
-        case Constants.Store.premiumMonthlyID,
-             Constants.Store.premiumAnnualID,
-             Constants.Store.premiumForeverID:
-            return .premium
-        case Constants.Store.familyMonthlyID,
-             Constants.Store.familyAnnualID:
-            return .family
-        case Constants.Store.maxMonthlyID,
-             Constants.Store.maxAnnualID:
-            return .max
-        default:
-            return nil
-        }
-    }
+    func product(for id: String) -> StoreProduct? { products[id] }
 
     // MARK: - Purchase
 
     @discardableResult
     func purchase(productID: String) async -> Bool {
-        guard let product = products[productID] else { return false }
-        return await doPurchase(product)
+        guard Purchases.isConfigured else { return false }
+        isPurchasing = true
+        errorMessage = nil
+        defer { isPurchasing = false }
+
+        do {
+            let result: PurchaseResultData
+            if let package = packages[productID] {
+                result = try await Purchases.shared.purchase(package: package)
+            } else if let product = products[productID] {
+                // Product exists but is not in the current offering -- still
+                // purchasable, just without offering attribution.
+                result = try await Purchases.shared.purchase(product: product)
+            } else {
+                storeLogger.error("purchase: unknown product \(productID)")
+                return false
+            }
+            if result.userCancelled { return false }
+            await applyOptimisticPlan(from: result.customerInfo)
+            await waitForServerPlan()
+            return true
+        } catch {
+            errorMessage = error.localizedDescription
+            storeLogger.error("purchase error: \(error)")
+            return false
+        }
     }
 
     // Backward-compatible entry points
@@ -87,129 +189,64 @@ final class StoreService {
     // MARK: - Restore
 
     func restore() async {
+        guard Purchases.isConfigured else { return }
         isPurchasing = true
         errorMessage = nil
         defer { isPurchasing = false }
         do {
-            try await AppStore.sync()
-            await recomputeEntitlements()
+            let info = try await Purchases.shared.restorePurchases()
+            await applyOptimisticPlan(from: info)
+            await waitForServerPlan()
         } catch {
             errorMessage = error.localizedDescription
+            storeLogger.error("restore error: \(error)")
         }
     }
 
-    // MARK: - Private
+    // MARK: - Entitlements
 
-    private func doPurchase(_ product: Product) async -> Bool {
-        isPurchasing = true
-        errorMessage = nil
-        defer { isPurchasing = false }
-        do {
-            let result = try await product.purchase()
-            switch result {
-            case .success(let verification):
-                let transaction = try checkVerified(verification)
-                await transaction.finish()
-                await recomputeEntitlements()
-                return true
-            case .userCancelled: return false
-            case .pending:       return false
-            @unknown default:    return false
-            }
-        } catch {
-            errorMessage = error.localizedDescription
-            return false
-        }
-    }
-
-    private func listenForTransactions() {
-        Task(priority: .background) {
-            for await result in Transaction.updates {
-                guard let transaction = try? checkVerified(result) else { continue }
-                await transaction.finish()
-                await recomputeEntitlements()
-            }
-        }
-    }
-
-    private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
-        switch result {
-        case .unverified(_, let error): throw error
-        case .verified(let value):      return value
-        }
-    }
-
-    /// Scans all active entitlements and applies the highest tier
-    /// (max > family > premium). Family purchases also upgrade members.
-    @MainActor
-    private func recomputeEntitlements() async {
+    /// Highest plan unlocked by the active entitlements (max > family > premium).
+    nonisolated static func plan(from info: CustomerInfo) -> UserPlan {
         var best: UserPlan = .free
-        var hasFamily = false
-        for await result in Transaction.currentEntitlements {
-            guard let transaction = try? checkVerified(result),
-                  transaction.revocationDate == nil,
-                  let plan = Self.plan(for: transaction.productID) else { continue }
+        for id in info.entitlements.active.keys {
+            guard let plan = Constants.RevenueCat.plan(forEntitlement: id) else { continue }
             if plan > best { best = plan }
-            if plan == .family { hasFamily = true }
         }
+        return best
+    }
 
-        let defaults = UserDefaults.standard
-        if best > .free {
-            defaults.set(true, forKey: hadLocalEntitlementKey)
-            await setRemotePlan(best)
-            if hasFamily { await upgradeFamilyMembers() }
-        } else if defaults.bool(forKey: hadLocalEntitlementKey) {
-            // Own entitlement expired/revoked -- downgrade. Users granted a plan
-            // server-side (family members) never set this flag and are untouched.
-            defaults.set(false, forKey: hadLocalEntitlementKey)
-            await setRemotePlan(.free)
+    /// Pushes entitlement changes (renewals, expirations, cancellations made on
+    /// another device) into the UI without waiting for an app relaunch.
+    private func observeCustomerInfo() {
+        Task { [weak self] in
+            for await info in Purchases.shared.customerInfoStream {
+                await self?.applyOptimisticPlan(from: info)
+            }
         }
     }
 
-    @MainActor
-    private func setRemotePlan(_ plan: UserPlan) async {
-        guard let userId = AuthService.shared.currentUser?.id,
-              AuthService.shared.currentUser?.plan != plan else { return }
-        do {
-            try await supabase
-                .from("users")
-                .update(["plan": plan.rawValue])
-                .eq("id", value: userId.uuidString)
-                .execute()
-            AuthService.shared.currentUser?.plan = plan
-            AnalyticsService.shared.track(
-                plan == .free ? .premiumRevoked : .premiumPurchased
-            )
-        } catch {
-            storeLogger.error("setRemotePlan error: \(error)")
-        }
+    /// Unlocks the UI immediately after a local entitlement change.
+    /// In-memory only -- the `users.plan` row is owned by the webhook, so this
+    /// never writes to Supabase. It also never downgrades: a user granted a
+    /// plan server-side (a family member, a referral PRO grant) has no local
+    /// entitlement, and clearing their tier here would lock them out.
+    private func applyOptimisticPlan(from info: CustomerInfo) async {
+        let plan = Self.plan(from: info)
+        guard plan > .free,
+              let current = AuthService.shared.currentUser?.plan,
+              plan > current else { return }
+        AuthService.shared.currentUser?.plan = plan
+        AnalyticsService.shared.track(.premiumPurchased)
     }
 
-    /// Sets all members of the buyer's family to premium (#18).
-    @MainActor
-    private func upgradeFamilyMembers() async {
-        guard let familyId = AuthService.shared.currentUser?.familyId else { return }
-        do {
-            // Fetch child user IDs from family_members
-            struct FamilyMemberRow: Decodable {
-                let childUserId: UUID
-                enum CodingKeys: String, CodingKey { case childUserId = "child_user_id" }
-            }
-            let members: [FamilyMemberRow] = try await supabase
-                .from("family_members")
-                .select("child_user_id")
-                .eq("family_id", value: familyId.uuidString)
-                .execute()
-                .value
-            for m in members {
-                try await supabase
-                    .from("users")
-                    .update(["plan": UserPlan.premium.rawValue])
-                    .eq("id", value: m.childUserId.uuidString)
-                    .execute()
-            }
-        } catch {
-            storeLogger.error("upgradeFamilyMembers error: \(error)")
+    /// Re-reads the users row a few times so the authoritative, webhook-written
+    /// plan replaces the optimistic one. Webhook delivery is typically under a
+    /// second but is not guaranteed to beat the purchase callback.
+    private func waitForServerPlan() async {
+        for delay in [1.0, 3.0, 6.0] {
+            try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+            await AuthService.shared.refreshProfile()
+            if AuthService.shared.currentUser?.plan ?? .free > .free { return }
         }
     }
 }

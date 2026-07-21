@@ -59,6 +59,32 @@ enum Constants {
         static let familyProductID  = familyMonthlyID
     }
 
+    enum RevenueCat {
+        /// Public SDK key from RevenueCat -> Project settings -> API keys -> Apple.
+        /// Safe to ship in the binary (it is a publishable key), unlike the secret key.
+        static let apiKey = "appl_xkthlFFvYtbcgxbkXMgLwvLWqed"
+
+        /// Entitlement identifiers configured in the RevenueCat dashboard.
+        /// Each maps 1:1 onto a `UserPlan` tier.
+        static let premiumEntitlement = "premium"
+        static let familyEntitlement  = "family"
+        static let maxEntitlement     = "max"
+
+        /// Offering identifier the paywall pulls packages from.
+        /// "default" is whatever offering is marked current in the dashboard.
+        static let defaultOffering = "default"
+
+        /// Which plan an entitlement unlocks. nil = unknown entitlement.
+        static func plan(forEntitlement id: String) -> UserPlan? {
+            switch id {
+            case premiumEntitlement: return .premium
+            case familyEntitlement:  return .family
+            case maxEntitlement:     return .max
+            default:                 return nil
+            }
+        }
+    }
+
     enum Aptabase {
         // Replace with your Aptabase App Key from app.aptabase.com → Settings → App Key.
         // Format: "A-US-XXXXXXXXXX", "A-EU-XXXXXXXXXX", or "A-DEV-XXXXXXXXXX".

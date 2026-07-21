@@ -13,6 +13,7 @@
 		F55319E92FD2159F00698B66 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F55319E82FD2159F00698B66 /* SwiftUI.framework */; };
 		F55319FA2FD215A000698B66 /* w1Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F55319E42FD2159E00698B66 /* w1Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F5531A022FD215F600698B66 /* Aptabase in Frameworks */ = {isa = PBXBuildFile; productRef = F5531A012FD215F600698B66 /* Aptabase */; };
+		F5AA00032FE0000100C764F3 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = F5AA00022FE0000100C764F3 /* RevenueCat */; };
 		F5531C332FD2C8A800698B66 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F5531C322FD2C8A800698B66 /* StoreKit.framework */; };
 		F5D1B6732FC85CD100C764F3 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = F5D1B6722FC85CD100C764F3 /* Auth */; };
 		F5D1B6752FC85CD100C764F3 /* Functions in Frameworks */ = {isa = PBXBuildFile; productRef = F5D1B6742FC85CD100C764F3 /* Functions */; };
@@ -104,6 +105,7 @@
 				F5531C332FD2C8A800698B66 /* StoreKit.framework in Frameworks */,
 				F5D1B6792FC85CD100C764F3 /* Realtime in Frameworks */,
 				F526FAE42FD1E0EB00C25F19 /* GoogleSignIn in Frameworks */,
+				F5AA00032FE0000100C764F3 /* RevenueCat in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -192,6 +194,7 @@
 				F526FAE32FD1E0EB00C25F19 /* GoogleSignIn */,
 				F526FAE52FD1E0EB00C25F19 /* GoogleSignInSwift */,
 				F5531A012FD215F600698B66 /* Aptabase */,
+				F5AA00022FE0000100C764F3 /* RevenueCat */,
 			);
 			productName = reInspire;
 			productReference = F5D1B59B2FC8554600C764F3 /* reInspire.app */;
@@ -233,6 +236,7 @@
 				F5D1B6712FC85CD100C764F3 /* XCRemoteSwiftPackageReference "supabase-swift" */,
 				F526FAE22FD1E0EB00C25F19 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 				F5531A002FD215F600698B66 /* XCRemoteSwiftPackageReference "aptabase-swift" */,
+				F5AA00012FE0000100C764F3 /* XCRemoteSwiftPackageReference "purchases-ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F5D1B59C2FC8554600C764F3 /* Products */;
@@ -616,6 +620,14 @@
 				minimumVersion = 0.3.11;
 			};
 		};
+		F5AA00012FE0000100C764F3 /* XCRemoteSwiftPackageReference "purchases-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/RevenueCat/purchases-ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.81.1;
+			};
+		};
 		F5D1B6712FC85CD100C764F3 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/supabase-community/supabase-swift";
@@ -641,6 +653,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = F5531A002FD215F600698B66 /* XCRemoteSwiftPackageReference "aptabase-swift" */;
 			productName = Aptabase;
+		};
+		F5AA00022FE0000100C764F3 /* RevenueCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F5AA00012FE0000100C764F3 /* XCRemoteSwiftPackageReference "purchases-ios" */;
+			productName = RevenueCat;
 		};
 		F5D1B6722FC85CD100C764F3 /* Auth */ = {
 			isa = XCSwiftPackageProductDependency;
