@@ -129,13 +129,30 @@ serve(async (req) => {
     if (userErr) throw userErr;
     if (!user) return json({ ok: true, skipped: "unknown_user" });
 
-    if (user.plan !== plan) {
+    // A child's plan is granted by the family buyer, not by any purchase of
+    // their own. Downgrading them here would revoke family access over an
+    // event that says nothing about the parent's subscription -- and would
+    // surface as "the kid randomly lost access", impossible to trace back.
+    // The parent's own events still cascade correctly further down.
+    let isFamilyChild = false;
+    if (plan === "free") {
+      const { data: membership } = await admin
+        .from("family_members")
+        .select("child_user_id")
+        .eq("child_user_id", appUserId)
+        .maybeSingle();
+      isFamilyChild = !!membership;
+    }
+
+    if (user.plan !== plan && !isFamilyChild) {
       const { error: updErr } = await admin
         .from("users")
         .update({ plan })
         .eq("id", appUserId);
       if (updErr) throw updErr;
       console.log(`plan ${user.plan} -> ${plan} for ${appUserId} (${type})`);
+    } else if (isFamilyChild) {
+      console.log(`skipped downgrade of family child ${appUserId} (${type})`);
     }
 
     // Family plans cascade to the buyer's children. Downgrades cascade too:
