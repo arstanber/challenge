@@ -43,7 +43,12 @@ enum Constants {
         /// Must match the product IDs created in App Store Connect exactly.
         static let premiumMonthlyID = "reProMonthly"
         static let premiumAnnualID  = "reProAnnually"
-        static let premiumForeverID = "reProLifetime"     // non-renewing lifetime
+        // Non-consumable, so RevenueCat reports it with expires_date == null and
+        // the webhook treats the entitlement as permanent. The doubled "e" is
+        // intentional: the original "reProLifetime" ID was burned by the
+        // auto-renewable product it replaced, and App Store product IDs can
+        // never be reused.
+        static let premiumForeverID = "reProLifetimee"
         static let familyMonthlyID  = "reFamilyMonthly"
         static let familyAnnualID   = "reFamilyAnnually"
         static let maxMonthlyID     = "reMaxMonthly"
