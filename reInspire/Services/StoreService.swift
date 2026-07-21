@@ -238,7 +238,12 @@ final class StoreService {
     // MARK: - Entitlements
 
     /// Highest plan unlocked by the active entitlements (max > family > premium).
-    nonisolated static func plan(from info: CustomerInfo) -> UserPlan {
+    ///
+    /// MainActor-isolated like the rest of the type: both the entitlement lookup
+    /// and UserPlan's Comparable conformance are, and reaching them from a
+    /// nonisolated context is an error under the Swift 6 language mode. The sole
+    /// caller already runs on the main actor.
+    static func plan(from info: CustomerInfo) -> UserPlan {
         var best: UserPlan = .free
         for id in info.entitlements.active.keys {
             guard let plan = Constants.RevenueCat.plan(forEntitlement: id) else { continue }
