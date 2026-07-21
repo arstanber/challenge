@@ -170,7 +170,10 @@ final class StoreService {
             }
             if result.userCancelled { return false }
             await applyOptimisticPlan(from: result.customerInfo)
-            await waitForServerPlan()
+            // Detached: the tier is already unlocked optimistically, so blocking
+            // the button on webhook delivery would just show a spinner over a
+            // purchase that already succeeded.
+            Task { await waitForServerPlan() }
             return true
         } catch {
             errorMessage = error.localizedDescription
@@ -196,7 +199,7 @@ final class StoreService {
         do {
             let info = try await Purchases.shared.restorePurchases()
             await applyOptimisticPlan(from: info)
-            await waitForServerPlan()
+            Task { await waitForServerPlan() }
         } catch {
             errorMessage = error.localizedDescription
             storeLogger.error("restore error: \(error)")
