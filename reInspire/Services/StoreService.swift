@@ -151,7 +151,11 @@ final class StoreService {
 
     @discardableResult
     func purchase(productID: String) async -> Bool {
-        guard Purchases.isConfigured else { return false }
+        guard Purchases.isConfigured else {
+            errorMessage = String(localized: "Магазин недоступен. Попробуйте позже.")
+            storeLogger.error("purchase: Purchases not configured")
+            return false
+        }
         isPurchasing = true
         errorMessage = nil
         defer { isPurchasing = false }
@@ -165,6 +169,12 @@ final class StoreService {
                 // purchasable, just without offering attribution.
                 result = try await Purchases.shared.purchase(product: product)
             } else {
+                // Neither the offering nor the store knows this ID -- almost
+                // always a product missing from the current RevenueCat offering
+                // or not yet Ready to Submit in App Store Connect. Surfaced
+                // rather than swallowed: a silent false reads as "the button
+                // did nothing", which is indistinguishable from a hung app.
+                errorMessage = String(localized: "Этот тариф сейчас недоступен. Попробуйте позже.")
                 storeLogger.error("purchase: unknown product \(productID)")
                 return false
             }
