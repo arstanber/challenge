@@ -37,6 +37,25 @@ extension View {
     func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
         if condition { transform(self) } else { self }
     }
+
+    /// A shared Liquid Glass surface for cards and compact controls.
+    ///
+    /// The subtle tint keeps each surface tied to its semantic accent while
+    /// the native glass effect provides depth, highlights, and refraction.
+    func liquidGlassSurface<S: InsettableShape>(
+        in shape: S,
+        tint: Color = .primary,
+        tintOpacity: Double = 0.035,
+        borderOpacity: Double = 0.12
+    ) -> some View {
+        background(tint.opacity(tintOpacity), in: shape)
+            .glassEffect(.regular, in: shape)
+            .overlay {
+                shape
+                    .strokeBorder(.white.opacity(borderOpacity), lineWidth: 0.75)
+                    .allowsHitTesting(false)
+            }
+    }
 }
 
 extension Array where Element == GridItem {

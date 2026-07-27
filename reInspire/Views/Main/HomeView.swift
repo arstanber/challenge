@@ -90,6 +90,7 @@ private struct StrictBlock: Identifiable {
 // MARK: - Home
 
 struct HomeView: View {
+    @Environment(AuthService.self) private var authService
     @State private var vm = ActivitiesViewModel()
     @State private var timerService = ActivityTimerService.shared
     @State private var routineService = RoutineService.shared
@@ -99,6 +100,7 @@ struct HomeView: View {
     @AppStorage(AppPrefs.Key.groupCompleted) private var groupCompleted = true
     @AppStorage(AppPrefs.Key.strictMode) private var strictMode = true
     @AppStorage(AppPrefs.Key.zoomerMode) private var zoomerMode = false
+    @AppStorage(AppPrefs.Key.dismissedHomePremiumVersion) private var dismissedPremiumVersion = ""
     // Strict-mode refusal: connector says the goal is not reached yet.
     @State private var strictBlock: StrictBlock?
 
@@ -112,6 +114,7 @@ struct HomeView: View {
     @State private var showSettings = false
     @State private var showStreakDetail = false
     @State private var showRoutines = false
+    @State private var showHomePaywall = false
     @State private var playingRoutine: Routine?
     // Inline drag-to-reorder happens right on the home list (no separate page).
     @State private var reorderMode = false
@@ -418,6 +421,23 @@ struct HomeView: View {
                             doneCards
                         }
                     }
+
+                    if shouldShowPremiumCard {
+                        HomePremiumCard(
+                            onOpen: {
+                                Haptics.tap()
+                                showHomePaywall = true
+                            },
+                            onDismiss: {
+                                Haptics.tap()
+                                withAnimation(.easeOut(duration: 0.2)) {
+                                    dismissedPremiumVersion = WhatsNewRelease.version
+                                }
+                            }
+                        )
+                        .transition(.opacity.combined(with: .move(edge: .bottom)))
+                        .appearEffect(delay: 0.25)
+                    }
                 }
                 .padding(.horizontal, 18)
                 .padding(.top, 84)
@@ -540,6 +560,9 @@ struct HomeView: View {
             NewHabitView(draft: draft, vm: vm) { Task { await vm.loadActivities() } }
         }
         .sheet(isPresented: $showAIPlanner, onDismiss: reload) { GoalPlannerView() }
+        .sheet(isPresented: $showHomePaywall) {
+            NavigationStack { PremiumView() }
+        }
         .sheet(item: $connectorSuggestion, onDismiss: { suggestionEngine.dismissPending() }) { suggestion in
             ConnectorSuggestionSheet(suggestion: suggestion)
         }
@@ -615,6 +638,12 @@ struct HomeView: View {
     }
 
     // MARK: Actions
+
+    private var shouldShowPremiumCard: Bool {
+        authService.currentUser != nil
+            && authService.currentUser?.isPremium != true
+            && dismissedPremiumVersion != WhatsNewRelease.version
+    }
 
     private func completeTask(_ activity: Activity) {
         Task {
@@ -895,9 +924,11 @@ private struct FreezeYesterdayBanner: View {
             .buttonStyle(.plain)
         }
         .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(Color(hex: "4580FF").opacity(0.12))
+        .liquidGlassSurface(
+            in: RoundedRectangle(cornerRadius: 22, style: .continuous),
+            tint: Color(hex: "4580FF"),
+            tintOpacity: 0.10,
+            borderOpacity: 0.18
         )
     }
 }
@@ -1000,9 +1031,10 @@ private struct TaskCardView: View {
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 18)
-        .background(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(AppColors.cardBg)
+        .liquidGlassSurface(
+            in: RoundedRectangle(cornerRadius: 24, style: .continuous),
+            tint: accent,
+            tintOpacity: 0.035
         )
         .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .scaleEffect(isPressed ? 0.975 : 1.0)
@@ -1091,9 +1123,11 @@ private struct TaskCardView: View {
                     }
                     .buttonStyle(.plain)
                     .foregroundStyle(timerIsRunning ? .orange : accent)
-                    .background(
-                        Capsule()
-                            .fill((timerIsRunning ? Color.orange : accent).opacity(0.12))
+                    .liquidGlassSurface(
+                        in: Capsule(),
+                        tint: timerIsRunning ? .orange : accent,
+                        tintOpacity: 0.10,
+                        borderOpacity: 0.16
                     )
                     .disabled(anotherTimerIsActive || timerService.isSubmitting(task.id))
 
@@ -1116,7 +1150,12 @@ private struct TaskCardView: View {
                         }
                         .buttonStyle(.plain)
                         .foregroundStyle(accent)
-                        .background(Capsule().fill(accent.opacity(0.12)))
+                        .liquidGlassSurface(
+                            in: Capsule(),
+                            tint: accent,
+                            tintOpacity: 0.10,
+                            borderOpacity: 0.16
+                        )
                         .disabled(timerService.isSubmitting(task.id))
                     }
 
@@ -1145,7 +1184,12 @@ private struct TaskCardView: View {
                 .foregroundStyle(accent)
                 .padding(.horizontal, 16)
                 .frame(height: 38)
-                .background(Capsule().fill(accent.opacity(0.12)))
+                .liquidGlassSurface(
+                    in: Capsule(),
+                    tint: accent,
+                    tintOpacity: 0.10,
+                    borderOpacity: 0.16
+                )
         }
         .buttonStyle(.plain)
     }
@@ -1222,13 +1266,12 @@ private struct DoneTaskCard: View {
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 18)
-        .background(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(AppColors.cardBg.opacity(0.45))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+        .opacity(0.78)
+        .liquidGlassSurface(
+            in: RoundedRectangle(cornerRadius: 24, style: .continuous),
+            tint: Color(hex: "2FB873"),
+            tintOpacity: 0.025,
+            borderOpacity: 0.10
         )
         .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .onTapGesture { Haptics.selection(); onOpen() }
