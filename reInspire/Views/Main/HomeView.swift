@@ -770,6 +770,82 @@ struct HomeView: View {
     }
 }
 
+// MARK: - Premium prompt
+
+private struct HomePremiumCard: View {
+    let onOpen: () -> Void
+    let onDismiss: () -> Void
+
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            Button(action: onOpen) {
+                HStack(spacing: 14) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color(hex: "8B5CF6"), Color(hex: "5B8CFF")],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                        Image(systemName: "crown.fill")
+                            .font(.system(size: 23, weight: .semibold))
+                            .foregroundStyle(.white)
+                    }
+                    .frame(width: 56, height: 56)
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 7) {
+                            Text("reInspire")
+                                .font(.sfProDisplay(15, weight: .semibold))
+                                .foregroundStyle(.secondary)
+                            Text("PRO")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 7)
+                                .padding(.vertical, 3)
+                                .background(Capsule().fill(Color.primary.opacity(0.72)))
+                        }
+
+                        Text("Раскрой свой потенциал")
+                            .font(.sfProDisplay(21, weight: .semibold))
+                            .foregroundStyle(.primary)
+                            .lineLimit(2)
+                        Text("Безлимитные привычки и вся сила ИИ")
+                            .font(.system(size: 14))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(.tertiary)
+                }
+                .padding(18)
+                .background(
+                    RoundedRectangle(cornerRadius: 28, style: .continuous)
+                        .fill(AppColors.cardBg)
+                )
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint("Открывает варианты подписки")
+
+            Button(action: onDismiss) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 32, height: 32)
+                    .background(Circle().fill(Color.primary.opacity(0.07)))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Скрыть предложение")
+            .offset(x: 8, y: -8)
+        }
+    }
+}
+
 // MARK: - Top bar (glow + fade; cards scroll underneath and dissolve)
 
 private struct HomeTopBar: View {

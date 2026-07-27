@@ -5,7 +5,9 @@ struct MainTabView: View {
     /// Last paid plan we already congratulated -- so the popup fires once
     /// per plan change (purchase, upgrade, or server-side grant).
     @AppStorage("celebratedPlan") private var celebratedPlan = UserPlan.free.rawValue
+    @AppStorage(AppPrefs.Key.lastSeenWhatsNewVersion) private var lastSeenWhatsNewVersion = ""
     @State private var celebrationPlan: UserPlan?
+    @State private var showWhatsNew = false
     @State private var joinVM = ProfileViewModel()
     @State private var showJoinPrompt = false
     @State private var joining = false
@@ -19,11 +21,19 @@ struct MainTabView: View {
             .overlay(alignment: .top) { OfflineBanner() }
             // Warm the AI-quota cache so canUse/remaining reflect the server state
             .task { await RateLimiterService.shared.fetchUsage() }
-            .task { checkPlanCelebration() }
+            .task {
+                checkPlanCelebration()
+                presentWhatsNewIfNeeded()
+            }
             .onChange(of: authService.currentUser?.plan) { checkPlanCelebration() }
             .task(id: authService.pendingFamilyCode) { if canJoinPending { showJoinPrompt = true } }
-            .sheet(item: $celebrationPlan) { plan in
+            .sheet(item: $celebrationPlan, onDismiss: presentWhatsNewIfNeeded) { plan in
                 PlanCelebrationView(plan: plan)
+            }
+            .sheet(isPresented: $showWhatsNew, onDismiss: markWhatsNewSeen) {
+                WhatsNewView()
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
             }
             .alert("Присоединиться к семье?", isPresented: $showJoinPrompt) {
                 Button("Присоединиться") {
@@ -50,6 +60,16 @@ struct MainTabView: View {
         guard celebratedPlan != plan.rawValue else { return }
         celebratedPlan = plan.rawValue
         celebrationPlan = plan
+    }
+
+    private func presentWhatsNewIfNeeded() {
+        guard celebrationPlan == nil,
+              lastSeenWhatsNewVersion != WhatsNewRelease.version else { return }
+        showWhatsNew = true
+    }
+
+    private func markWhatsNewSeen() {
+        lastSeenWhatsNewVersion = WhatsNewRelease.version
     }
 }
 

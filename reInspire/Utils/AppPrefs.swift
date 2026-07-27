@@ -12,6 +12,8 @@ enum AppPrefs {
         static let strictMode = "strictMode"
         static let zoomerMode = "zoomerMode"
         static let liveActivityEnabled = "liveActivityEnabled"
+        static let lastSeenWhatsNewVersion = "lastSeenWhatsNewVersion"
+        static let dismissedHomePremiumVersion = "dismissedHomePremiumVersion"
     }
 
     enum Option {

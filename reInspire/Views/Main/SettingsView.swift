@@ -62,6 +62,7 @@ struct SettingsView: View {
     @State private var showStatistics = false
     @State private var showLocations = false
     @State private var showProfile = false
+    @State private var showWhatsNew = false
 
     private let blue = Color(hex: "0A84FF")
 
@@ -113,6 +114,11 @@ struct SettingsView: View {
         }
         .sheet(isPresented: $showPremium) {
             NavigationStack { PremiumView() }
+        }
+        .sheet(isPresented: $showWhatsNew) {
+            WhatsNewView()
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showAppIcon) {
             AppIconPickerView()
@@ -451,8 +457,9 @@ struct SettingsView: View {
             SettingsLinkRow(icon: "questionmark.circle", title: "FAQ",
                             url: URL(string: "https://thechallenges.app/support.html")!)
             SettingsDivider()
-            SettingsLinkRow(icon: "sparkles", title: "Что нового",
-                            url: URL(string: "https://thechallenges.app/features.html")!)
+            SettingsRow(icon: "sparkles", title: "Что нового", trailing: .chevron) {
+                Haptics.tap(); showWhatsNew = true
+            }
             SettingsDivider()
             SettingsShareRow(icon: "square.and.arrow.up", title: "Поделиться приложением",
                              url: URL(string: "https://thechallenges.app")!)
