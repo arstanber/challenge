@@ -21,6 +21,20 @@ private struct PendingPhoto: Codable, Identifiable {
     let createdAt: Date
 }
 
+private struct DeferredReportRequest: Encodable {
+    let id: UUID
+    let activityId: UUID
+    let photoURL: String
+    let comment: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case activityId = "activity_id"
+        case photoURL = "photo_url"
+        case comment
+    }
+}
+
 @MainActor
 @Observable
 final class PendingPhotoStore {
@@ -127,10 +141,10 @@ final class PendingPhotoStore {
         let jpeg = try Data(contentsOf: fileURL)
 
         // 1. Upload the proof.
-        let path = "\(entry.activityId.uuidString)/\(UUID().uuidString).jpg"
+        let path = "\(entry.activityId.uuidString)/\(entry.id.uuidString).jpg"
         try await supabase.storage
             .from(Constants.Storage.reportsBucket)
-            .upload(path, data: jpeg, options: FileOptions(contentType: "image/jpeg"))
+            .upload(path, data: jpeg, options: FileOptions(contentType: "image/jpeg", upsert: true))
         let photoURL = try supabase.storage
             .from(Constants.Storage.reportsBucket)
             .getPublicURL(path: path)
@@ -138,17 +152,23 @@ final class PendingPhotoStore {
 
         // 2. Insert the report (created_at reflects replay time, which is fine --
         //    the streak day is still the user's local day if they reconnect same day).
-        let req = CreateReportRequest(activityId: entry.activityId, photoURL: photoURL, comment: entry.comment)
+        let req = DeferredReportRequest(
+            id: entry.id,
+            activityId: entry.activityId,
+            photoURL: photoURL,
+            comment: entry.comment
+        )
         let report: Report = try await supabase
             .from("reports")
-            .insert(req)
+            .upsert(req, onConflict: "id")
             .select()
             .single()
             .execute()
             .value
 
-        // 3. AI verification. A 429/offline leaves the photo accepted (the report
-        //    already counts as a check-in); only an explicit rejection rolls back.
+        // 3. AI verification. Photo reports stay pending until the server writes
+        //    an explicit approved/excused/rejected verdict. A transient failure
+        //    must never turn an unverified proof into a completed task.
         do {
             let resp = try await aiService.verify(
                 reportId: report.id,
@@ -169,8 +189,9 @@ final class PendingPhotoStore {
                 )
             }
         } catch {
-            // Quota/verification unavailable: leave the report as a plain check-in.
+            TaskEngine.shared.clearOptimisticDone(entry.activityId)
             logger.error("deferred AI verify unavailable for \(entry.id): \(error)")
+            throw error
         }
 
         await TaskEngine.shared.noteReportChanged(activityId: entry.activityId)

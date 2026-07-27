@@ -69,6 +69,7 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization") ?? "";
     const bearer = authHeader.replace(/^Bearer\s+/i, "");
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    let callerId: string | null = null;
     if (bearer !== serviceKey) {
       const authClient = createClient(
         Deno.env.get("SUPABASE_URL")!,
@@ -79,6 +80,7 @@ serve(async (req) => {
       if (authErr || !caller) {
         return json({ error: "Unauthorized" }, 401);
       }
+      callerId = caller.id;
     }
 
     const keyId      = Deno.env.get("APNS_KEY_ID");
@@ -95,6 +97,9 @@ serve(async (req) => {
     const { user_id, title, body, data, content_state } = await req.json();
     if (!user_id || !title) {
       return json({ error: "user_id and title are required" }, 400);
+    }
+    if (callerId && callerId !== user_id) {
+      return json({ error: "Forbidden" }, 403);
     }
 
     // Fetch device token from push_tokens table

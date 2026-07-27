@@ -34,7 +34,7 @@ Deno.serve(async (req: Request) => {
   let lang: Lang = "en";
   try {
     const body = await req.json();
-    const { condition, photo_url, report_id, is_excuse = false, language } = body;
+    const { report_id, is_excuse = false, language } = body;
     lang = pickLang(language);
     const langNote = writeExplanationIn(lang);
     // Localized fallback explanations for paths that don't run the model.
@@ -46,16 +46,11 @@ Deno.serve(async (req: Request) => {
       error: { en: "An error occurred during verification.", ru: "Произошла ошибка во время проверки.", de: "Bei der Verifizierung ist ein Fehler aufgetreten.", kk: "Тексеру кезінде қате орын алды." },
     } as const;
 
-    if (!condition || !photo_url) {
-      return json({ error: "Missing condition or photo_url" }, 400);
+    if (!report_id) {
+      return json({ error: "Missing report_id" }, 400);
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-
-    // Only verify photos that live in our own reports bucket
-    if (!String(photo_url).startsWith(`${supabaseUrl}/storage/v1/object/public/reports/`)) {
-      return json({ error: "photo_url must point to the reports bucket" }, 400);
-    }
 
     // 1. Authenticate the caller -- user id comes from the verified JWT, never the body
     const authHeader = req.headers.get("Authorization") ?? "";
@@ -69,17 +64,26 @@ Deno.serve(async (req: Request) => {
 
     const adminClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-    // 2. The report being verified must belong to the caller
-    if (report_id) {
-      const { data: report } = await adminClient
-        .from("reports")
-        .select("id, activities!inner(user_id)")
-        .eq("id", report_id)
-        .maybeSingle();
-      const ownerId = (report as { activities?: { user_id?: string } } | null)?.activities?.user_id;
-      if (!report || ownerId !== user.id) {
-        return json({ error: "Report not found" }, 403);
-      }
+    // 2. Load all security-sensitive inputs from the owned report/activity.
+    //    Never trust a client-provided photo URL or verification condition.
+    const { data: report } = await adminClient
+      .from("reports")
+      .select("id, photo_url, activities!inner(user_id, title, condition)")
+      .eq("id", report_id)
+      .maybeSingle();
+    const ownedReport = report as {
+      photo_url?: string | null;
+      activities?: { user_id?: string; title?: string; condition?: string | null };
+    } | null;
+    if (!ownedReport || ownedReport.activities?.user_id !== user.id) {
+      return json({ error: "Report not found" }, 403);
+    }
+    const photoURL = ownedReport.photo_url ?? "";
+    const condition = ownedReport.activities?.condition?.trim()
+      || ownedReport.activities?.title?.trim()
+      || "";
+    if (!condition || !photoURL.startsWith(`${supabaseUrl}/storage/v1/object/public/reports/`)) {
+      return json({ error: "Report has no valid proof" }, 400);
     }
 
     // 3. Enforce the monthly quota server-side (atomic check-and-increment)
@@ -104,7 +108,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // 4. Fetch photo
-    const photoResponse = await fetch(photo_url);
+    const photoResponse = await fetch(photoURL);
     if (!photoResponse.ok) {
       const explanation = EXPL.noPhoto[lang];
       return json({ approved: false, excused: false, explanation });
@@ -205,13 +209,14 @@ Respond ONLY with valid JSON (no markdown):
 
     // 6. Write the verdict server-side. Clients cannot write ai_result/ai_explanation
     //    (blocked by the protect_ai_verdict trigger) -- this is the only write path.
-    if (report_id) {
-      const aiResult = result.approved ? "approved" : result.excused ? "excused" : "rejected";
-      const { error: writeError } = await adminClient
-        .from("reports")
-        .update({ ai_result: aiResult, ai_explanation: result.explanation })
-        .eq("id", report_id);
-      if (writeError) console.error("verdict write error:", writeError);
+    const aiResult = result.approved ? "approved" : result.excused ? "excused" : "rejected";
+    const { error: writeError } = await adminClient
+      .from("reports")
+      .update({ ai_result: aiResult, ai_explanation: result.explanation })
+      .eq("id", report_id);
+    if (writeError) {
+      console.error("verdict write error:", writeError);
+      return json({ error: "Could not save verdict" }, 500);
     }
 
     return json({ ...result, remaining: quota.remaining });

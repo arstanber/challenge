@@ -704,11 +704,8 @@ private struct P6CodeCard: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 16)
 
-            (Text("Мы отправили код на ")
+            Text("Мы отправили код на \(Text(vm.pendingEmail).foregroundColor(.black).fontWeight(.semibold))")
                 .foregroundColor(Color(hex: "948F95"))
-             + Text(vm.pendingEmail)
-                .foregroundColor(.black)
-                .fontWeight(.semibold))
                 .font(.system(size: 16))
                 .lineSpacing(4)
                 .padding(.horizontal, 20)

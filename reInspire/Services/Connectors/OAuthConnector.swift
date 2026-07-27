@@ -127,7 +127,7 @@ final class OAuthConnector: NSObject, ASWebAuthenticationPresentationContextProv
             .first { $0.activationState == .foregroundActive } as? UIWindowScene
         if let key = scene?.keyWindow { return key }
         if let scene { return UIWindow(windowScene: scene) }
-        return UIWindow(frame: .zero)
+        preconditionFailure("No foreground window scene available for OAuth")
     }
 }
 
