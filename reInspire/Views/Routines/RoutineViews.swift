@@ -232,7 +232,12 @@ struct RoutinesView: View {
     }
 
     private var availableActivities: [Activity] {
-        activities.filter { $0.status == .active && $0.parentId == nil }
+        let active = activities.filter { $0.status == .active }
+        let activeParentIds = Set(active.filter { $0.parentId == nil }.map(\.id))
+        return active.filter { activity in
+            guard let parentId = activity.parentId else { return true }
+            return !activeParentIds.contains(parentId)
+        }
     }
 
     private func routineSubtitle(_ routine: Routine) -> String {
