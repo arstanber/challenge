@@ -9,8 +9,15 @@ final class CreateActivityViewModel {
     var title = ""
     var description = ""
     var type: ActivityType = .challenge {
-        // Auto-verification lives on goal tasks; leaving .goal drops the binding.
-        didSet { if type != .goal { selectedCapability = nil } }
+        didSet {
+            // Auto-verification lives on goal tasks; leaving .goal drops the binding.
+            if type != .goal { selectedCapability = nil }
+            if type.hasAIVerification {
+                completionMode = .check
+            } else if type == .goal, !completionMode.needsTarget {
+                completionMode = .counter
+            }
+        }
     }
     var condition = ""
     var frequency: ActivityFrequency = .daily
@@ -25,6 +32,16 @@ final class CreateActivityViewModel {
         return Calendar.current.date(from: comps) ?? Date()
     }()
     var goalTarget: String = ""
+    var completionMode: ActivityCompletionMode = .check {
+        didSet {
+            if completionMode.needsTarget, type != .goal {
+                type = .goal
+            } else if !completionMode.needsTarget, type == .goal {
+                type = .habit
+            }
+        }
+    }
+    var completionUnit: String = ""
     /// Data-source capability bound to this task (auto-tracks its progress).
     private(set) var selectedCapability: ConnectorCapability?
     var assignToChildId: UUID?
@@ -47,6 +64,7 @@ final class CreateActivityViewModel {
         if type.hasAIVerification && condition.trimmingCharacters(in: .whitespaces).isEmpty { return false }
         // A connector-bound task needs a positive target to count against.
         if selectedCapability != nil, !((Double(goalTarget) ?? 0) > 0) { return false }
+        if completionMode.needsTarget, !((Double(goalTarget) ?? 0) > 0) { return false }
         return true
     }
 
@@ -58,6 +76,8 @@ final class CreateActivityViewModel {
     func bindConnector(_ capability: ConnectorCapability, target: Double) {
         selectedCapability = capability
         type = .goal
+        completionMode = .counter
+        completionUnit = capability.unit
         goalTarget = String(Int(target))
     }
 
@@ -93,7 +113,9 @@ final class CreateActivityViewModel {
                     frequency: frequency,
                     deadline: hasDeadline ? deadline : nil,
                     reminderTime: reminderEnabled ? reminderTime : nil,
-                    goalTarget: showGoalTarget ? Double(goalTarget) : nil,
+                    goalTarget: completionMode.needsTarget || showGoalTarget ? Double(goalTarget) : nil,
+                    completionMode: isAssignment ? .check : completionMode,
+                    completionUnit: isAssignment ? nil : normalizedCompletionUnit,
                     workspaceId: workspaceId,
                     parentId: parentId,
                     category: category,
@@ -149,6 +171,13 @@ final class CreateActivityViewModel {
             errorMessage = error.localizedDescription
         }
         isLoading = false
+    }
+
+    private var normalizedCompletionUnit: String? {
+        guard completionMode.needsTarget else { return nil }
+        if completionMode == .timer { return "мин" }
+        let trimmed = completionUnit.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? completionMode.defaultUnit : trimmed
     }
 
     /// Looks up another user's language for a cross-user push (the assigned

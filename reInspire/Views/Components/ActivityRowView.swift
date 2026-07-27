@@ -31,11 +31,13 @@ struct ActivityRowView: View {
                 }
             }
 
-            if activity.type == .goal, let target = activity.goalTarget {
+            if activity.effectiveCompletionMode.needsTarget, let target = activity.goalTarget {
                 VStack(alignment: .leading, spacing: 4) {
                     ProgressView(value: activity.goalProgress, total: target)
                         .tint(Color(hex: "0048E2"))
-                    Text(String(format: "%.0f / %.0f", activity.goalProgress, target))
+                    let unit = activity.effectiveCompletionUnit
+                    let suffix = unit.isEmpty ? "" : " \(unit)"
+                    Text(String(format: "%.0f / %.0f", activity.goalProgress, target) + suffix)
                         .font(.manrope(.medium, size: 11))
                         .foregroundStyle(.secondary)
                 }

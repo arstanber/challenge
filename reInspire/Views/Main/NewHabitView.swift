@@ -26,7 +26,7 @@ struct NewHabitView: View {
     @State private var polarity = String(localized: "Развить")          // Развить / Бросить
     @State private var repeatMode = String(localized: "Ежедневно")      // Ежедневно / Еженедельно
     @State private var selectedDays: Set<Int> = Set(0..<7)
-    @State private var goalOn: Bool
+    @State private var completionMode: ActivityCompletionMode
     @State private var goalValue: String
     @State private var goalUnit: String
     @State private var reminderOn = false
@@ -42,7 +42,7 @@ struct NewHabitView: View {
         _title = State(initialValue: draft.title)
         _icon = State(initialValue: draft.icon)
         _tint = State(initialValue: draft.tint)
-        _goalOn = State(initialValue: draft.goalEnabled)
+        _completionMode = State(initialValue: draft.goalEnabled ? .counter : .check)
         _goalValue = State(initialValue: draft.goalTarget.map { String(Int($0)) } ?? "")
         _goalUnit = State(initialValue: "")
         _photoDesc = State(initialValue: draft.condition)
@@ -60,7 +60,14 @@ struct NewHabitView: View {
                            "18C29C", "FF7AB6", "FFD93D", "FF8A3D", "5B7CFF"]
     private let weekdays = [String(localized: "П"), String(localized: "В"), String(localized: "С"), String(localized: "Ч"), String(localized: "П"), String(localized: "С"), String(localized: "В")]
 
-    private var canCreate: Bool { !title.trimmingCharacters(in: .whitespaces).isEmpty }
+    private var canCreate: Bool {
+        guard !title.trimmingCharacters(in: .whitespaces).isEmpty else { return false }
+        if completionMode.needsTarget {
+            return (Double(goalValue.filter { $0.isNumber || $0 == "." || $0 == "," }
+                .replacingOccurrences(of: ",", with: ".")) ?? 0) > 0
+        }
+        return true
+    }
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -72,7 +79,7 @@ struct NewHabitView: View {
                     if showPalette { paletteRow }
                     typeRow
                     repeatRow
-                    goalRow
+                    completionModeRow
                     photoRow
                     reminderRow
                     Color.clear.frame(height: 110)
@@ -86,7 +93,7 @@ struct NewHabitView: View {
         }
         .overlay(alignment: .top) { header }
         .animation(.spring(response: 0.3, dampingFraction: 0.85), value: showPalette)
-        .animation(.spring(response: 0.3, dampingFraction: 0.85), value: goalOn)
+        .animation(.spring(response: 0.3, dampingFraction: 0.85), value: completionMode)
         .animation(.spring(response: 0.3, dampingFraction: 0.85), value: reminderOn)
         .animation(.easeInOut(duration: 0.25), value: tint)
     }
@@ -183,8 +190,14 @@ struct NewHabitView: View {
             Text("Тип").font(.system(size: 19, weight: .medium)).foregroundStyle(.primary)
             Spacer()
             Menu {
-                Button("Развить") { polarity = String(localized: "Развить") }
-                Button("Бросить") { polarity = String(localized: "Бросить") }
+                Button("Развить") {
+                    polarity = String(localized: "Развить")
+                    if completionMode == .abstinence { completionMode = .check }
+                }
+                Button("Бросить") {
+                    polarity = String(localized: "Бросить")
+                    completionMode = .abstinence
+                }
             } label: { valueLabel(polarity) }
         }
         .padding(18)
@@ -229,40 +242,90 @@ struct NewHabitView: View {
         .background { field }
     }
 
-    // MARK: Goal
+    // MARK: Completion mode
 
-    private var goalRow: some View {
+    private var completionModeRow: some View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(spacing: 14) {
-                HStack {
-                    Text("Цель").font(.system(size: 19, weight: .medium)).foregroundStyle(.primary)
-                    Spacer()
-                    Toggle("", isOn: $goalOn).labelsHidden().tint(tint)
+                HStack(alignment: .firstTextBaseline) {
+                    Text("Как отмечать").font(.system(size: 19, weight: .medium)).foregroundStyle(.primary)
+                    Spacer(minLength: 12)
+                    Text(completionMode.displayName)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(tint)
                 }
-                if goalOn {
+
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                    ForEach(ActivityCompletionMode.allCases) { mode in
+                        Button {
+                            Haptics.selection()
+                            completionMode = mode
+                            if mode == .abstinence {
+                                polarity = String(localized: "Бросить")
+                            } else if polarity == String(localized: "Бросить") {
+                                polarity = String(localized: "Развить")
+                            }
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: mode.icon)
+                                Text(mode.displayName)
+                                    .lineLimit(1)
+                            }
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(completionMode == mode ? Color.black : Color.primary)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 44)
+                            .background(
+                                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                                    .fill(completionMode == mode ? tint : Color.primary.opacity(0.07))
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+
+                if completionMode.needsTarget {
                     Rectangle().fill(Color.primary.opacity(0.1)).frame(height: 1)
                     HStack(spacing: 10) {
-                        TextField("", text: $goalValue, prompt: Text("10 000").foregroundColor(.secondary))
-                            .keyboardType(.numberPad)
+                        TextField("", text: $goalValue, prompt: Text(completionMode == .timer ? "30" : "10").foregroundColor(.secondary))
+                            .keyboardType(.decimalPad)
                             .font(.system(size: 18, weight: .semibold))
                             .frame(width: 110)
                             .padding(.vertical, 10).padding(.horizontal, 14)
                             .background(RoundedRectangle(cornerRadius: 12).fill(Color.primary.opacity(0.08)))
-                        TextField("", text: $goalUnit, prompt: Text("шагов / мин / км").foregroundColor(.secondary))
-                            .font(.system(size: 18))
-                            .padding(.vertical, 10).padding(.horizontal, 14)
-                            .background(RoundedRectangle(cornerRadius: 12).fill(Color.primary.opacity(0.08)))
+                        if completionMode == .timer {
+                            Text("мин")
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundStyle(.secondary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.vertical, 10).padding(.horizontal, 14)
+                                .background(RoundedRectangle(cornerRadius: 12).fill(Color.primary.opacity(0.08)))
+                        } else {
+                            TextField("", text: $goalUnit, prompt: Text("страниц / км / раз").foregroundColor(.secondary))
+                                .font(.system(size: 18))
+                                .padding(.vertical, 10).padding(.horizontal, 14)
+                                .background(RoundedRectangle(cornerRadius: 12).fill(Color.primary.opacity(0.08)))
+                        }
                     }
                 }
             }
             .padding(18)
             .background { field }
 
-            Text("Добавьте цель, например \"10 страниц\", \"30 мин\" или \"5 км\".")
+            Text(completionModeHint)
                 .font(.system(size: 14))
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 8)
                 .padding(.top, 10)
+        }
+    }
+
+    private var completionModeHint: String {
+        switch completionMode {
+        case .check: return String(localized: "Обычная отметка выполнения одним нажатием.")
+        case .counter: return String(localized: "Записывайте число: страницы, километры, подходы или стаканы.")
+        case .timer: return String(localized: "Запускайте таймер, а завершённые минуты попадут в прогресс.")
+        case .abstinence: return String(localized: "Каждый успешный день без нежелательного действия продолжает серию.")
         }
     }
 
@@ -396,8 +459,13 @@ struct NewHabitView: View {
         creating = true
         Haptics.success()
         let freq: ActivityFrequency = repeatMode == "Ежедневно" ? .daily : .weekly
-        let goal: Double? = goalOn ? Double(goalValue.filter(\.isNumber)) : nil
-        let type: ActivityType = goalOn ? .goal : .habit
+        let normalizedGoal = goalValue.replacingOccurrences(of: ",", with: ".")
+        let goal: Double? = completionMode.needsTarget ? Double(normalizedGoal) : nil
+        let type: ActivityType = completionMode.needsTarget ? .goal : .habit
+        let trimmedUnit = goalUnit.trimmingCharacters(in: .whitespacesAndNewlines)
+        let unit: String? = completionMode.needsTarget
+            ? (completionMode == .timer ? "мин" : (trimmedUnit.isEmpty ? completionMode.defaultUnit : trimmedUnit))
+            : nil
         let condition = photoDesc.trimmingCharacters(in: .whitespacesAndNewlines)
         // Picker indices are 0-based Monday-first; schedule_days is ISO 1=Mon..7=Sun.
         let days: [Int]? = freq == .weekly && selectedDays.count < 7 && !selectedDays.isEmpty
@@ -409,6 +477,8 @@ struct NewHabitView: View {
                 type: type,
                 frequency: freq,
                 goalTarget: goal,
+                completionMode: completionMode,
+                completionUnit: unit,
                 reminderTime: reminderOn ? reminderTime : nil,
                 condition: condition.isEmpty ? nil : condition,
                 scheduleDays: days

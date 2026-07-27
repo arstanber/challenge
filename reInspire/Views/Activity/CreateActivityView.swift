@@ -43,10 +43,27 @@ struct CreateActivityView: View {
                     }
                 }
 
-                if vm.showGoalTarget {
-                    Section("Goal target") {
-                        TextField("Target value (e.g. 100 for 100 km)", text: $vm.goalTarget)
+                if presetChildName == nil && !vm.type.hasAIVerification {
+                    Section {
+                        Picker("Как отмечать", selection: $vm.completionMode) {
+                            ForEach(ActivityCompletionMode.allCases) { mode in
+                                Label(mode.displayName, systemImage: mode.icon).tag(mode)
+                            }
+                        }
+                        if vm.completionMode.needsTarget {
+                            TextField(
+                                vm.completionMode == .timer ? "Минут в день" : "Целевое значение",
+                                text: $vm.goalTarget
+                            )
                             .keyboardType(.decimalPad)
+                            if vm.completionMode == .counter {
+                                TextField("Единица: страницы, км, раз", text: $vm.completionUnit)
+                            }
+                        }
+                    } header: {
+                        Text("Выполнение")
+                    } footer: {
+                        Text(completionModeDescription)
                     }
                 }
 
@@ -99,6 +116,7 @@ struct CreateActivityView: View {
                 }
             }
             .hapticFeedback(.selection, trigger: vm.type)
+            .hapticFeedback(.selection, trigger: vm.completionMode)
             .hapticFeedback(.selection, trigger: vm.frequency)
             .hapticFeedback(.selection, trigger: vm.hasDeadline)
             .hapticFeedback(.selection, trigger: vm.reminderEnabled)
@@ -126,6 +144,15 @@ struct CreateActivityView: View {
                     }
                 }
             }
+        }
+    }
+
+    private var completionModeDescription: String {
+        switch vm.completionMode {
+        case .check: return String(localized: "Обычная отметка одним нажатием.")
+        case .counter: return String(localized: "Записывайте числовой прогресс.")
+        case .timer: return String(localized: "Засчитывайте время из встроенного таймера.")
+        case .abstinence: return String(localized: "Подтверждайте каждый день без нежелательного действия.")
         }
     }
 }

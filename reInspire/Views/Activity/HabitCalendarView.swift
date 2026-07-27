@@ -12,6 +12,9 @@ struct HabitCalendarView: View {
     @State private var showCamera = false
     @State private var liveToday: Double?
     @State private var shareRequest: ShareRequest?
+    @State private var counterValue = ""
+    @State private var timerStartedAt: Date?
+    @State private var timerAccumulated: TimeInterval = 0
 
     // Honors the "Начало недели" setting (Mon/Sun-first grid).
     private let cal = AppPrefs.calendar
@@ -290,7 +293,14 @@ struct HabitCalendarView: View {
 
             if isGoal {
                 goalTodayStat
-            } else {
+            }
+
+            switch vm.activity.effectiveCompletionMode {
+            case .counter:
+                counterControl
+            case .timer:
+                timerControl
+            case .check, .abstinence:
                 markDoneControl
             }
         }
@@ -312,9 +322,12 @@ struct HabitCalendarView: View {
         // Distance goals are stored in km; convert for display when imperial.
         let target = isDistance ? AppPrefs.displayDistance(vm.activity.goalTarget ?? 0)
                                 : (vm.activity.goalTarget ?? 0)
-        let rawCurrent = liveToday ?? vm.activity.goalProgress
+        let storedProgress = vm.activity.frequency == .once ? vm.activity.goalProgress : vm.todayProgress
+        let rawCurrent = liveToday ?? storedProgress
         let current = isDistance ? AppPrefs.displayDistance(rawCurrent) : rawCurrent
-        let unitSuffix = isDistance ? " \(AppPrefs.distanceUnit)" : ""
+        let unitSuffix = isDistance
+            ? " \(AppPrefs.distanceUnit)"
+            : (vm.activity.effectiveCompletionUnit.isEmpty ? "" : " \(vm.activity.effectiveCompletionUnit)")
         let fraction = target > 0 ? min(current / target, 1.0) : 0
         return HStack(spacing: 16) {
             ZStack {
@@ -348,6 +361,130 @@ struct HabitCalendarView: View {
             // Connector hit the target -> complete the goal automatically.
             await vm.autoCompleteIfGoalMet(connectorValue: v)
         }
+    }
+
+    private var counterControl: some View {
+        HStack(spacing: 10) {
+            TextField("0", text: $counterValue)
+                .keyboardType(.decimalPad)
+                .font(.manrope(.bold, size: 18))
+                .multilineTextAlignment(.center)
+                .frame(width: 92, height: 48)
+                .background(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(Color.primary.opacity(0.08))
+                )
+
+            Text(vm.activity.effectiveCompletionUnit)
+                .font(.manrope(.semiBold, size: 15))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+
+            Spacer(minLength: 4)
+
+            Button {
+                let normalized = counterValue.replacingOccurrences(of: ",", with: ".")
+                guard let value = Double(normalized), value > 0 else { return }
+                Haptics.tap()
+                Task {
+                    await vm.submitGoalProgress(value: value, image: nil)
+                    if vm.errorMessage == nil {
+                        counterValue = ""
+                        Haptics.success()
+                    }
+                }
+            } label: {
+                if vm.isSubmittingReport {
+                    ProgressView().tint(.white)
+                        .frame(width: 92, height: 48)
+                } else {
+                    Label("Добавить", systemImage: "plus")
+                        .font(.manrope(.bold, size: 14))
+                        .frame(width: 112, height: 48)
+                }
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(accent)
+            .disabled(counterAmount == nil || vm.isSubmittingReport)
+        }
+        .padding(.horizontal, 28)
+    }
+
+    private var counterAmount: Double? {
+        let normalized = counterValue.replacingOccurrences(of: ",", with: ".")
+        guard let value = Double(normalized), value > 0 else { return nil }
+        return value
+    }
+
+    private var timerControl: some View {
+        VStack(spacing: 12) {
+            TimelineView(.periodic(from: .now, by: 1)) { context in
+                Text(timerText(at: context.date))
+                    .font(.system(size: 38, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(.primary)
+            }
+
+            HStack(spacing: 12) {
+                if timerStartedAt == nil && timerAccumulated > 0 {
+                    Button("Сбросить") {
+                        Haptics.tap()
+                        timerAccumulated = 0
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(.secondary)
+                }
+
+                Button {
+                    Haptics.tap()
+                    if let started = timerStartedAt {
+                        timerAccumulated += Date().timeIntervalSince(started)
+                        timerStartedAt = nil
+                    } else {
+                        timerStartedAt = Date()
+                    }
+                } label: {
+                    Label(
+                        timerStartedAt == nil ? "Старт" : "Пауза",
+                        systemImage: timerStartedAt == nil ? "play.fill" : "pause.fill"
+                    )
+                    .font(.manrope(.bold, size: 15))
+                    .frame(minWidth: 92)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(timerStartedAt == nil ? accent : .orange)
+
+                if timerAccumulated > 0 && timerStartedAt == nil {
+                    Button {
+                        let minutes = timerAccumulated / 60
+                        guard minutes > 0 else { return }
+                        Haptics.tap()
+                        Task {
+                            await vm.submitGoalProgress(value: minutes, image: nil)
+                            if vm.errorMessage == nil {
+                                timerAccumulated = 0
+                                Haptics.success()
+                            }
+                        }
+                    } label: {
+                        if vm.isSubmittingReport {
+                            ProgressView()
+                        } else {
+                            Label("Зачесть", systemImage: "checkmark")
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(accent)
+                    .disabled(vm.isSubmittingReport)
+                }
+            }
+        }
+    }
+
+    private func timerText(at date: Date) -> String {
+        let running = timerStartedAt.map { max(0, date.timeIntervalSince($0)) } ?? 0
+        let total = Int(timerAccumulated + running)
+        return String(format: "%02d:%02d", total / 60, total % 60)
     }
 
     /// Photo is required only for photo-verified task types (challenge /
@@ -384,7 +521,8 @@ struct HabitCalendarView: View {
     }
 
     private var markDoneControl: some View {
-        VStack(spacing: 10) {
+        let isAbstinence = vm.activity.effectiveCompletionMode == .abstinence
+        return VStack(spacing: 10) {
             Button {
                 Haptics.tap()
                 if !vm.isDoneToday && needsPhoto {
@@ -410,15 +548,22 @@ struct HabitCalendarView: View {
                                 style: StrokeStyle(lineWidth: 2, dash: vm.isDoneToday ? [] : [6])
                             )
                         )
-                    Image(systemName: "checkmark")
+                    Image(systemName: isAbstinence ? "hand.raised.fill" : "checkmark")
                         .font(.system(size: 28, weight: .bold))
                         .foregroundColor(vm.isDoneToday ? .white : .primary.opacity(0.3))
                 }
             }
-            Text(vm.isDoneToday ? String(localized: "Нажми, чтобы отменить") : String(localized: "Отметить выполненным"))
+            Text(markDoneLabel(isAbstinence: isAbstinence))
                 .font(.manrope(.medium, size: 12))
                 .foregroundColor(.primary.opacity(0.4))
         }
+    }
+
+    private func markDoneLabel(isAbstinence: Bool) -> String {
+        if vm.isDoneToday { return String(localized: "Нажми, чтобы отменить") }
+        return isAbstinence
+            ? String(localized: "Сегодня удержался")
+            : String(localized: "Отметить выполненным")
     }
 }
 

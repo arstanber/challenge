@@ -188,13 +188,15 @@ struct ActivityDetailView: View {
 
     private var statsSection: some View {
         VStack(spacing: 12) {
-            if vm.activity.type == .goal, let target = vm.activity.goalTarget {
+            if vm.activity.effectiveCompletionMode.needsTarget, let target = vm.activity.goalTarget {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Text("Progress")
                             .font(.subheadline.bold())
                         Spacer()
-                        Text(String(format: "%.0f / %.0f", vm.activity.goalProgress, target))
+                        let unit = vm.activity.effectiveCompletionUnit
+                        let suffix = unit.isEmpty ? "" : " \(unit)"
+                        Text(String(format: "%.0f / %.0f", vm.activity.goalProgress, target) + suffix)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }

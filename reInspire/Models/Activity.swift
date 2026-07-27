@@ -77,6 +77,45 @@ enum ActivityFrequency: String, Codable, CaseIterable, Identifiable {
     }
 }
 
+enum ActivityCompletionMode: String, Codable, CaseIterable, Identifiable {
+    case check
+    case counter
+    case timer
+    case abstinence
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .check: return String(localized: "Отметка")
+        case .counter: return String(localized: "Счётчик")
+        case .timer: return String(localized: "Таймер")
+        case .abstinence: return String(localized: "Не делать")
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .check: return "checkmark.circle.fill"
+        case .counter: return "number.circle.fill"
+        case .timer: return "timer"
+        case .abstinence: return "hand.raised.fill"
+        }
+    }
+
+    var needsTarget: Bool {
+        self == .counter || self == .timer
+    }
+
+    var defaultUnit: String {
+        switch self {
+        case .counter: return String(localized: "раз")
+        case .timer: return String(localized: "мин")
+        case .check, .abstinence: return ""
+        }
+    }
+}
+
 struct Activity: Codable, Identifiable {
     let id: UUID
     var userId: UUID
@@ -93,6 +132,11 @@ struct Activity: Codable, Identifiable {
     var streakBest: Int
     var goalProgress: Double
     var goalTarget: Double?
+    /// How the user records completion. Optional so cached rows created before
+    /// the column existed continue to decode; `effectiveCompletionMode`
+    /// provides the backwards-compatible value.
+    var completionMode: ActivityCompletionMode? = nil
+    var completionUnit: String? = nil
     var createdAt: Date
     var planId: UUID?
     var planTitle: String?
@@ -123,6 +167,8 @@ struct Activity: Codable, Identifiable {
         case streakBest = "streak_best"
         case goalProgress = "goal_progress"
         case goalTarget = "goal_target"
+        case completionMode = "completion_mode"
+        case completionUnit = "completion_unit"
         case createdAt = "created_at"
         case planId = "plan_id"
         case planTitle = "plan_title"
@@ -139,6 +185,25 @@ struct Activity: Codable, Identifiable {
     var progressFraction: Double {
         guard let target = goalTarget, target > 0 else { return 0 }
         return max(0, min(goalProgress / target, 1.0))
+    }
+
+    var effectiveCompletionMode: ActivityCompletionMode {
+        completionMode ?? (goalTarget.map { $0 > 0 } == true ? .counter : .check)
+    }
+
+    var effectiveCompletionUnit: String {
+        let unit = completionUnit?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !unit.isEmpty { return unit }
+        if connector != nil || connectorMetric != nil {
+            switch connectorMetric ?? ConnectorMetric.infer(from: self) {
+            case .steps: return String(localized: "шагов")
+            case .activeEnergy: return String(localized: "ккал")
+            case .exerciseMinutes: return String(localized: "мин")
+            case .distance: return String(localized: "км")
+            case .itemsToday: return String(localized: "раз")
+            }
+        }
+        return effectiveCompletionMode.defaultUnit
     }
 
     var isFromParent: Bool { assignedBy != nil }
@@ -177,6 +242,8 @@ struct CreateActivityRequest: Codable {
     var deadline: Date?
     var reminderTime: Date?
     var goalTarget: Double?
+    var completionMode: ActivityCompletionMode? = nil
+    var completionUnit: String? = nil
     var planId: UUID?
     var planTitle: String?
     var workspaceId: UUID?
@@ -194,6 +261,8 @@ struct CreateActivityRequest: Codable {
         case title, description, type, condition, frequency, deadline
         case reminderTime = "reminder_time"
         case goalTarget = "goal_target"
+        case completionMode = "completion_mode"
+        case completionUnit = "completion_unit"
         case planId = "plan_id"
         case planTitle = "plan_title"
         case workspaceId = "workspace_id"
@@ -227,6 +296,8 @@ extension Activity {
             streakBest: 0,
             goalProgress: 0,
             goalTarget: req.goalTarget,
+            completionMode: req.completionMode,
+            completionUnit: req.completionUnit,
             createdAt: createdAt,
             planId: req.planId,
             planTitle: req.planTitle,

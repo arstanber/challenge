@@ -113,6 +113,7 @@ final class GoalPlannerViewModel {
             deadline: parentDeadline,
             reminderTime: nil,
             goalTarget: nil,
+            completionMode: .check,
             planId: sharedPlanId,
             planTitle: sharedPlanTitle,
             parentId: nil
@@ -151,6 +152,7 @@ final class GoalPlannerViewModel {
                 deadline: stepDeadline,
                 reminderTime: nil,
                 goalTarget: activity.goalTarget,
+                completionMode: activity.goalTarget == nil ? .check : .counter,
                 planId: sharedPlanId,
                 planTitle: sharedPlanTitle,
                 parentId: parent.id

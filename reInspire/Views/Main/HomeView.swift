@@ -873,11 +873,14 @@ private struct TaskCardView: View {
     @State private var wiggle = false
 
     private var accent: Color { typeAccent(task.type) }
-    private var isGoal: Bool { task.goalTarget != nil && task.goalTarget! > 0 }
+    private var isGoal: Bool { task.effectiveCompletionMode.needsTarget }
+    private var completionIcon: String { task.effectiveCompletionMode.icon }
 
     private var subtitle: String? {
         if let target = task.goalTarget, target > 0 {
-            return "\(grouped(task.goalProgress)) / \(grouped(target))"
+            let unit = task.effectiveCompletionUnit
+            let suffix = unit.isEmpty ? "" : " \(unit)"
+            return "\(grouped(task.goalProgress)) / \(grouped(target))\(suffix)"
         }
         if task.type.hasStreak && task.streakCurrent > 0 {
             return "🔥 \(task.streakCurrent)"
@@ -893,7 +896,7 @@ private struct TaskCardView: View {
     var body: some View {
         VStack(spacing: 14) {
             HStack(spacing: 14) {
-                Image(systemName: task.type.icon)
+                Image(systemName: completionIcon)
                     .font(.system(size: 22, weight: .semibold))
                     .foregroundStyle(accent)
                     .frame(width: 30)
@@ -922,7 +925,7 @@ private struct TaskCardView: View {
                 } else {
                     TaskRing(
                         accent: accent,
-                        icon: task.type.icon,
+                        icon: completionIcon,
                         isGoal: isGoal,
                         progress: task.progressFraction,
                         isChecked: isCompleting,
@@ -1004,7 +1007,7 @@ private struct DoneTaskCard: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            Image(systemName: task.type.icon)
+            Image(systemName: task.effectiveCompletionMode.icon)
                 .font(.system(size: 22, weight: .semibold))
                 .foregroundStyle(.secondary.opacity(0.6))
                 .frame(width: 30)

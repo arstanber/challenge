@@ -138,12 +138,14 @@ struct SubmitReportView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Отметить прогресс").font(.headline)
                 if let target = activity.goalTarget {
-                    Text(String(format: String(localized: "Сейчас: %.0f / %.0f"), activity.goalProgress, target))
+                    let unit = activity.effectiveCompletionUnit
+                    let suffix = unit.isEmpty ? "" : " \(unit)"
+                    Text(String(format: String(localized: "Сейчас: %.0f / %.0f"), activity.goalProgress, target) + suffix)
                         .font(.subheadline).foregroundStyle(.secondary)
                     ProgressView(value: activity.progressFraction).tint(Color(hex: "0048E2"))
                 }
             }
-            TextField("Значение прогресса (например, 5 для 5 км)", text: $progressValue)
+            TextField(progressPrompt, text: $progressValue)
                 .keyboardType(.decimalPad)
                 .padding(14)
                 .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 12))
@@ -154,13 +156,30 @@ struct SubmitReportView: View {
 
     private var taskSection: some View {
         VStack(spacing: 12) {
-            Image(systemName: "checkmark.circle.fill")
+            Image(systemName: activity.effectiveCompletionMode.icon)
                 .font(.system(size: 60)).foregroundStyle(.green)
-            Text("Нажмите ниже, чтобы отметить \(activity.type == .habit ? "привычку" : "задачу") выполненной")
+            Text(taskInstruction)
                 .font(.subheadline).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
         .padding(.vertical, 20)
+    }
+
+    private var progressPrompt: String {
+        if activity.effectiveCompletionMode == .timer {
+            return String(localized: "Сколько минут засчитать")
+        }
+        let unit = activity.effectiveCompletionUnit
+        return unit.isEmpty
+            ? String(localized: "Значение прогресса")
+            : String(localized: "Сколько добавить: \(unit)")
+    }
+
+    private var taskInstruction: String {
+        if activity.effectiveCompletionMode == .abstinence {
+            return String(localized: "Подтвердите, что сегодня удержались")
+        }
+        return String(localized: "Нажмите ниже, чтобы отметить выполнение")
     }
 
     // MARK: - Buttons

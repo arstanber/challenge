@@ -609,6 +609,8 @@ final class ActivitiesViewModel {
             deadline: activity.deadline,
             reminderTime: activity.reminderTime,
             goalTarget: activity.goalTarget,
+            completionMode: activity.completionMode,
+            completionUnit: activity.completionUnit,
             workspaceId: activity.workspaceId,
             parentId: activity.parentId
         )
@@ -627,6 +629,8 @@ final class ActivitiesViewModel {
         type: ActivityType,
         frequency: ActivityFrequency,
         goalTarget: Double? = nil,
+        completionMode: ActivityCompletionMode = .check,
+        completionUnit: String? = nil,
         reminderTime: Date? = nil,
         condition: String? = nil,
         scheduleDays: [Int]? = nil
@@ -643,6 +647,8 @@ final class ActivitiesViewModel {
             deadline: nil,
             reminderTime: reminderTime,
             goalTarget: goalTarget,
+            completionMode: completionMode,
+            completionUnit: completionUnit,
             workspaceId: nil,
             parentId: nil,
             scheduleDays: scheduleDays

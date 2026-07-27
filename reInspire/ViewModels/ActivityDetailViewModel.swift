@@ -274,7 +274,9 @@ final class ActivityDetailViewModel {
                 .execute()
             activity.goalProgress = newProgress
 
-            if let target = activity.goalTarget, newProgress >= target {
+            if activity.frequency == .once,
+               let target = activity.goalTarget,
+               newProgress >= target {
                 await markCompleted()
             }
             onReportSubmitted?()
@@ -319,6 +321,16 @@ final class ActivityDetailViewModel {
     }
 
     var totalDaysDone: Int { completedDays.count }
+
+    var todayProgress: Double {
+        reports
+            .filter {
+                cal.isDate($0.createdAt, inSameDayAs: Date())
+                    && $0.aiResult != .rejected
+            }
+            .compactMap(\.progressValue)
+            .reduce(0, +)
+    }
 
     /// Current streak: server-maintained column (kept fresh by the reports
     /// trigger + refresh_my_streaks), local recomputation as offline seed.
