@@ -92,6 +92,7 @@ private struct StrictBlock: Identifiable {
 struct HomeView: View {
     @State private var vm = ActivitiesViewModel()
     @State private var timerService = ActivityTimerService.shared
+    @State private var routineService = RoutineService.shared
     @AppStorage("requirePhotoVerification") private var requirePhoto = true
     // ON: done tasks collect struck-through at the bottom. OFF: they stay
     // in place in the list order.
@@ -110,6 +111,8 @@ struct HomeView: View {
     // Navigation
     @State private var showSettings = false
     @State private var showStreakDetail = false
+    @State private var showRoutines = false
+    @State private var playingRoutine: Routine?
     // Inline drag-to-reorder happens right on the home list (no separate page).
     @State private var reorderMode = false
     @State private var draggingTask: Activity?
@@ -361,6 +364,18 @@ struct HomeView: View {
                         .appearEffect(delay: 0.05)
                     }
 
+                    RoutineHomeSection(
+                        routines: routineService.routines,
+                        activities: vm.myActivities + vm.parentActivities,
+                        isHandled: vm.isHandledToday,
+                        onStart: { playingRoutine = $0 },
+                        onManage: {
+                            Haptics.tap()
+                            showRoutines = true
+                        }
+                    )
+                    .appearEffect(delay: 0.08)
+
                     if vm.isLoading && activeTasks.isEmpty && doneTodayTasks.isEmpty {
                         SkeletonTaskList(rows: 4)
                             .padding(.top, 8)
@@ -453,6 +468,7 @@ struct HomeView: View {
         .task {
             vm.startSyncObserver()
             await vm.loadActivities()
+            await routineService.load()
             timerService.restoreLiveActivity()
             NotificationService.shared.clearLegacyMotivationPlan()
             await syncAllNotifications()
@@ -489,6 +505,11 @@ struct HomeView: View {
         }
         .fullScreenCover(item: $detailActivity) { activity in
             HabitCalendarView(activity: activity) {
+                Task { await vm.loadActivities() }
+            }
+        }
+        .fullScreenCover(item: $playingRoutine) { routine in
+            RoutinePlayerView(routine: routine) {
                 Task { await vm.loadActivities() }
             }
         }
@@ -529,6 +550,15 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showBySaying, onDismiss: reload) { BySayingView() }
         .sheet(isPresented: $showSettings) { SettingsView() }
+        .sheet(isPresented: $showRoutines) {
+            RoutinesView(
+                activities: vm.myActivities + vm.parentActivities,
+                isHandled: vm.isHandledToday
+            ) { routine in
+                showRoutines = false
+                after { playingRoutine = routine }
+            }
+        }
         .sheet(isPresented: $showStreakDetail) {
             StreakDetailView(vm: vm)
                 .presentationDetents([.medium, .large])
