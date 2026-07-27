@@ -67,7 +67,17 @@ struct AICoachSheet: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 20) {
                     // Greeting card
-                    CoachCard(emoji: "💬", title: "Today's vibe") {
+                    CoachCard(
+                        emoji: "💬",
+                        title: AppLanguage.t(
+                            en: "Today's vibe",
+                            ru: "Настрой на сегодня",
+                            de: "Deine Stimmung heute",
+                            kk: "Бүгінгі көңіл күй",
+                            fr: "L'ambiance du jour",
+                            ar: "أجواء اليوم"
+                        )
+                    ) {
                         Text(brief.greeting)
                             .font(.manrope(.medium, size: 15))
                             .foregroundStyle(.primary)
@@ -76,7 +86,17 @@ struct AICoachSheet: View {
 
                     // Top tasks
                     if !brief.topTasks.isEmpty {
-                        CoachCard(emoji: "🎯", title: "Focus on these") {
+                        CoachCard(
+                            emoji: "🎯",
+                            title: AppLanguage.t(
+                                en: "Focus on these",
+                                ru: "Главное на сегодня",
+                                de: "Darauf konzentrieren",
+                                kk: "Осыларға назар аудар",
+                                fr: "À faire en priorité",
+                                ar: "ركّز على هذه"
+                            )
+                        ) {
                             VStack(alignment: .leading, spacing: 10) {
                                 ForEach(brief.topTasks, id: \.self) { task in
                                     HStack(spacing: 10) {
@@ -93,7 +113,17 @@ struct AICoachSheet: View {
                     }
 
                     // Motivation
-                    CoachCard(emoji: "⚡️", title: "Tip of the day") {
+                    CoachCard(
+                        emoji: "⚡️",
+                        title: AppLanguage.t(
+                            en: "Tip of the day",
+                            ru: "Совет дня",
+                            de: "Tipp des Tages",
+                            kk: "Күннің кеңесі",
+                            fr: "Conseil du jour",
+                            ar: "نصيحة اليوم"
+                        )
+                    ) {
                         Text(brief.motivationTip)
                             .font(.manrope(.medium, size: 15))
                             .foregroundStyle(.primary)

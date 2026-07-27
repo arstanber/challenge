@@ -1,5 +1,8 @@
 import Foundation
 import Supabase
+import os.log
+
+private let logger = Logger(subsystem: "com.reinspire", category: "AICoachService")
 
 // MARK: - AI Coach Service (#10 #11 #12)
 // All AI calls route through Supabase Edge Functions.
@@ -13,9 +16,10 @@ struct MorningBrief: Decodable, Identifiable {
     let topTasks: [String]      // up to 3 activity titles to focus on today
     let motivationTip: String   // one-liner tip
     let error: String?
+    let remaining: Int?
 
     private enum CodingKeys: String, CodingKey {
-        case greeting, topTasks, motivationTip, error
+        case greeting, topTasks, motivationTip, error, remaining
     }
 }
 
@@ -68,7 +72,12 @@ final class AICoachService {
                                language: AppLanguage.current)
         let response: MorningBrief = try await supabase.functions
             .invoke("morning-brief", options: FunctionInvokeOptions(body: req))
-        if let e = response.error { throw CoachError.server(e) }
+        if let error = response.error {
+            logger.error("morning brief returned fallback: \(error, privacy: .public)")
+        }
+        if let remaining = response.remaining {
+            await RateLimiterService.shared.syncRemaining(remaining, for: .morningBrief)
+        }
         return response
     }
 
