@@ -39,6 +39,11 @@ struct ReInspireActivityAttributes: ActivityAttributes {
         var goalReached: Bool
         var tasks: [LiveTask]
         var flashApproved: Bool
+        var timerTaskId: UUID?
+        var timerTitle: String?
+        var timerStartedAt: Date?
+        var timerAccumulatedSeconds: Double?
+        var timerTargetMinutes: Double?
     }
 }
 
@@ -162,6 +167,38 @@ private struct DICompactProgress: View {
     }
 }
 
+// MARK: - Persisted task timer
+
+private struct DITimerElapsed: View {
+    let state: ReInspireActivityAttributes.ContentState
+    var font: Font = .system(.caption, design: .rounded).weight(.bold)
+
+    private var accumulated: TimeInterval {
+        max(0, state.timerAccumulatedSeconds ?? 0)
+    }
+
+    private var displayStart: Date? {
+        state.timerStartedAt?.addingTimeInterval(-accumulated)
+    }
+
+    var body: some View {
+        if let displayStart {
+            Text(timerInterval: displayStart...Date.distantFuture, countsDown: false)
+                .font(font)
+                .monospacedDigit()
+        } else {
+            Text(Self.format(accumulated))
+                .font(font)
+                .monospacedDigit()
+        }
+    }
+
+    private static func format(_ seconds: TimeInterval) -> String {
+        let total = Int(seconds)
+        return String(format: "%02d:%02d", total / 60, total % 60)
+    }
+}
+
 // MARK: - Task row with checkbox (expanded list)
 
 private struct DITaskRow: View {
@@ -208,27 +245,58 @@ struct w1LiveActivity: Widget {
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    DIProgressRing(
-                        done: context.state.todayDone,
-                        goal: context.attributes.dailyGoal,
-                        reached: context.state.goalReached,
-                        size: 40, lineWidth: 4, fontSize: 17
-                    )
-                    .padding(.leading, 4)
+                    if context.state.timerTaskId != nil {
+                        Image(systemName: "timer")
+                            .font(.system(size: 28, weight: .semibold))
+                            .foregroundStyle(DI.accent)
+                            .frame(width: 40, height: 40)
+                            .padding(.leading, 4)
+                    } else {
+                        DIProgressRing(
+                            done: context.state.todayDone,
+                            goal: context.attributes.dailyGoal,
+                            reached: context.state.goalReached,
+                            size: 40, lineWidth: 4, fontSize: 17
+                        )
+                        .padding(.leading, 4)
+                    }
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    VStack(spacing: 0) {
-                        DIStreak(value: context.state.streakCurrent, iconSize: 15, fontSize: 17)
-                        Text("\(context.state.todayDone)/\(context.attributes.dailyGoal)")
-                            .font(.system(.caption, design: .rounded).weight(.semibold))
-                            .monospacedDigit()
-                            .foregroundStyle(.secondary)
+                    if context.state.timerTaskId != nil {
+                        DITimerElapsed(
+                            state: context.state,
+                            font: .system(.title3, design: .rounded).weight(.bold)
+                        )
+                        .foregroundStyle(DI.accent)
+                        .padding(.trailing, 6)
+                    } else {
+                        VStack(spacing: 0) {
+                            DIStreak(value: context.state.streakCurrent, iconSize: 15, fontSize: 17)
+                            Text("\(context.state.todayDone)/\(context.attributes.dailyGoal)")
+                                .font(.system(.caption, design: .rounded).weight(.semibold))
+                                .monospacedDigit()
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.trailing, 6)
                     }
-                    .padding(.trailing, 6)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     VStack(spacing: 6) {
-                        if context.state.goalReached {
+                        if context.state.timerTaskId != nil {
+                            HStack(spacing: 8) {
+                                Image(systemName: context.state.timerStartedAt == nil ? "play.fill" : "pause.fill")
+                                    .foregroundStyle(DI.accent)
+                                Text(context.state.timerTitle ?? "Таймер")
+                                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                                    .lineLimit(1)
+                                Spacer(minLength: 0)
+                                if let target = context.state.timerTargetMinutes {
+                                    Text("цель \(Int(target)) мин")
+                                        .font(.system(.caption2, design: .rounded))
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                        } else if context.state.goalReached {
                             Label("Цель дня выполнена!", systemImage: "checkmark.seal.fill")
                                 .font(.system(.subheadline, design: .rounded).weight(.semibold))
                                 .foregroundStyle(DI.done)
@@ -258,13 +326,32 @@ struct w1LiveActivity: Widget {
                     }
                 }
             } compactLeading: {
-                DIStreak(value: context.state.streakCurrent, iconSize: 12, fontSize: 13)
+                if context.state.timerTaskId != nil {
+                    Image(systemName: "timer")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(DI.accent)
+                } else {
+                    DIStreak(value: context.state.streakCurrent, iconSize: 12, fontSize: 13)
+                }
             } compactTrailing: {
-                DICompactProgress(state: context.state, goal: context.attributes.dailyGoal)
+                if context.state.timerTaskId != nil {
+                    DITimerElapsed(state: context.state)
+                        .foregroundStyle(DI.accent)
+                } else {
+                    DICompactProgress(state: context.state, goal: context.attributes.dailyGoal)
+                }
             } minimal: {
-                DICompactProgress(state: context.state, goal: context.attributes.dailyGoal, showLabel: false)
+                if context.state.timerTaskId != nil {
+                    Image(systemName: "timer")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(DI.accent)
+                } else {
+                    DICompactProgress(state: context.state, goal: context.attributes.dailyGoal, showLabel: false)
+                }
             }
-            .widgetURL(URL(string: "reinspire://open"))
+            .widgetURL(context.state.timerTaskId.flatMap {
+                URL(string: "reinspire://task/\($0.uuidString)")
+            } ?? URL(string: "reinspire://open"))
             .keylineTint(DI.accent)
         }
     }
@@ -278,15 +365,36 @@ private struct LockScreenBanner: View {
 
     var body: some View {
         HStack(spacing: 16) {
-            DIProgressRing(
-                done: state.todayDone,
-                goal: attrs.dailyGoal,
-                reached: state.goalReached,
-                size: 44, lineWidth: 5, fontSize: 15
-            )
+            if state.timerTaskId != nil {
+                Image(systemName: "timer")
+                    .font(.system(size: 25, weight: .semibold))
+                    .foregroundStyle(DI.accent)
+                    .frame(width: 44, height: 44)
+                    .background(DI.accent.opacity(0.12), in: Circle())
+            } else {
+                DIProgressRing(
+                    done: state.todayDone,
+                    goal: attrs.dailyGoal,
+                    reached: state.goalReached,
+                    size: 44, lineWidth: 5, fontSize: 15
+                )
+            }
 
             VStack(alignment: .leading, spacing: 3) {
-                if state.goalReached {
+                if state.timerTaskId != nil {
+                    Text(state.timerTitle ?? "Таймер")
+                        .font(.system(.subheadline, design: .rounded).weight(.bold))
+                        .lineLimit(1)
+                    HStack(spacing: 8) {
+                        DITimerElapsed(state: state)
+                            .foregroundStyle(DI.accent)
+                        if state.timerStartedAt == nil {
+                            Text("на паузе")
+                                .font(.system(.caption, design: .rounded))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                } else if state.goalReached {
                     Text("Цель дня выполнена!")
                         .font(.system(.subheadline, design: .rounded).weight(.bold))
                         .foregroundStyle(.green)
@@ -297,9 +405,11 @@ private struct LockScreenBanner: View {
                         .font(.system(.subheadline, design: .rounded).weight(.semibold))
                         .lineLimit(1)
                 }
-                Text("\(state.todayDone) из \(attrs.dailyGoal) выполнено · стрик \(state.streakCurrent) 🔥")
-                    .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(.secondary)
+                if state.timerTaskId == nil {
+                    Text("\(state.todayDone) из \(attrs.dailyGoal) выполнено · стрик \(state.streakCurrent) 🔥")
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(.secondary)
+                }
             }
             Spacer(minLength: 0)
         }

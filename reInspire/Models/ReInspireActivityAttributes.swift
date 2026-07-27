@@ -34,15 +34,30 @@ public struct ReInspireActivityAttributes: ActivityAttributes {
         /// Transient: drives the green checkmark pop in compact/minimal right
         /// after a verification is approved.
         public var flashApproved: Bool
+        /// Optional persisted task timer. Optional fields keep remote pushes
+        /// from older server code backwards-compatible with the new widget.
+        public var timerTaskId: UUID?
+        public var timerTitle: String?
+        public var timerStartedAt: Date?
+        public var timerAccumulatedSeconds: Double?
+        public var timerTargetMinutes: Double?
 
         public init(todayDone: Int, streakCurrent: Int, nextTaskTitle: String,
-                    goalReached: Bool, tasks: [LiveTask] = [], flashApproved: Bool = false) {
+                    goalReached: Bool, tasks: [LiveTask] = [], flashApproved: Bool = false,
+                    timerTaskId: UUID? = nil, timerTitle: String? = nil,
+                    timerStartedAt: Date? = nil, timerAccumulatedSeconds: Double? = nil,
+                    timerTargetMinutes: Double? = nil) {
             self.todayDone = todayDone
             self.streakCurrent = streakCurrent
             self.nextTaskTitle = nextTaskTitle
             self.goalReached = goalReached
             self.tasks = tasks
             self.flashApproved = flashApproved
+            self.timerTaskId = timerTaskId
+            self.timerTitle = timerTitle
+            self.timerStartedAt = timerStartedAt
+            self.timerAccumulatedSeconds = timerAccumulatedSeconds
+            self.timerTargetMinutes = timerTargetMinutes
         }
     }
 }

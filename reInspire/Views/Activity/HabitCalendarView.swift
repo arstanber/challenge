@@ -13,8 +13,7 @@ struct HabitCalendarView: View {
     @State private var liveToday: Double?
     @State private var shareRequest: ShareRequest?
     @State private var counterValue = ""
-    @State private var timerStartedAt: Date?
-    @State private var timerAccumulated: TimeInterval = 0
+    @State private var timerService = ActivityTimerService.shared
 
     // Honors the "Начало недели" setting (Mon/Sun-first grid).
     private let cal = AppPrefs.calendar
@@ -66,6 +65,7 @@ struct HabitCalendarView: View {
         }
         .task {
             await vm.loadReports()
+            timerService.restoreLiveActivity()
             await refreshLiveValue()
         }
         .onChange(of: ConnectorService.shared.connected) { _, _ in
@@ -426,10 +426,10 @@ struct HabitCalendarView: View {
             }
 
             HStack(spacing: 12) {
-                if timerStartedAt == nil && timerAccumulated > 0 {
+                if timerIsActive && !timerIsRunning && timerElapsed > 0 {
                     Button("Сбросить") {
                         Haptics.tap()
-                        timerAccumulated = 0
+                        timerService.reset(vm.activity.id)
                     }
                     .buttonStyle(.bordered)
                     .tint(.secondary)
@@ -437,37 +437,36 @@ struct HabitCalendarView: View {
 
                 Button {
                     Haptics.tap()
-                    if let started = timerStartedAt {
-                        timerAccumulated += Date().timeIntervalSince(started)
-                        timerStartedAt = nil
-                    } else {
-                        timerStartedAt = Date()
+                    if !timerService.toggle(vm.activity) {
+                        Haptics.warning()
                     }
                 } label: {
                     Label(
-                        timerStartedAt == nil ? "Старт" : "Пауза",
-                        systemImage: timerStartedAt == nil ? "play.fill" : "pause.fill"
+                        timerButtonTitle,
+                        systemImage: timerIsRunning ? "pause.fill" : "play.fill"
                     )
                     .font(.manrope(.bold, size: 15))
                     .frame(minWidth: 92)
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(timerStartedAt == nil ? accent : .orange)
+                .tint(timerIsRunning ? .orange : accent)
+                .disabled(anotherTimerIsActive || timerService.isSubmitting(vm.activity.id))
 
-                if timerAccumulated > 0 && timerStartedAt == nil {
+                if timerIsActive && !timerIsRunning && timerElapsed > 0 {
                     Button {
-                        let minutes = timerAccumulated / 60
-                        guard minutes > 0 else { return }
+                        guard let minutes = timerService.minutesForSubmission(vm.activity.id) else { return }
                         Haptics.tap()
                         Task {
                             await vm.submitGoalProgress(value: minutes, image: nil)
                             if vm.errorMessage == nil {
-                                timerAccumulated = 0
+                                timerService.completeSubmission(vm.activity.id)
                                 Haptics.success()
+                            } else {
+                                timerService.cancelSubmission(vm.activity.id)
                             }
                         }
                     } label: {
-                        if vm.isSubmittingReport {
+                        if vm.isSubmittingReport || timerService.isSubmitting(vm.activity.id) {
                             ProgressView()
                         } else {
                             Label("Зачесть", systemImage: "checkmark")
@@ -475,15 +474,42 @@ struct HabitCalendarView: View {
                     }
                     .buttonStyle(.bordered)
                     .tint(accent)
-                    .disabled(vm.isSubmittingReport)
+                    .disabled(vm.isSubmittingReport || timerService.isSubmitting(vm.activity.id))
                 }
+            }
+
+            if anotherTimerIsActive {
+                Text("Сначала завершите другой таймер")
+                    .font(.manrope(.semiBold, size: 12))
+                    .foregroundStyle(.secondary)
             }
         }
     }
 
+    private var timerIsActive: Bool {
+        timerService.isActive(vm.activity.id)
+    }
+
+    private var timerIsRunning: Bool {
+        timerService.isRunning(vm.activity.id)
+    }
+
+    private var anotherTimerIsActive: Bool {
+        timerService.activeActivityId.map { $0 != vm.activity.id } ?? false
+    }
+
+    private var timerElapsed: TimeInterval {
+        timerService.elapsedSeconds(for: vm.activity.id)
+    }
+
+    private var timerButtonTitle: LocalizedStringKey {
+        if timerIsRunning { return "Пауза" }
+        if timerIsActive { return "Продолжить" }
+        return "Старт"
+    }
+
     private func timerText(at date: Date) -> String {
-        let running = timerStartedAt.map { max(0, date.timeIntervalSince($0)) } ?? 0
-        let total = Int(timerAccumulated + running)
+        let total = Int(timerService.elapsedSeconds(for: vm.activity.id, at: date))
         return String(format: "%02d:%02d", total / 60, total % 60)
     }
 

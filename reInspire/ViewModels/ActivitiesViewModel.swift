@@ -224,6 +224,7 @@ final class ActivitiesViewModel {
                 .value
             myActivities = all.filter { $0.assignedBy == nil }
             parentActivities = all.filter { $0.assignedBy != nil }
+            await refreshMeasurableProgress()
             await engine.refresh(activityIds: all.map(\.id))
             await replayWidgetCheckins()
             await engine.refreshStreaks()
@@ -248,6 +249,7 @@ final class ActivitiesViewModel {
             guard let activity = (myActivities + parentActivities).first(where: { $0.id == id }),
                   activity.status == .active,
                   !activity.type.hasAIVerification,
+                  !activity.effectiveCompletionMode.needsTarget,
                   !engine.isDoneToday(id)
             else { continue }
             await engine.markDone(activity)
@@ -261,6 +263,25 @@ final class ActivitiesViewModel {
                 myActivities[idx].streakCurrent = s.current
                 myActivities[idx].streakBest = s.best
             }
+        }
+    }
+
+    private func refreshMeasurableProgress() async {
+        do {
+            let rows = try await ActivityProgressService.loadToday()
+            let progress = Dictionary(uniqueKeysWithValues: rows.map { ($0.activityId, $0.dailyProgress) })
+            for idx in myActivities.indices
+            where myActivities[idx].frequency != .once
+                && myActivities[idx].effectiveCompletionMode.needsTarget {
+                myActivities[idx].goalProgress = progress[myActivities[idx].id] ?? 0
+            }
+            for idx in parentActivities.indices
+            where parentActivities[idx].frequency != .once
+                && parentActivities[idx].effectiveCompletionMode.needsTarget {
+                parentActivities[idx].goalProgress = progress[parentActivities[idx].id] ?? 0
+            }
+        } catch {
+            logger.error("daily measurable progress refresh failed: \(error)")
         }
     }
 
@@ -280,6 +301,7 @@ final class ActivitiesViewModel {
                 .value
             myActivities = all.filter { $0.assignedBy == nil }
             parentActivities = all.filter { $0.assignedBy != nil }
+            await refreshMeasurableProgress()
             await engine.refresh(activityIds: all.map(\.id))
         } catch {
             errorMessage = error.localizedDescription
@@ -296,9 +318,60 @@ final class ActivitiesViewModel {
         publishWidgetSnapshot()
     }
 
+    @discardableResult
+    func recordProgress(_ activity: Activity, value: Double) async -> Bool {
+        guard value > 0 else { return false }
+        errorMessage = nil
+        do {
+            let update = try await ActivityProgressService.record(
+                activityId: activity.id,
+                value: value
+            )
+            patchProgress(
+                activityId: activity.id,
+                progress: update.displayProgress,
+                completed: activity.frequency == .once && update.targetReached
+            )
+            if update.reportCreated {
+                await engine.noteReportChanged(activityId: activity.id)
+                applyEngineStreaks()
+            }
+            publishWidgetSnapshot()
+            return true
+        } catch {
+            errorMessage = error.localizedDescription
+            return false
+        }
+    }
+
+    private func patchProgress(activityId: UUID, progress: Double, completed: Bool) {
+        if let idx = myActivities.firstIndex(where: { $0.id == activityId }) {
+            myActivities[idx].goalProgress = progress
+            myActivities[idx].status = completed ? .completed : .active
+        }
+        if let idx = parentActivities.firstIndex(where: { $0.id == activityId }) {
+            parentActivities[idx].goalProgress = progress
+            parentActivities[idx].status = completed ? .completed : .active
+        }
+    }
+
     /// Undo today's completion of a recurring task (tap a done card to uncheck).
     /// Deletes today's reports and clears the engine's done-state, then refreshes.
     func undoHabitToday(_ activity: Activity) async {
+        if activity.effectiveCompletionMode.needsTarget {
+            do {
+                try await ActivityProgressService.resetToday(activityId: activity.id)
+                patchProgress(activityId: activity.id, progress: 0, completed: false)
+            } catch {
+                errorMessage = error.localizedDescription
+                return
+            }
+            await engine.undoToday(activityId: activity.id)
+            applyEngineStreaks()
+            publishWidgetSnapshot()
+            return
+        }
+
         let start = calendar.startOfDay(for: Date())
         let iso = ISO8601DateFormatter()
         do {

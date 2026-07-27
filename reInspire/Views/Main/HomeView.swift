@@ -91,6 +91,7 @@ private struct StrictBlock: Identifiable {
 
 struct HomeView: View {
     @State private var vm = ActivitiesViewModel()
+    @State private var timerService = ActivityTimerService.shared
     @AppStorage("requirePhotoVerification") private var requirePhoto = true
     // ON: done tasks collect struck-through at the bottom. OFF: they stay
     // in place in the list order.
@@ -273,6 +274,23 @@ struct HomeView: View {
             onDelete: { act in deletingActivity = act },
             onTomorrow: { act in Task { await vm.moveToTomorrow(act); await vm.loadActivities() } },
             onAddSubtask: { addSubtaskParent = $0 },
+            onAddProgress: { activity, value in
+                Task {
+                    if await vm.recordProgress(activity, value: value) {
+                        Haptics.success()
+                    }
+                }
+            },
+            onSubmitTimer: { activity, minutes in
+                Task {
+                    if await vm.recordProgress(activity, value: minutes) {
+                        timerService.completeSubmission(activity.id)
+                        Haptics.success()
+                    } else {
+                        timerService.cancelSubmission(activity.id)
+                    }
+                }
+            },
             reordering: reorderMode,
             cancelledTaskId: cancelledTaskId
         )
@@ -435,6 +453,7 @@ struct HomeView: View {
         .task {
             vm.startSyncObserver()
             await vm.loadActivities()
+            timerService.restoreLiveActivity()
             NotificationService.shared.clearLegacyMotivationPlan()
             await syncAllNotifications()
             await loadMorningBriefIfNeeded()
@@ -865,12 +884,15 @@ private struct TaskCardView: View {
     let onDelete: (Activity) -> Void
     let onTomorrow: (Activity) -> Void
     var onAddSubtask: ((Activity) -> Void)? = nil
+    var onAddProgress: ((Activity, Double) -> Void)? = nil
+    var onSubmitTimer: ((Activity, Double) -> Void)? = nil
     var reordering: Bool = false
     var cancelledTaskId: UUID? = nil
 
     @State private var isCompleting = false
     @State private var isPressed = false
     @State private var wiggle = false
+    @State private var timerService = ActivityTimerService.shared
 
     private var accent: Color { typeAccent(task.type) }
     private var isGoal: Bool { task.effectiveCompletionMode.needsTarget }
@@ -934,6 +956,10 @@ private struct TaskCardView: View {
                 }
             }
 
+            if !reordering {
+                measurableQuickActions
+            }
+
             if !subtasks.isEmpty {
                 VStack(spacing: 12) {
                     ForEach(subtasks) { sub in
@@ -995,6 +1021,130 @@ private struct TaskCardView: View {
         Haptics.medium()
         withAnimation { isCompleting = true }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.55) { onToggle(task) }
+    }
+
+    @ViewBuilder
+    private var measurableQuickActions: some View {
+        switch task.effectiveCompletionMode {
+        case .counter:
+            HStack(spacing: 10) {
+                quickProgressButton(title: "+1", value: 1)
+                quickProgressButton(title: "+5", value: 5)
+                Spacer(minLength: 0)
+            }
+
+        case .timer:
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 10) {
+                    if timerIsActive {
+                        TimelineView(.periodic(from: .now, by: 1)) { context in
+                            Text(timerText(at: context.date))
+                                .font(.sfProDisplay(15, weight: .semibold))
+                                .monospacedDigit()
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    Button {
+                        Haptics.tap()
+                        if !timerService.toggle(task) {
+                            Haptics.warning()
+                        }
+                    } label: {
+                        Label(
+                            timerButtonTitle,
+                            systemImage: timerIsRunning ? "pause.fill" : "play.fill"
+                        )
+                        .font(.sfProDisplay(14, weight: .semibold))
+                        .padding(.horizontal, 14)
+                        .frame(height: 38)
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(timerIsRunning ? .orange : accent)
+                    .background(
+                        Capsule()
+                            .fill((timerIsRunning ? Color.orange : accent).opacity(0.12))
+                    )
+                    .disabled(anotherTimerIsActive || timerService.isSubmitting(task.id))
+
+                    if timerIsActive && !timerIsRunning && timerElapsed > 0 {
+                        Button {
+                            guard let minutes = timerService.minutesForSubmission(task.id) else { return }
+                            Haptics.tap()
+                            onSubmitTimer?(task, minutes)
+                        } label: {
+                            Group {
+                                if timerService.isSubmitting(task.id) {
+                                    ProgressView()
+                                } else {
+                                    Label("Зачесть", systemImage: "checkmark")
+                                }
+                            }
+                            .font(.sfProDisplay(14, weight: .semibold))
+                            .padding(.horizontal, 14)
+                            .frame(height: 38)
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(accent)
+                        .background(Capsule().fill(accent.opacity(0.12)))
+                        .disabled(timerService.isSubmitting(task.id))
+                    }
+
+                    Spacer(minLength: 0)
+                }
+
+                if anotherTimerIsActive {
+                    Text("Уже запущен другой таймер")
+                        .font(.sfProDisplay(12, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+        default:
+            EmptyView()
+        }
+    }
+
+    private func quickProgressButton(title: String, value: Double) -> some View {
+        Button {
+            Haptics.tap()
+            onAddProgress?(task, value)
+        } label: {
+            Text(title)
+                .font(.sfProDisplay(14, weight: .semibold))
+                .foregroundStyle(accent)
+                .padding(.horizontal, 16)
+                .frame(height: 38)
+                .background(Capsule().fill(accent.opacity(0.12)))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var timerIsActive: Bool {
+        timerService.isActive(task.id)
+    }
+
+    private var timerIsRunning: Bool {
+        timerService.isRunning(task.id)
+    }
+
+    private var timerElapsed: TimeInterval {
+        timerService.elapsedSeconds(for: task.id)
+    }
+
+    private var anotherTimerIsActive: Bool {
+        timerService.activeActivityId.map { $0 != task.id } ?? false
+    }
+
+    private var timerButtonTitle: LocalizedStringKey {
+        if timerIsRunning { return "Пауза" }
+        if timerIsActive { return "Продолжить" }
+        return "Старт"
+    }
+
+    private func timerText(at date: Date) -> String {
+        let total = Int(timerService.elapsedSeconds(for: task.id, at: date))
+        return String(format: "%02d:%02d", total / 60, total % 60)
     }
 }
 

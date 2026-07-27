@@ -46,7 +46,12 @@ final class LiveActivityService {
         let merged = mergeVerifying(into: tasks)
         let state = LAState(todayDone: todayDone, streakCurrent: streakCurrent,
                             nextTaskTitle: nextTaskTitle, goalReached: goalReached,
-                            tasks: merged, flashApproved: lastState?.flashApproved ?? false)
+                            tasks: merged, flashApproved: lastState?.flashApproved ?? false,
+                            timerTaskId: lastState?.timerTaskId,
+                            timerTitle: lastState?.timerTitle,
+                            timerStartedAt: lastState?.timerStartedAt,
+                            timerAccumulatedSeconds: lastState?.timerAccumulatedSeconds,
+                            timerTargetMinutes: lastState?.timerTargetMinutes)
         if let goal = dailyGoal { lastGoal = goal }
         lastState = state
         if let activity = current ?? running() {
@@ -59,6 +64,37 @@ final class LiveActivityService {
     /// The last content state we pushed -- callers attach this to a remote
     /// push so the server can mirror the notification onto the island.
     func lastPushedState() -> LAState? { lastState }
+
+    // MARK: - Timer
+
+    func setTimer(taskId: UUID, title: String, startedAt: Date?,
+                  accumulatedSeconds: Double, targetMinutes: Double?) {
+        guard AppPrefs.liveActivityEnabled else { return }
+        var state = lastState ?? LAState(
+            todayDone: 0,
+            streakCurrent: 0,
+            nextTaskTitle: title,
+            goalReached: false
+        )
+        state.timerTaskId = taskId
+        state.timerTitle = title
+        state.timerStartedAt = startedAt
+        state.timerAccumulatedSeconds = accumulatedSeconds
+        state.timerTargetMinutes = targetMinutes
+        lastState = state
+        pushOrLaunch(state)
+    }
+
+    func clearTimer() {
+        guard var state = lastState else { return }
+        state.timerTaskId = nil
+        state.timerTitle = nil
+        state.timerStartedAt = nil
+        state.timerAccumulatedSeconds = nil
+        state.timerTargetMinutes = nil
+        lastState = state
+        pushOrLaunch(state)
+    }
 
     // MARK: - Verification (#20b)
 

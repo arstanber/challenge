@@ -10,6 +10,7 @@ import Observation
 final class ActivityDetailViewModel {
     var activity: Activity
     var reports: [Report] = []
+    private(set) var todayProgress: Double
     var isLoading = false
     var isSubmittingReport = false
     var errorMessage: String?
@@ -33,6 +34,7 @@ final class ActivityDetailViewModel {
 
     init(activity: Activity) {
         self.activity = activity
+        self.todayProgress = activity.frequency == .once ? activity.goalProgress : 0
     }
 
     // MARK: - Load
@@ -47,6 +49,7 @@ final class ActivityDetailViewModel {
                 .order("created_at", ascending: false)
                 .execute()
                 .value
+            await refreshMeasurableProgress()
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -244,43 +247,20 @@ final class ActivityDetailViewModel {
         errorMessage = nil
         defer { isSubmittingReport = false }
         do {
-            var photoURL: String?
-            if let image, let jpeg = image.compressedForUpload() {
-                let path = "\(activity.id.uuidString)/\(UUID().uuidString).jpg"
-                try await supabase.storage
-                    .from(Constants.Storage.reportsBucket)
-                    .upload(path, data: jpeg, options: FileOptions(contentType: "image/jpeg"))
-                photoURL = try supabase.storage
-                    .from(Constants.Storage.reportsBucket)
-                    .getPublicURL(path: path)
-                    .absoluteString
+            let update = try await ActivityProgressService.record(
+                activityId: activity.id,
+                value: value
+            )
+            activity.goalProgress = update.displayProgress
+            todayProgress = update.dailyProgress
+            if activity.frequency == .once, update.targetReached {
+                activity.status = .completed
             }
-
-            let newProgress = activity.goalProgress + value
-            let req = CreateReportRequest(activityId: activity.id, photoURL: photoURL, progressValue: value)
-            let report: Report = try await supabase
-                .from("reports")
-                .insert(req)
-                .select()
-                .single()
-                .execute()
-                .value
-            reports.insert(report, at: 0)
-
-            try await supabase
-                .from("activities")
-                .update(["goal_progress": newProgress])
-                .eq("id", value: activity.id.uuidString)
-                .execute()
-            activity.goalProgress = newProgress
-
-            if activity.frequency == .once,
-               let target = activity.goalTarget,
-               newProgress >= target {
-                await markCompleted()
+            if update.reportCreated {
+                await reloadReportsOnly()
+                await TaskEngine.shared.noteReportChanged(activityId: activity.id)
             }
             onReportSubmitted?()
-            await TaskEngine.shared.noteReportChanged(activityId: activity.id)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -294,11 +274,19 @@ final class ActivityDetailViewModel {
         guard let target = activity.goalTarget, target > 0,
               connectorValue >= target, !isDoneToday else { return }
         do {
-            let req = CreateReportRequest(activityId: activity.id)
-            try await supabase.from("reports").insert(req).execute()
-            if activity.frequency == .once { await markCompleted() }
-            await loadReports()
-            await TaskEngine.shared.noteReportChanged(activityId: activity.id)
+            let current = activity.frequency == .once ? activity.goalProgress : todayProgress
+            let increment = max(0, connectorValue - current)
+            guard increment > 0 else { return }
+            let update = try await ActivityProgressService.record(
+                activityId: activity.id,
+                value: increment
+            )
+            activity.goalProgress = update.displayProgress
+            todayProgress = update.dailyProgress
+            if update.reportCreated {
+                await reloadReportsOnly()
+                await TaskEngine.shared.noteReportChanged(activityId: activity.id)
+            }
             onReportSubmitted?()
         } catch {
             errorMessage = error.localizedDescription
@@ -321,16 +309,6 @@ final class ActivityDetailViewModel {
     }
 
     var totalDaysDone: Int { completedDays.count }
-
-    var todayProgress: Double {
-        reports
-            .filter {
-                cal.isDate($0.createdAt, inSameDayAs: Date())
-                    && $0.aiResult != .rejected
-            }
-            .compactMap(\.progressValue)
-            .reduce(0, +)
-    }
 
     /// Current streak: server-maintained column (kept fresh by the reports
     /// trigger + refresh_my_streaks), local recomputation as offline seed.
@@ -384,6 +362,20 @@ final class ActivityDetailViewModel {
 
     /// Remove today's report(s) for this activity (undo).
     func undoToday() async {
+        if activity.effectiveCompletionMode.needsTarget {
+            do {
+                try await ActivityProgressService.resetToday(activityId: activity.id)
+                activity.goalProgress = 0
+                todayProgress = 0
+                await reloadReportsOnly()
+                await TaskEngine.shared.undoToday(activityId: activity.id)
+                onReportSubmitted?()
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+            return
+        }
+
         let start = cal.startOfDay(for: Date())
         let iso = ISO8601DateFormatter()
         do {
@@ -445,6 +437,34 @@ final class ActivityDetailViewModel {
     }
 
     // MARK: - Helpers
+
+    private func refreshMeasurableProgress() async {
+        guard activity.effectiveCompletionMode.needsTarget else { return }
+        do {
+            let snapshots = try await ActivityProgressService.loadToday()
+            let daily = snapshots.first(where: { $0.activityId == activity.id })?.dailyProgress ?? 0
+            todayProgress = daily
+            if activity.frequency != .once {
+                activity.goalProgress = daily
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func reloadReportsOnly() async {
+        do {
+            reports = try await supabase
+                .from("reports")
+                .select()
+                .eq("activity_id", value: activity.id.uuidString)
+                .order("created_at", ascending: false)
+                .execute()
+                .value
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
 
     private func markCompleted() async {
         activity.status = .completed
