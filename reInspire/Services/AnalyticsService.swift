@@ -38,6 +38,7 @@ final class AnalyticsService {
         case verificationFailed = "verification_failed"
         case excuseUsed = "excuse_used"
         case goalPlanGenerated = "goal_plan_generated"
+        case goalPlanStepRemoved = "goal_plan_step_removed"
         case streakMilestone = "streak_milestone"
         case premiumPurchased = "premium_purchased"
         case premiumRevoked = "premium_revoked"

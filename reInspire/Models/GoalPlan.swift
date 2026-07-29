@@ -16,9 +16,11 @@ struct GoalQuestionsResponse: Decodable {
 struct GoalPlanRequest: Encodable {
     let goalDescription: String
     let answers: [GoalAnswerPair]
+    let requirePhoto: Bool
     enum CodingKeys: String, CodingKey {
         case goalDescription = "goal_description"
         case answers
+        case requirePhoto = "require_photo"
     }
 }
 
@@ -30,7 +32,8 @@ struct GoalAnswerPair: Encodable {
 struct GoalPlanResponse: Decodable {
     let title: String
     let summary: String
-    let activities: [PlannedActivity]
+    /// Mutable: the user can drop steps they don't like in the plan preview.
+    var activities: [PlannedActivity]
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)

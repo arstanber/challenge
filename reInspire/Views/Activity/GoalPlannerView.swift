@@ -478,7 +478,8 @@ private enum PPColors {
     static let addTaskBg = Color(red: 0.872, green: 0.872, blue: 0.872)
     static let addTaskBorder = Color(red: 0.675, green: 0.675, blue: 0.675)
     static let addTaskText = Color(red: 0.536, green: 0.536, blue: 0.536)
-    static let checkboxBorder = Color(red: 0.839, green: 0.839, blue: 0.839)
+    static let deleteIcon = Color(red: 0.55, green: 0.55, blue: 0.55)
+    static let deleteBg = Color(red: 0.945, green: 0.945, blue: 0.945)
 }
 
 private struct PlanPreviewView: View {
@@ -514,18 +515,28 @@ private struct PlanPreviewView: View {
                             .padding(.top, 36)
                             .padding(.horizontal, 36)
 
-                            Text("Задачи для достижения цели:")
-                                .font(.system(size: 20, weight: .medium))
-                                .foregroundColor(.white)
-                                .padding(.top, 20)
-                                .padding(.horizontal, 36)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Задачи для достижения цели:")
+                                    .font(.system(size: 20, weight: .medium))
+                                    .foregroundColor(.white)
+                                Text("Убери лишнее -- смахни задачу или нажми ×")
+                                    .font(.system(size: 13, weight: .regular))
+                                    .foregroundColor(.white.opacity(0.7))
+                            }
+                            .padding(.top, 20)
+                            .padding(.horizontal, 36)
 
                             // Task cards
                             ScrollView(showsIndicators: false) {
                                 VStack(spacing: 16) {
                                     ForEach(plan.activities.sorted { $0.stepNumber < $1.stepNumber }) { activity in
-                                        PPTaskCard(activity: activity)
-                                            .padding(.horizontal, 4)
+                                        PPTaskCard(
+                                            activity: activity,
+                                            canDelete: vm.canRemovePlannedActivity,
+                                            onDelete: { remove(activity) }
+                                        )
+                                        .padding(.horizontal, 4)
+                                        .transition(.move(edge: .leading).combined(with: .opacity))
                                     }
                                 }
                                 .padding(.top, 20)
@@ -565,11 +576,19 @@ private struct PlanPreviewView: View {
         }
         .onAppear { Haptics.success() }
     }
+
+    private func remove(_ activity: PlannedActivity) {
+        Haptics.warning()
+        withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) {
+            vm.removePlannedActivity(id: activity.id)
+        }
+    }
 }
 
 private struct PPTaskCard: View {
     let activity: PlannedActivity
-    @State private var isChecked = false
+    let canDelete: Bool
+    let onDelete: () -> Void
 
     private var scheduleLabel: String { activity.frequency.displayName }
     private var durationLabel: String {
@@ -578,7 +597,16 @@ private struct PPTaskCard: View {
     }
     private var categoryColor: Color { activity.type.stepColor }
 
+    @ViewBuilder
     var body: some View {
+        if canDelete {
+            card.swipeToDelete(onDelete: onDelete)
+        } else {
+            card
+        }
+    }
+
+    private var card: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 15)
                 .fill(Color.white)
@@ -586,21 +614,6 @@ private struct PPTaskCard: View {
                 .shadow(color: .black.opacity(0.06), radius: 6, x: 0, y: 2)
 
             HStack(spacing: 12) {
-                // Checkbox
-                ZStack {
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(Color.white)
-                        .frame(width: 24, height: 24)
-                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(PPColors.checkboxBorder, lineWidth: 2))
-                    if isChecked {
-                        Image(systemName: "checkmark")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(PPColors.cardBlue)
-                    }
-                }
-                .onTapGesture { Haptics.selection(); withAnimation { isChecked.toggle() } }
-                .padding(.leading, 12)
-
                 VStack(alignment: .leading, spacing: 6) {
                     Text(activity.title)
                         .font(.system(size: 17, weight: .medium))
@@ -633,8 +646,24 @@ private struct PPTaskCard: View {
                             .cornerRadius(4)
                     }
                 }
+                .padding(.leading, 16)
 
-                Spacer()
+                Spacer(minLength: 8)
+
+                // Remove this step from the plan
+                if canDelete {
+                    Button(action: onDelete) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundColor(PPColors.deleteIcon)
+                            .frame(width: 30, height: 30)
+                            .background(PPColors.deleteBg)
+                            .clipShape(Circle())
+                    }
+                    .buttonStyle(.haptic)
+                    .accessibilityLabel(Text("Убрать задачу"))
+                    .padding(.trailing, 12)
+                }
             }
             .frame(height: 74)
         }

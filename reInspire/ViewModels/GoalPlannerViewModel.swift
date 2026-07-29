@@ -70,7 +70,11 @@ final class GoalPlannerViewModel {
         errorMessage = nil
         do {
             let pairs = answers.map { GoalAnswerPair(question: $0.question, answer: $0.answer.trimmingCharacters(in: .whitespaces)) }
-            let req = GoalPlanRequest(goalDescription: goalDescription.trimmingCharacters(in: .whitespaces), answers: pairs)
+            let req = GoalPlanRequest(
+                goalDescription: goalDescription.trimmingCharacters(in: .whitespaces),
+                answers: pairs,
+                requirePhoto: PhotoVerificationPolicy.requiresPhotoForEveryTask
+            )
             let response: GoalPlanResponse = try await supabase.functions
                 .invoke("plan-goal", options: FunctionInvokeOptions(body: req))
             plan = response
@@ -80,6 +84,23 @@ final class GoalPlannerViewModel {
             errorMessage = extractFunctionError(error)
             step = .questions
         }
+    }
+
+    // MARK: - Edit the generated plan
+
+    /// Drops a step the user doesn't want before the plan is created.
+    /// The last remaining step can't be removed -- an empty plan has nothing
+    /// to create.
+    func removePlannedActivity(id: UUID) {
+        guard var plan, plan.activities.count > 1 else { return }
+        plan.activities.removeAll { $0.id == id }
+        self.plan = plan
+        AnalyticsService.shared.track(.goalPlanStepRemoved, ["remaining": plan.activities.count])
+    }
+
+    /// A step can only be removed while more than one is left.
+    var canRemovePlannedActivity: Bool {
+        (plan?.activities.count ?? 0) > 1
     }
 
     // MARK: - Create all activities in Supabase
@@ -102,13 +123,19 @@ final class GoalPlannerViewModel {
         // over the AI's step-based estimate.
         let parentDeadline = deadline ?? maxStepDeadline
 
+        let parentCondition = PhotoVerificationPolicy.requiresPhotoForEveryTask
+            ? await AIVerificationService.shared.resolveCondition(
+                title: plan.title,
+                description: plan.summary
+            )
+            : nil
         let parentReq = CreateActivityRequest(
             userId: user.id,
             assignedBy: nil,
             title: plan.title,
             description: plan.summary,
             type: .goal,
-            condition: nil,
+            condition: parentCondition,
             frequency: .once,
             deadline: parentDeadline,
             reminderTime: nil,
@@ -134,6 +161,13 @@ final class GoalPlannerViewModel {
 
         // 2. Create subtasks with parent_id pointing to the parent goal
         for activity in plan.activities {
+            let condition = PhotoVerificationPolicy.requiresPhotoForEveryTask
+                ? await AIVerificationService.shared.resolveCondition(
+                    title: activity.title,
+                    description: activity.description,
+                    existing: activity.condition
+                )
+                : activity.condition
             var stepDeadline: Date? = activity.deadlineDays.map {
                 Calendar.current.date(byAdding: .day, value: $0, to: Date()) ?? Date()
             }
@@ -147,7 +181,7 @@ final class GoalPlannerViewModel {
                 title: activity.title,
                 description: activity.description,
                 type: activity.type,
-                condition: activity.condition,
+                condition: condition,
                 frequency: activity.frequency,
                 deadline: stepDeadline,
                 reminderTime: nil,

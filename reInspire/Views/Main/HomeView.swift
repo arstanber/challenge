@@ -667,7 +667,7 @@ struct HomeView: View {
     }
 
     private func proceedWithCompletion(_ activity: Activity) {
-        if requirePhoto && activity.type.requiresPhoto {
+        if requirePhoto {
             // Don't mark done yet — wait for photo submission
             lastPhotoTask = activity
             taskToComplete = activity
@@ -1100,7 +1100,13 @@ private struct TaskCardView: View {
             if !subtasks.isEmpty {
                 VStack(spacing: 12) {
                     ForEach(subtasks) { sub in
-                        SubTaskRow(subtask: sub, accent: typeAccent(sub.type), onToggle: onToggle)
+                        SubTaskRow(
+                            subtask: sub,
+                            accent: typeAccent(sub.type),
+                            onToggle: onToggle,
+                            onEdit: onEdit,
+                            onDelete: onDelete
+                        )
                     }
                 }
             }
@@ -1409,6 +1415,8 @@ private struct SubTaskRow: View {
     let subtask: Activity
     let accent: Color
     let onToggle: (Activity) -> Void
+    let onEdit: (Activity) -> Void
+    let onDelete: (Activity) -> Void
     @State private var isCompleting = false
 
     var body: some View {
@@ -1426,6 +1434,14 @@ private struct SubTaskRow: View {
             .scaleEffect(0.82)
         }
         .padding(.leading, 44)
+        // A step of an AI plan is deletable on its own -- the card-level swipe
+        // and menu only reach the parent goal. No swipe action here: the row's
+        // pan would run simultaneously with the card's own swipe gesture.
+        .contentShape(Rectangle())
+        .contextMenu {
+            Button { onEdit(subtask) } label: { Label("Изменить", systemImage: "pencil") }
+            Button(role: .destructive) { onDelete(subtask) } label: { Label("Удалить", systemImage: "trash") }
+        }
     }
 
     private func handleToggle() {
