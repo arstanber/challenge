@@ -30,7 +30,11 @@ struct ReInspireTaskEntity: AppEntity, Identifiable {
     @MainActor
     static func openCheckableTasks() -> [ReInspireTaskEntity] {
         (WidgetDataStore.load()?.tasks ?? [])
-            .filter { !$0.isDone && !($0.requiresPhoto ?? false) }
+            .filter {
+                !$0.isDone
+                    && !PhotoVerificationPolicy.requiresPhotoForEveryTask
+                    && !($0.requiresPhoto ?? false)
+            }
             .map { ReInspireTaskEntity(id: $0.id, title: $0.title) }
     }
 }

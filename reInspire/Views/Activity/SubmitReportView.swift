@@ -13,6 +13,9 @@ struct SubmitReportView: View {
     @State private var showCamera = false
     @State private var showResult = false
     @State private var submittedAsExcuse = false
+    @AppStorage("requirePhotoVerification") private var requirePhoto = true
+
+    private var needsPhoto: Bool { requirePhoto }
 
     var body: some View {
         NavigationStack {
@@ -58,13 +61,17 @@ struct SubmitReportView: View {
     private var formContent: some View {
         ScrollView {
             VStack(spacing: 20) {
-                switch activity.type {
-                case .challenge, .assignment:
+                if needsPhoto {
                     photoSection
-                case .goal:
-                    goalSection
-                case .task, .habit:
-                    taskSection
+                } else {
+                    switch activity.type {
+                    case .challenge, .assignment:
+                        photoSection
+                    case .goal:
+                        goalSection
+                    case .task, .habit:
+                        taskSection
+                    }
                 }
 
                 if let error = vm.errorMessage {
@@ -208,7 +215,7 @@ struct SubmitReportView: View {
             .disabled(isSubmitDisabled || vm.isSubmittingReport)
 
             // Excuse button — only for AI-verified activities
-            if activity.type.hasAIVerification && capturedImage != nil {
+            if needsPhoto && capturedImage != nil {
                 Button {
                     Task { await handleSubmit(isExcuse: true) }
                 } label: {
@@ -233,7 +240,7 @@ struct SubmitReportView: View {
                 .disabled(vm.isSubmittingReport)
             }
 
-            if activity.type.hasAIVerification {
+            if needsPhoto {
                 Text("Нажмите \"Отправить как оправдание\", если была веская причина (травма, болезнь, форс-мажор)")
                     .font(.caption2).foregroundStyle(.tertiary)
                     .multilineTextAlignment(.center)
@@ -245,6 +252,13 @@ struct SubmitReportView: View {
 
     private func handleSubmit(isExcuse: Bool) async {
         submittedAsExcuse = isExcuse
+        if needsPhoto {
+            guard let image = capturedImage else { return }
+            showResult = true
+            await vm.submitPhotoReport(image: image, comment: comment, isExcuse: isExcuse)
+            if vm.errorMessage != nil { showResult = false }
+            return
+        }
         switch activity.type {
         case .challenge, .assignment:
             guard let image = capturedImage else { return }
@@ -265,6 +279,7 @@ struct SubmitReportView: View {
     }
 
     private var submitLabel: String {
+        if needsPhoto { return String(localized: "Отправить фото") }
         switch activity.type {
         case .challenge, .assignment: return String(localized: "Отправить фото")
         case .goal:                   return String(localized: "Отметить")
@@ -281,6 +296,7 @@ struct SubmitReportView: View {
     }
 
     private var isSubmitDisabled: Bool {
+        if needsPhoto { return capturedImage == nil }
         switch activity.type {
         case .challenge, .assignment:
             return capturedImage == nil

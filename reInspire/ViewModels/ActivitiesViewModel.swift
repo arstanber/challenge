@@ -248,7 +248,7 @@ final class ActivitiesViewModel {
         for id in ids {
             guard let activity = (myActivities + parentActivities).first(where: { $0.id == id }),
                   activity.status == .active,
-                  !activity.type.hasAIVerification,
+                  !PhotoVerificationPolicy.requiresPhotoForEveryTask,
                   !activity.effectiveCompletionMode.needsTarget,
                   !engine.isDoneToday(id)
             else { continue }
@@ -507,7 +507,7 @@ final class ActivitiesViewModel {
                     typeColorName: widgetColorName(for: activity.type),
                     deadline: activity.deadline,
                     isDone: engine.isDoneToday(activity.id),
-                    requiresPhoto: activity.type.hasAIVerification
+                    requiresPhoto: PhotoVerificationPolicy.requiresPhotoForEveryTask
                 )
             }
 
@@ -709,13 +709,16 @@ final class ActivitiesViewModel {
         scheduleDays: [Int]? = nil
     ) async -> Activity? {
         guard let user = authService.currentUser else { return nil }
+        let resolvedCondition = PhotoVerificationPolicy.requiresPhotoForEveryTask
+            ? await AIVerificationService.shared.resolveCondition(title: title, existing: condition)
+            : condition
         let req = CreateActivityRequest(
             userId: user.id,
             assignedBy: nil,
             title: title,
             description: "",
             type: type,
-            condition: condition,
+            condition: resolvedCondition,
             frequency: frequency,
             deadline: nil,
             reminderTime: reminderTime,
@@ -740,13 +743,16 @@ final class ActivitiesViewModel {
     /// ActivityDetailViewModel.createSubtasks for the manual "add subtask" flow.
     func createSubtask(parent: Activity, title: String, deadline: Date?) async {
         guard let user = authService.currentUser else { return }
+        let condition = PhotoVerificationPolicy.requiresPhotoForEveryTask
+            ? await AIVerificationService.shared.resolveCondition(title: title)
+            : nil
         let req = CreateActivityRequest(
             userId: user.id,
             assignedBy: nil,
             title: title,
             description: "",
             type: .task,
-            condition: nil,
+            condition: condition,
             frequency: .once,
             deadline: deadline,
             reminderTime: nil,

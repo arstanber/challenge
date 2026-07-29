@@ -61,14 +61,15 @@ final class CreateActivityViewModel {
 
     var isValid: Bool {
         guard !title.trimmingCharacters(in: .whitespaces).isEmpty else { return false }
-        if type.hasAIVerification && condition.trimmingCharacters(in: .whitespaces).isEmpty { return false }
         // A connector-bound task needs a positive target to count against.
         if selectedCapability != nil, !((Double(goalTarget) ?? 0) > 0) { return false }
         if completionMode.needsTarget, !((Double(goalTarget) ?? 0) > 0) { return false }
         return true
     }
 
-    var showConditionField: Bool { type.hasAIVerification && selectedCapability == nil }
+    var showConditionField: Bool {
+        PhotoVerificationPolicy.requiresPhotoForEveryTask && selectedCapability == nil
+    }
     var showGoalTarget: Bool { type == .goal }
 
     /// Bind a data-source capability so this task auto-tracks against it. The
@@ -85,6 +86,21 @@ final class CreateActivityViewModel {
         guard isValid, let user = authService.currentUser else { return }
         isLoading = true
         errorMessage = nil
+
+        let trimmedTitle = title.trimmingCharacters(in: .whitespaces)
+        let enteredCondition = condition.trimmingCharacters(in: .whitespacesAndNewlines)
+        let resolvedCondition: String?
+        if PhotoVerificationPolicy.requiresPhotoForEveryTask {
+            resolvedCondition = await AIVerificationService.shared.resolveCondition(
+                title: trimmedTitle,
+                description: description.trimmingCharacters(in: .whitespacesAndNewlines),
+                existing: enteredCondition
+            )
+        } else {
+            resolvedCondition = type.hasAIVerification && !enteredCondition.isEmpty
+                ? enteredCondition
+                : nil
+        }
 
         // Resolve who this task is for. A child-assignment list wins over a
         // single child id; with neither, the task is the user's own.
@@ -106,10 +122,10 @@ final class CreateActivityViewModel {
                 let request = CreateActivityRequest(
                     userId: target,
                     assignedBy: isAssignment ? user.id : nil,
-                    title: title.trimmingCharacters(in: .whitespaces),
+                    title: trimmedTitle,
                     description: description.trimmingCharacters(in: .whitespaces),
                     type: type,
-                    condition: showConditionField ? condition.trimmingCharacters(in: .whitespaces) : nil,
+                    condition: resolvedCondition,
                     frequency: frequency,
                     deadline: hasDeadline ? deadline : nil,
                     reminderTime: reminderEnabled ? reminderTime : nil,

@@ -589,25 +589,13 @@ struct RoutinePlayerView: View {
 
     @ViewBuilder
     private func actionControls(_ activity: Activity) -> some View {
-        switch activity.effectiveCompletionMode {
-        case .counter:
-            HStack(spacing: 12) {
-                progressButton("+1", activity: activity, value: 1)
-                progressButton("+5", activity: activity, value: 5)
-            }
-
-        case .timer:
-            timerControls(activity)
-
-        case .check, .abstinence:
+        if requirePhoto {
             Button {
                 completeCheck(activity)
             } label: {
                 Label(
-                    requirePhoto && activity.type.requiresPhoto ? "Сделать фото" : "Выполнено",
-                    systemImage: requirePhoto && activity.type.requiresPhoto
-                        ? "camera.fill"
-                        : "checkmark"
+                    "Сделать фото",
+                    systemImage: "camera.fill"
                 )
                 .font(.sfProDisplay(17, weight: .semibold))
                 .frame(maxWidth: .infinity)
@@ -616,6 +604,30 @@ struct RoutinePlayerView: View {
             .buttonStyle(.borderedProminent)
             .tint(Color(hex: "4580FF"))
             .disabled(isSubmitting)
+        } else {
+            switch activity.effectiveCompletionMode {
+            case .counter:
+                HStack(spacing: 12) {
+                    progressButton("+1", activity: activity, value: 1)
+                    progressButton("+5", activity: activity, value: 5)
+                }
+
+            case .timer:
+                timerControls(activity)
+
+            case .check, .abstinence:
+                Button {
+                    completeCheck(activity)
+                } label: {
+                    Label("Выполнено", systemImage: "checkmark")
+                        .font(.sfProDisplay(17, weight: .semibold))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 54)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(Color(hex: "4580FF"))
+                .disabled(isSubmitting)
+            }
         }
     }
 
@@ -744,7 +756,7 @@ struct RoutinePlayerView: View {
     }
 
     private func completeCheck(_ activity: Activity) {
-        if requirePhoto && activity.type.requiresPhoto {
+        if requirePhoto {
             cameraActivity = activity
             return
         }

@@ -8,6 +8,7 @@ interface QuestionsRequest {
 interface PlanRequest {
   goal_description: string;
   answers: Array<{ question: string; answer: string }>;
+  require_photo?: boolean;
 }
 
 const MODEL = "claude-sonnet-4-5";
@@ -94,7 +95,7 @@ Deno.serve(async (req: Request) => {
         });
       }
 
-      const { goal_description, answers } = body as PlanRequest;
+      const { goal_description, answers, require_photo } = body as PlanRequest;
       console.log("Phase 2, model:", MODEL, "answers:", answers.length);
 
       const answersText = answers
@@ -105,7 +106,7 @@ Deno.serve(async (req: Request) => {
       const text = await callClaude(anthropicKey, [
         {
           role: "user",
-          content: `You are a personal goal coach. Create a structured action plan.\n\nGoal: ${goal_description}\nToday: ${today}\n\nUser answers:\n${answersText}\n\nCreate a realistic ladder of 4-6 activities. Types: habit (recurring), goal (measurable, needs goal_target number), challenge (photo-verified), task (one-time).\n\nRespond ONLY with valid JSON (no markdown):\n{"title":"Plan title","summary":"2-3 sentence summary","activities":[{"step_number":1,"title":"title","description":"what and why","type":"habit","frequency":"daily","condition":null,"goal_target":null,"deadline_days":30,"rationale":"one sentence"}]}`,
+          content: `You are a personal goal coach. Create a structured action plan.\n\nGoal: ${goal_description}\nToday: ${today}\n\nUser answers:\n${answersText}\n\nCreate a realistic ladder of 4-6 activities. Types: habit (recurring), goal (measurable, needs goal_target number), challenge (photo-verified), task (one-time).\n${require_photo ? "Photo proof is required for every generated activity. For every activity, condition must be a short, concrete description in the user's language of exactly what must be visible in one photo to prove completion. Never return a null or vague condition." : "For challenge activities, condition must describe exactly what the proof photo should show. Other activity types may use null."}\n\nRespond ONLY with valid JSON (no markdown):\n{"title":"Plan title","summary":"2-3 sentence summary","activities":[{"step_number":1,"title":"title","description":"what and why","type":"habit","frequency":"daily","condition":"concrete photo proof requirement or null","goal_target":null,"deadline_days":30,"rationale":"one sentence"}]}`,
         },
       ]);
 

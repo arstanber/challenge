@@ -295,13 +295,17 @@ struct HabitCalendarView: View {
                 goalTodayStat
             }
 
-            switch vm.activity.effectiveCompletionMode {
-            case .counter:
-                counterControl
-            case .timer:
-                timerControl
-            case .check, .abstinence:
+            if needsPhoto {
                 markDoneControl
+            } else {
+                switch vm.activity.effectiveCompletionMode {
+                case .counter:
+                    counterControl
+                case .timer:
+                    timerControl
+                case .check, .abstinence:
+                    markDoneControl
+                }
             }
         }
         .padding(.vertical, 18)
@@ -513,11 +517,9 @@ struct HabitCalendarView: View {
         return String(format: "%02d:%02d", total / 60, total % 60)
     }
 
-    /// Photo is required only for photo-verified task types (challenge /
-    /// assignment) AND when the global setting is on. Goals/tasks/habits never
-    /// need a photo, so the banner and camera step don't apply to them.
+    /// The global setting applies to every activity type.
     private var needsPhoto: Bool {
-        requirePhoto && vm.activity.type.requiresPhoto
+        requirePhoto
     }
 
     // Photo requirement shown each time you open the task.

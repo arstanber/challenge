@@ -271,6 +271,7 @@ final class ActivityDetailViewModel {
     /// a plain check-in so it counts toward the day + streak, and finishes a
     /// one-off goal. No-op if already done today or the target isn't met.
     func autoCompleteIfGoalMet(connectorValue: Double) async {
+        guard !PhotoVerificationPolicy.requiresPhotoForEveryTask else { return }
         guard let target = activity.goalTarget, target > 0,
               connectorValue >= target, !isDoneToday else { return }
         do {
@@ -404,13 +405,16 @@ final class ActivityDetailViewModel {
             let deadline: Date? = sub.estimatedDays.flatMap {
                 cal.date(byAdding: .day, value: $0, to: today)
             }
+            let condition = PhotoVerificationPolicy.requiresPhotoForEveryTask
+                ? await AIVerificationService.shared.resolveCondition(title: sub.title)
+                : nil
             let req = CreateActivityRequest(
                 userId: user.id,
                 assignedBy: nil,
                 title: sub.title,
                 description: "",
                 type: .task,
-                condition: nil,
+                condition: condition,
                 frequency: .once,
                 deadline: deadline,
                 reminderTime: nil,

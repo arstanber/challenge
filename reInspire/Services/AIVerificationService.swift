@@ -66,6 +66,19 @@ final class AIVerificationService {
         }
     }
 
+    /// Returns the user-entered proof requirement, or asks AI to create one.
+    /// Falling back to the task title keeps photo verification enforceable even
+    /// when the suggestion service is temporarily unavailable.
+    func resolveCondition(
+        title: String,
+        description: String = "",
+        existing: String? = nil
+    ) async -> String {
+        let entered = existing?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !entered.isEmpty { return entered }
+        return await suggestCondition(title: title, description: description) ?? title
+    }
+
     func verify(
         reportId: UUID,
         activityId: UUID,

@@ -57,7 +57,7 @@ struct WorkspaceHomeView: View {
                             WorkspaceEmptyState(workspaceName: workspace.name)
                         } else {
                             HomeTaskListView(activities: activeTasks) { activity in
-                                if requirePhoto && activity.type.requiresPhoto {
+                                if requirePhoto {
                                     taskToComplete = activity
                                 } else {
                                     Task {

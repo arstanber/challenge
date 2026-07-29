@@ -29,7 +29,7 @@ struct CompleteTaskView: View {
         _vm = State(initialValue: ActivityDetailViewModel(activity: activity))
     }
 
-    private var requiresAI: Bool { activity.type.hasAIVerification }
+    private var requiresAI: Bool { activity.requiresPhotoProof }
 
     /// What kind of photo the user must take.
     private var requirementLine: String {

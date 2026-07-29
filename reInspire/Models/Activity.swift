@@ -1,5 +1,17 @@
 import Foundation
 
+enum PhotoVerificationPolicy {
+    static let settingKey = "requirePhotoVerification"
+
+    static var requiresPhotoForEveryTask: Bool {
+        UserDefaults.standard.object(forKey: settingKey) as? Bool ?? true
+    }
+
+    static func requiresPhoto(for activity: Activity) -> Bool {
+        requiresPhotoForEveryTask
+    }
+}
+
 enum ActivityType: String, Codable, CaseIterable, Identifiable {
     case challenge, goal, task, habit, assignment
 
@@ -207,6 +219,7 @@ struct Activity: Codable, Identifiable {
     }
 
     var isFromParent: Bool { assignedBy != nil }
+    var requiresPhotoProof: Bool { PhotoVerificationPolicy.requiresPhoto(for: self) }
 
     /// ISO weekday of a date: Monday = 1 ... Sunday = 7.
     /// Calendar.weekday is Sunday = 1 ... Saturday = 7, hence the shift
