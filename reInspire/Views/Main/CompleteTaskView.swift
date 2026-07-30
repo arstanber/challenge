@@ -153,7 +153,21 @@ struct CompleteTaskView: View {
                 }
             }
             Spacer()
-            Color.clear.frame(width: 56, height: 56)
+            if camera.canSwitchCamera {
+                Button {
+                    Haptics.tap()
+                    camera.switchCamera()
+                } label: {
+                    Image(systemName: "arrow.triangle.2.circlepath.camera")
+                        .font(.system(size: 24, weight: .medium))
+                        .foregroundColor(.white)
+                        .frame(width: 56, height: 56)
+                        .background(Circle().fill(.black.opacity(0.35)))
+                }
+                .accessibilityLabel(String(localized: "Сменить камеру"))
+            } else {
+                Color.clear.frame(width: 56, height: 56)
+            }
         }
         .padding(.horizontal, 24)
     }

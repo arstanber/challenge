@@ -1,42 +1,76 @@
 import SwiftUI
-import AVFoundation
+import UIKit
 
-struct CameraView: UIViewControllerRepresentable {
+struct CameraView: View {
     @Binding var image: UIImage?
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var camera = CameraModel()
 
-    func makeUIViewController(context: Context) -> UIImagePickerController {
-        let picker = UIImagePickerController()
-        // .camera is unavailable on the simulator and camera-less devices;
-        // selecting it there crashes. Fall back to the photo library.
-        picker.sourceType = UIImagePickerController.isSourceTypeAvailable(.camera) ? .camera : .photoLibrary
-        picker.delegate = context.coordinator
-        picker.allowsEditing = false
-        return picker
-    }
-
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-
-    final class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
-        let parent: CameraView
-
-        init(_ parent: CameraView) {
-            self.parent = parent
-        }
-
-        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
-            if let image = info[.originalImage] as? UIImage {
-                parent.image = image
+    var body: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+            if camera.isAvailable {
+                CameraPreview(camera: camera).ignoresSafeArea()
+            } else if camera.permissionDenied {
+                Text("Нет доступа к камере")
+                    .foregroundStyle(.white)
+            } else {
+                ProgressView().tint(.white)
             }
-            parent.dismiss()
-        }
 
-        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-            parent.dismiss()
+            VStack {
+                HStack {
+                    Button { dismiss() } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(width: 44, height: 44)
+                            .background(.black.opacity(0.4), in: Circle())
+                    }
+                    Spacer()
+                }
+                Spacer()
+                HStack {
+                    Color.clear.frame(width: 56, height: 56)
+                    Spacer()
+                    Button {
+                        Haptics.medium()
+                        camera.capture()
+                    } label: {
+                        ZStack {
+                            Circle().strokeBorder(.white, lineWidth: 4).frame(width: 78, height: 78)
+                            Circle().fill(.white).frame(width: 62, height: 62)
+                        }
+                    }
+                    .disabled(!camera.isAvailable)
+                    Spacer()
+                    if camera.canSwitchCamera {
+                        Button {
+                            Haptics.tap()
+                            camera.switchCamera()
+                        } label: {
+                            Image(systemName: "arrow.triangle.2.circlepath.camera")
+                                .font(.system(size: 24, weight: .medium))
+                                .foregroundStyle(.white)
+                                .frame(width: 56, height: 56)
+                                .background(.black.opacity(0.35), in: Circle())
+                        }
+                        .accessibilityLabel(String(localized: "Сменить камеру"))
+                    } else {
+                        Color.clear.frame(width: 56, height: 56)
+                    }
+                }
+                .padding(.horizontal, 42)
+                .padding(.bottom, 34)
+            }
+            .padding(.horizontal, 18)
+        }
+        .onAppear { camera.start() }
+        .onDisappear { camera.stop() }
+        .onReceive(camera.$captured) { captured in
+            guard let captured else { return }
+            image = captured
+            dismiss()
         }
     }
 }
