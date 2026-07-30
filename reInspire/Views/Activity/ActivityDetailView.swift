@@ -13,6 +13,8 @@ struct ActivityDetailView: View {
     @State private var showHabitCalendar = false
     // Paywall when monthly AI quota is spent
     @State private var showPaywall = false
+    @State private var showMaxPaywall = false
+    @State private var selectedPage = 0
 
     init(activity: Activity, onReportSubmitted: (() -> Void)? = nil) {
         let viewModel = ActivityDetailViewModel(activity: activity)
@@ -21,18 +23,34 @@ struct ActivityDetailView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                headerSection
-                statsSection
-                if vm.isLoading {
-                    ProgressView().frame(maxWidth: .infinity)
-                } else {
-                    reportsSection
+        VStack(spacing: 0) {
+            pageIndicator
+
+            TabView(selection: $selectedPage) {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 20) {
+                        headerSection
+                        statsSection
+                        if vm.isLoading {
+                            ProgressView().frame(maxWidth: .infinity)
+                        } else {
+                            reportsSection
+                        }
+                    }
+                    .padding()
+                    .readableWidth()
                 }
+                .tag(0)
+
+                ActivityLearningView(
+                    activity: vm.activity,
+                    isMax: AuthService.shared.currentUser?.plan == .max,
+                    isActive: selectedPage == 1,
+                    openMaxPaywall: { showMaxPaywall = true }
+                )
+                .tag(1)
             }
-            .padding()
-            .readableWidth()
+            .tabViewStyle(.page(indexDisplayMode: .never))
         }
         .navigationTitle(vm.activity.title)
         .navigationBarTitleDisplayMode(.large)
@@ -117,6 +135,11 @@ struct ActivityDetailView: View {
         .sheet(isPresented: $showPaywall) {
             NavigationStack { PremiumView() }
         }
+        .sheet(isPresented: $showMaxPaywall) {
+            NavigationStack {
+                PremiumView(initialSelection: Constants.Store.maxAnnualID)
+            }
+        }
         .alert("Error", isPresented: Binding(
             get: { vm.errorMessage != nil },
             set: { if !$0 { vm.errorMessage = nil } }
@@ -125,6 +148,35 @@ struct ActivityDetailView: View {
         } message: {
             Text(vm.errorMessage ?? "")
         }
+    }
+
+    private var pageIndicator: some View {
+        HStack(spacing: 8) {
+            Button {
+                withAnimation(.snappy) { selectedPage = 0 }
+            } label: {
+                Label("Задание", systemImage: "checkmark.circle")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(selectedPage == 0 ? .primary : .secondary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
+                    .background(selectedPage == 0 ? Color.primary.opacity(0.08) : .clear, in: Capsule())
+            }
+            .buttonStyle(.plain)
+
+            Button {
+                withAnimation(.snappy) { selectedPage = 1 }
+            } label: {
+                Label("Обучение", systemImage: "graduationcap.fill")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(selectedPage == 1 ? .purple : .secondary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
+                    .background(selectedPage == 1 ? Color.purple.opacity(0.1) : .clear, in: Capsule())
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.vertical, 6)
     }
 
     private var headerSection: some View {

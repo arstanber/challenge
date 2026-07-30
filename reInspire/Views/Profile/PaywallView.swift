@@ -34,7 +34,11 @@ struct PremiumView: View {
     @State private var store = StoreService.shared
     @Environment(\.dismiss) private var dismiss
 
-    @State private var selected: String = Constants.Store.premiumAnnualID
+    @State private var selected: String
+
+    init(initialSelection: String = Constants.Store.premiumAnnualID) {
+        _selected = State(initialValue: initialSelection)
+    }
 
     private let features: [PaywallFeature] = [
         .init(icon: "infinity",            text: String(localized: "Безлимит задач и привычек")),
