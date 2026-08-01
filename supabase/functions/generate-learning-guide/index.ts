@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { CORS_HEADERS, verifyAuth } from "../_shared/rateLimiter.ts";
 import { type Lang, pickLang, respondIn } from "../_shared/i18n.ts";
 
-const PERPLEXITY_URL = "https://api.perplexity.ai/chat/completions";
+const PERPLEXITY_URL = "https://api.perplexity.ai/v1/sonar";
 const MODEL = "sonar";
 
 type Step = { title: string; details: string };
@@ -14,6 +14,32 @@ type Guide = {
   steps: Step[];
   safetyNotes: string[];
   resources: Resource[];
+};
+
+const GUIDE_SCHEMA = {
+  type: "object",
+  properties: {
+    title: { type: "string" },
+    overview: { type: "string" },
+    steps: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          title: { type: "string" },
+          details: { type: "string" },
+        },
+        required: ["title", "details"],
+        additionalProperties: false,
+      },
+    },
+    safetyNotes: {
+      type: "array",
+      items: { type: "string" },
+    },
+  },
+  required: ["title", "overview", "steps", "safetyNotes"],
+  additionalProperties: false,
 };
 
 function json(data: unknown, status = 200): Response {
@@ -71,6 +97,18 @@ function normalizeGuide(value: unknown): Guide | null {
   if (!title || !overview || steps.length === 0) return null;
 
   return { title, overview, steps, safetyNotes, resources };
+}
+
+function resourcesFromSearchResults(value: unknown): Resource[] {
+  return (Array.isArray(value) ? value : [])
+    .filter((item): item is Record<string, unknown> => !!item && typeof item === "object")
+    .map((item) => ({
+      title: cleanText(item.title, 160),
+      url: cleanText(item.url, 800),
+      description: cleanText(item.snippet, 240),
+    }))
+    .filter((item) => item.title && isYouTubeURL(item.url))
+    .slice(0, 5);
 }
 
 async function fingerprint(parts: string[]): Promise<string> {
@@ -170,7 +208,7 @@ Deno.serve(async (req: Request) => {
 ${context}
 
 ${respondIn(language)}
-Use only information supported by the web search results. If the topic involves health, medicine, physical risk, finance, or law, include a concise safety note and advise professional help when appropriate. Never invent a video URL. Choose 3 to 5 directly relevant YouTube videos from the search results.
+Use only information supported by the web search results. If the topic involves health, medicine, physical risk, finance, or law, include a concise safety note and advise professional help when appropriate. The server will attach verified video links separately.
 
 Return ONLY valid JSON without markdown:
 {
@@ -179,10 +217,7 @@ Return ONLY valid JSON without markdown:
   "steps": [
     {"title": "step title", "details": "clear actionable explanation"}
   ],
-  "safetyNotes": ["important warning when relevant"],
-  "resources": [
-    {"title": "exact video title", "url": "YouTube URL from search results", "description": "why it helps"}
-  ]
+  "safetyNotes": ["important warning when relevant"]
 }`;
 
     const perplexityResponse = await fetch(PERPLEXITY_URL, {
@@ -201,10 +236,16 @@ Return ONLY valid JSON without markdown:
           { role: "user", content: prompt },
         ],
         search_domain_filter: ["youtube.com", "youtu.be"],
-        search_context_size: "low",
+        web_search_options: { search_context_size: "low" },
         temperature: 0.2,
         max_tokens: 1400,
-        response_format: { type: "json_object" },
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "learning_guide",
+            schema: GUIDE_SCHEMA,
+          },
+        },
       }),
     });
 
@@ -222,7 +263,10 @@ Return ONLY valid JSON without markdown:
       return json({ error: "invalid_learning_guide" }, 502);
     }
 
-    const guide = normalizeGuide(parsed);
+    const guide = normalizeGuide({
+      ...(parsed as Record<string, unknown>),
+      resources: resourcesFromSearchResults(perplexityData.search_results),
+    });
     if (!guide) return json({ error: "invalid_learning_guide" }, 502);
 
     const generatedAt = new Date().toISOString();
