@@ -95,6 +95,7 @@ final class ActivityDetailViewModel {
             LiveActivityService.shared.resolveVerifying(taskId: activity.id, approved: true)
             onReportSubmitted?()
             await TaskEngine.shared.noteReportChanged(activityId: activity.id)
+            if !isExcuse { ReviewRequestManager.shared.registerSuccessfulCompletion() }
             return
         }
 
@@ -180,6 +181,7 @@ final class ActivityDetailViewModel {
                 case .approved:
                     if activity.frequency == .once { await markCompleted() }
                     onReportSubmitted?()
+                    ReviewRequestManager.shared.registerSuccessfulCompletion()
                 case .excused:
                     // Excuse accepted — activity stays active, streak not counted but not penalised
                     break
@@ -203,6 +205,7 @@ final class ActivityDetailViewModel {
                 onReportSubmitted?()
                 LiveActivityService.shared.resolveVerifying(taskId: activity.id, approved: true)
                 await TaskEngine.shared.noteReportChanged(activityId: activity.id)
+                if !isExcuse { ReviewRequestManager.shared.registerSuccessfulCompletion() }
             }
         } catch {
             errorMessage = error.localizedDescription
@@ -235,6 +238,7 @@ final class ActivityDetailViewModel {
             if activity.frequency == .once { await markCompleted() }
             onReportSubmitted?()
             await TaskEngine.shared.noteReportChanged(activityId: activity.id)
+            ReviewRequestManager.shared.registerSuccessfulCompletion()
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -259,6 +263,7 @@ final class ActivityDetailViewModel {
             if update.reportCreated {
                 await reloadReportsOnly()
                 await TaskEngine.shared.noteReportChanged(activityId: activity.id)
+                ReviewRequestManager.shared.registerSuccessfulCompletion()
             }
             onReportSubmitted?()
         } catch {

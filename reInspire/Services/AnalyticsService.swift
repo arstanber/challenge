@@ -54,5 +54,6 @@ final class AnalyticsService {
         case firstWinShown = "first_win_shown"
         case firstWinAccepted = "first_win_accepted"
         case shareCardShared = "share_card_shared"
+        case reviewRequested = "review_requested"
     }
 }

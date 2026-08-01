@@ -169,6 +169,7 @@ final class TaskEngine {
         markDoneLocally(activity.id)
         await insertCheckinReport(activityId: activity.id, queueOnFailure: true)
         await refreshStreaks()
+        ReviewRequestManager.shared.registerSuccessfulCompletion()
     }
 
     /// Local-only optimistic tick (used while a photo report is being handled

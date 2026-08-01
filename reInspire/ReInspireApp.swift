@@ -1,4 +1,5 @@
 import SwiftUI
+import StoreKit
 import os.log
 #if canImport(GoogleSignIn)
 import GoogleSignIn
@@ -58,6 +59,8 @@ struct ReInspireApp: App {
 
 struct RootView: View {
     @Environment(AuthService.self) private var authService
+    @Environment(\.requestReview) private var requestReview
+    @State private var reviewManager = ReviewRequestManager.shared
     @AppStorage("appTheme") private var appTheme = AppColorTheme.light.rawValue
     @AppStorage(AppPrefs.Key.timeFormat) private var timeFormat = AppPrefs.Option.h24
 
@@ -85,6 +88,14 @@ struct RootView: View {
         // 12/24h override for every DatePicker and .formatted() time in the app.
         // Reading `timeFormat` here makes the whole tree re-render on change.
         .environment(\.locale, locale(hourCycle: timeFormat))
+        .onChange(of: reviewManager.requestSequence) { _, _ in
+            Task { @MainActor in
+                // Let the success screen or camera dismiss before StoreKit
+                // presents its native rating sheet.
+                try? await Task.sleep(for: .seconds(1.2))
+                requestReview()
+            }
+        }
     }
 
     private func locale(hourCycle: String) -> Locale {
