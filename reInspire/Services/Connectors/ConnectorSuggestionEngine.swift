@@ -145,7 +145,13 @@ final class ConnectorSuggestionEngine {
         }
         // Chess
         if has(["шахмат", "chess", "парти", "chess.com"]) {
-            add(.chessCom)
+            add(.chessCom, .lichess)
+        }
+        if has(["github", "гитхаб", "коммит", "commit", "pull request", "пул реквест", "кодить", "coding"]) {
+            add(.github)
+        }
+        if has(["youtube", "ютуб", "опубликовать видео", "выложить видео", "загрузить видео", "ролик", "канал"]) {
+            add(.youtube)
         }
         // Telegram bot reports
         if has(["telegram", "телеграм", "фото-отч", "фото отч", "боту"]) {

@@ -34,6 +34,9 @@ struct ConnectorCapability: Identifiable, Hashable {
         let n = Int(target)
         switch connector {
         case .chessCom:    return String(localized: "Сыграть \(n) партий на Chess.com")
+        case .github:      return String(localized: "Сделать \(n) коммитов на GitHub")
+        case .lichess:     return String(localized: "Сыграть \(n) партий на Lichess")
+        case .youtube:     return String(localized: "Опубликовать \(n) видео на YouTube")
         case .appleHealth, .appleFitness:
             switch metric {
             case .steps:           return String(localized: "Пройти \(n) шагов")
@@ -61,6 +64,9 @@ extension DataConnector {
         case .appleClock:    return ["будильник", "alarm", "clock", "подъём", "apple"]
         case .appleShortcuts: return ["команды", "shortcuts", "siri", "автоматизац", "apple"]
         case .chessCom:      return ["chess", "chess.com", "chesscom", "шахмат", "шахматы"]
+        case .github:        return ["github", "гитхаб", "коммит", "commit", "код", "coding"]
+        case .lichess:       return ["lichess", "личесс", "шахмат", "шахматы"]
+        case .youtube:       return ["youtube", "ютуб", "видео", "ролик", "канал"]
         case .strava:        return ["strava", "страва", "бег", "run", "велосипед", "ride"]
         }
     }
@@ -91,6 +97,18 @@ extension DataConnector {
         case .chessCom:
             return [
                 ConnectorCapability(connector: self, title: String(localized: "Сыгранные партии за день"), metric: .itemsToday, unit: String(localized: "партий"), defaultTarget: 10)
+            ]
+        case .github:
+            return [
+                ConnectorCapability(connector: self, title: String(localized: "Публичные коммиты за день"), metric: .itemsToday, unit: String(localized: "коммитов"), defaultTarget: 1)
+            ]
+        case .lichess:
+            return [
+                ConnectorCapability(connector: self, title: String(localized: "Сыгранные партии за день"), metric: .itemsToday, unit: String(localized: "партий"), defaultTarget: 5)
+            ]
+        case .youtube:
+            return [
+                ConnectorCapability(connector: self, title: String(localized: "Опубликованные видео за день"), metric: .itemsToday, unit: String(localized: "видео"), defaultTarget: 1)
             ]
         case .telegram, .appleClock, .appleShortcuts:
             return []

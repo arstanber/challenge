@@ -14,6 +14,7 @@ import UIKit
 /// - Strava → `OAuthConnector` (OAuth2 via the `connector-oauth` Supabase Edge
 ///   Function, which holds the client secrets and tokens).
 /// - Chess.com → `ChessConnector` (public API by username, on-device, no OAuth).
+/// - GitHub / Lichess / YouTube → public profile activity, on-device, no OAuth.
 @MainActor
 @Observable
 final class ConnectorService {
@@ -27,6 +28,9 @@ final class ConnectorService {
     private let calendar = CalendarConnector()
     private let clock = ClockConnector()
     private let chess = ChessConnector()
+    private let github = GitHubConnector()
+    private let lichess = LichessConnector()
+    private let youtube = YouTubeConnector()
     private let defaultsKey = "connected_connectors_v1"
 
     private init() { load() }
@@ -38,6 +42,9 @@ final class ConnectorService {
         case .telegram:      return TelegramService.shared.isLinked
         case .appleClock:    return clock.isEnabled
         case .chessCom:      return chess.isConnected
+        case .github:        return github.isConnected
+        case .lichess:       return lichess.isConnected
+        case .youtube:       return youtube.isConnected
         case .appleCalendar: return connected.contains(c) && Self.isCalendarAuthorized
         default:             return connected.contains(c)
         }
@@ -45,6 +52,9 @@ final class ConnectorService {
 
     /// The stored Chess.com username (for prefilling the connect sheet).
     var chessUsername: String? { chess.username }
+    var githubUsername: String? { github.username }
+    var lichessUsername: String? { lichess.username }
+    var youtubeChannelID: String? { youtube.channelID }
 
     /// Connect Chess.com by validating + storing a username (no OAuth).
     func connectChess(username: String) async throws {
@@ -56,6 +66,40 @@ final class ConnectorService {
     func disconnectChess() {
         chess.disconnect()
         connected.remove(.chessCom)
+        save()
+    }
+
+    func profileIdentifier(for connector: DataConnector) -> String? {
+        switch connector {
+        case .chessCom: return chessUsername
+        case .github: return githubUsername
+        case .lichess: return lichessUsername
+        case .youtube: return youtubeChannelID
+        default: return nil
+        }
+    }
+
+    func connectProfile(_ connector: DataConnector, identifier: String) async throws {
+        switch connector {
+        case .chessCom: try await chess.connect(username: identifier)
+        case .github: try await github.connect(username: identifier)
+        case .lichess: try await lichess.connect(username: identifier)
+        case .youtube: try await youtube.connect(channelID: identifier)
+        default: throw ConnectorError.unavailable
+        }
+        connected.insert(connector)
+        save()
+    }
+
+    func disconnectProfile(_ connector: DataConnector) {
+        switch connector {
+        case .chessCom: chess.disconnect()
+        case .github: github.disconnect()
+        case .lichess: lichess.disconnect()
+        case .youtube: youtube.disconnect()
+        default: return
+        }
+        connected.remove(connector)
         save()
     }
 
@@ -97,7 +141,8 @@ final class ConnectorService {
         case .calendar:  try await calendar.requestAuthorization()
         case .clock:     try await clock.enable()
         case .shortcuts: openShortcutsApp()
-        case .username:  return // Chess.com etc. connect via their own sheet.
+        case .username:
+            throw ConnectorError.notConfigured(String(localized: "Откройте настройки коннектора и укажите профиль"))
         case .telegram:  return // handled via TelegramLinkView; nothing to do here.
         }
         connected.insert(c)
@@ -108,7 +153,7 @@ final class ConnectorService {
         switch c.kind {
         case .oauth:    await oauth.disconnect(c)
         case .clock:    clock.disable()
-        case .username: chess.disconnect()
+        case .username: disconnectProfile(c)
         case .telegram: return // handled via TelegramLinkView.
         case .health, .calendar, .shortcuts: break
         }
@@ -163,6 +208,12 @@ final class ConnectorService {
             return await todayCalendarEventsCount().map(Double.init)
         case .chessCom:
             return Double(await chess.gamesToday())
+        case .github:
+            return Double(await github.commitsToday())
+        case .lichess:
+            return Double(await lichess.gamesToday())
+        case .youtube:
+            return Double(await youtube.uploadsToday())
         case .telegram, .appleClock, .appleShortcuts:
             return nil
         }

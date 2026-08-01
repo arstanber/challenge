@@ -190,7 +190,7 @@ struct OAuthConfig {
                 extraAuthParams: [URLQueryItem(name: "approval_prompt", value: "auto")]
             )
         case .appleHealth, .appleFitness, .appleCalendar, .telegram, .appleClock,
-             .appleShortcuts, .chessCom:
+             .appleShortcuts, .chessCom, .github, .lichess, .youtube:
             return OAuthConfig(clientId: "", authorizeURL: "", scope: "")
         }
     }

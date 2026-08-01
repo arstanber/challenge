@@ -8,7 +8,7 @@ struct ConnectorsView: View {
     @State private var showTelegramLink = false
     @State private var showPremium = false
     @State private var showClockSettings = false
-    @State private var showChessSettings = false
+    @State private var profileConnector: DataConnector?
     @State private var healthSheet: DataConnector?
     @State private var errorMessage: String?
 
@@ -45,8 +45,8 @@ struct ConnectorsView: View {
         .sheet(isPresented: $showClockSettings) {
             ClockReminderSheet(service: service)
         }
-        .sheet(isPresented: $showChessSettings) {
-            ChessUsernameSheet(service: service)
+        .sheet(item: $profileConnector) { connector in
+            PublicProfileConnectorSheet(connector: connector, service: service)
         }
         .sheet(item: $healthSheet) { connector in
             HealthConnectSheet(connector: connector, service: service)
@@ -119,9 +119,9 @@ struct ConnectorsView: View {
             return
         }
 
-        // Chess.com connects by username (public API, no OAuth).
-        if connector == .chessCom {
-            showChessSettings = true
+        // Public profile sources connect without OAuth through their own sheet.
+        if connector.kind == .username {
+            profileConnector = connector
             return
         }
 
@@ -455,9 +455,10 @@ private struct HealthConnectSheet: View {
     }
 }
 
-// MARK: - Chess.com username settings
+// MARK: - Public profile connector settings
 
-private struct ChessUsernameSheet: View {
+private struct PublicProfileConnectorSheet: View {
+    let connector: DataConnector
     let service: ConnectorService
     @Environment(\.dismiss) private var dismiss
 
@@ -465,17 +466,36 @@ private struct ChessUsernameSheet: View {
     @State private var saving = false
     @State private var errorMessage: String?
 
-    private var isConnected: Bool { service.isConnected(.chessCom) }
+    private var isConnected: Bool { service.isConnected(connector) }
+
+    private var fieldTitle: String {
+        connector == .youtube ? String(localized: "ID YouTube-канала") : String(localized: "Имя пользователя")
+    }
+
+    private var helpText: String {
+        switch connector {
+        case .chessCom:
+            return String(localized: "Введи свой ник на Chess.com. Мы считаем сыгранные за день партии через публичный API.")
+        case .github:
+            return String(localized: "Введи GitHub username. Учитываются только публичные коммиты; приватная активность не читается.")
+        case .lichess:
+            return String(localized: "Введи свой ник на Lichess. Мы считаем завершённые за день партии через публичный API.")
+        case .youtube:
+            return String(localized: "Введи ID канала из 24 символов, начинающийся с UC. Он указан в YouTube Studio в разделе расширенных настроек.")
+        default:
+            return ""
+        }
+    }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("Имя пользователя Chess.com", text: $username)
+                    TextField(fieldTitle, text: $username)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                 } footer: {
-                    Text("Введи свой ник на Chess.com. Мы будем считать сыгранные за день партии через публичный API -- авторизация не нужна.")
+                    Text(helpText)
                 }
                 if let errorMessage {
                     Section { Text(errorMessage).font(.caption).foregroundStyle(.red) }
@@ -483,14 +503,14 @@ private struct ChessUsernameSheet: View {
                 if isConnected {
                     Section {
                         Button(role: .destructive) {
-                            service.disconnectChess(); Haptics.tap(); dismiss()
+                            service.disconnectProfile(connector); Haptics.tap(); dismiss()
                         } label: {
                             Text("Отключить")
                         }
                     }
                 }
             }
-            .navigationTitle("Chess.com")
+            .navigationTitle(connector.displayName)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -503,7 +523,7 @@ private struct ChessUsernameSheet: View {
                         .overlay { if saving { ProgressView().scaleEffect(0.7) } }
                 }
             }
-            .onAppear { username = service.chessUsername ?? "" }
+            .onAppear { username = service.profileIdentifier(for: connector) ?? "" }
         }
     }
 
@@ -511,7 +531,7 @@ private struct ChessUsernameSheet: View {
         saving = true
         defer { saving = false }
         do {
-            try await service.connectChess(username: username)
+            try await service.connectProfile(connector, identifier: username)
             Haptics.success()
             dismiss()
         } catch {

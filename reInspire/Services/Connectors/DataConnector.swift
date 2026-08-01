@@ -10,6 +10,9 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
     case appleClock
     case appleShortcuts
     case chessCom
+    case github
+    case lichess
+    case youtube
     // Max
     case strava
 
@@ -27,7 +30,7 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
         case .telegram:                                                    return .telegram
         case .appleClock:                                                  return .clock
         case .appleShortcuts:                                              return .shortcuts
-        case .chessCom:                                                    return .username
+        case .chessCom, .github, .lichess, .youtube:                       return .username
         case .strava:                                                      return .oauth
         }
     }
@@ -35,7 +38,7 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
     /// Plan tier required to connect this source.
     var requiredPlan: UserPlan {
         switch self {
-        case .appleHealth, .appleFitness, .appleCalendar, .telegram, .appleClock, .appleShortcuts, .chessCom:
+        case .appleHealth, .appleFitness, .appleCalendar, .telegram, .appleClock, .appleShortcuts, .chessCom, .github, .lichess, .youtube:
             return .free
         case .strava:
             return .max
@@ -61,6 +64,9 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
         case .appleClock:    return String(localized: "Будильник")
         case .appleShortcuts: return String(localized: "Команды")
         case .chessCom:      return "Chess.com"
+        case .github:        return "GitHub"
+        case .lichess:       return "Lichess"
+        case .youtube:       return "YouTube"
         case .strava:        return "Strava"
         }
     }
@@ -75,6 +81,9 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
         case .appleClock:    return String(localized: "Ежедневное напоминание со списком задач в выбранное время")
         case .appleShortcuts: return String(localized: "Запускайте задачи и автоматизации через приложение «Команды» и Siri")
         case .chessCom:      return String(localized: "Засчитывает сыгранные за день партии на Chess.com")
+        case .github:        return String(localized: "Засчитывает публичные коммиты за день")
+        case .lichess:       return String(localized: "Засчитывает сыгранные за день партии на Lichess")
+        case .youtube:       return String(localized: "Засчитывает опубликованные за день видео")
         case .strava:        return String(localized: "Пробежки и тренировки из Strava засчитываются автоматически")
         }
     }
@@ -88,6 +97,9 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
         case .appleClock:    return "alarm.fill"
         case .appleShortcuts: return "square.stack.3d.up.fill"
         case .chessCom:      return "checkerboard.rectangle"
+        case .github:        return "chevron.left.forwardslash.chevron.right"
+        case .lichess:       return "circle.grid.cross.fill"
+        case .youtube:       return "play.rectangle.fill"
         case .strava:        return "figure.outdoor.cycle"
         }
     }
@@ -102,7 +114,7 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
         case .appleShortcuts: return "appleshortcuts"
         case .chessCom:       return "chess"
         case .strava:         return "strava"
-        case .telegram, .appleClock: return nil
+        case .github, .lichess, .youtube, .telegram, .appleClock: return nil
         }
     }
 
@@ -115,6 +127,9 @@ enum DataConnector: String, CaseIterable, Identifiable, Codable {
         case .appleClock:    return Color(hex: "FF9F0A")
         case .appleShortcuts: return Color(hex: "5E5CE6")
         case .chessCom:      return Color(hex: "769656")
+        case .github:        return Color.primary
+        case .lichess:       return Color(hex: "B58863")
+        case .youtube:       return Color(hex: "FF0000")
         case .strava:        return Color(hex: "FC4C02")
         }
     }
