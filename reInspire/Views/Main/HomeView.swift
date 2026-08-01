@@ -146,6 +146,7 @@ struct HomeView: View {
     // dismissed; only opening the sheet is a separate flag.
     @State private var morningBrief: MorningBrief?
     @State private var showMorningBriefSheet = false
+    @State private var showAIChat = false
 
     // iPad (regular width) lays task cards out in a width-adaptive grid:
     // ~2 columns in portrait, ~3 in landscape, chosen from the available width.
@@ -461,6 +462,18 @@ struct HomeView: View {
                 .padding(.top, 14)
                 .ignoresSafeArea(.container, edges: .top)
         }
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 24)
+                .onEnded { value in
+                    let horizontal = value.predictedEndTranslation.width
+                    let vertical = value.predictedEndTranslation.height
+                    guard horizontal < -90,
+                          abs(horizontal) > abs(vertical) * 1.4,
+                          !reorderMode else { return }
+                    Haptics.medium()
+                    showAIChat = true
+                }
+        )
         // Bottom create buttons, always above the home indicator
         .safeAreaInset(edge: .bottom) {
             BottomButtons(
@@ -522,6 +535,12 @@ struct HomeView: View {
         .fullScreenCover(isPresented: $showPerfectDay) {
             PerfectDayView { showPerfectDay = false }
                 .presentationBackground(.clear)
+        }
+        .fullScreenCover(isPresented: $showAIChat) {
+            AIChatView(
+                todayTasks: todayTasks.map(\.title),
+                streakCurrent: vm.globalStreakCurrent
+            )
         }
         .fullScreenCover(item: $detailActivity) { activity in
             HabitCalendarView(activity: activity) {

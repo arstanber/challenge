@@ -4,6 +4,7 @@ export type Feature =
   | "verify-report"
   | "parse-tasks-group"
   | "coach-group"
+  | "ai-chat"
   | "plan-goal";
 
 export interface RateLimitOk {

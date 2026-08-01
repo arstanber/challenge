@@ -47,6 +47,26 @@ struct SplitTask: Decodable, Identifiable {
     private enum CodingKeys: String, CodingKey { case title, estimatedDays }
 }
 
+struct AIChatTurn: Codable, Identifiable {
+    let id: UUID
+    let role: String
+    let content: String
+
+    init(id: UUID = UUID(), role: String, content: String) {
+        self.id = id
+        self.role = role
+        self.content = content
+    }
+
+    private enum CodingKeys: String, CodingKey { case role, content }
+}
+
+struct AIChatReply: Decodable {
+    let reply: String
+    let remaining: Int?
+    let error: String?
+}
+
 // MARK: - Service
 
 final class AICoachService {
@@ -125,6 +145,31 @@ final class AICoachService {
         let response: GoalSplit = try await supabase.functions
             .invoke("split-goal", options: FunctionInvokeOptions(body: req))
         if let e = response.error { throw CoachError.server(e) }
+        return response
+    }
+
+    // MARK: Personal AI chat
+
+    private struct ChatRequest: Encodable {
+        let messages: [AIChatTurn]
+        let todayTasks: [String]
+        let streakCurrent: Int
+        let language: String
+    }
+
+    func chat(messages: [AIChatTurn], todayTasks: [String], streakCurrent: Int) async throws -> AIChatReply {
+        let request = ChatRequest(
+            messages: Array(messages.suffix(12)),
+            todayTasks: Array(todayTasks.prefix(20)),
+            streakCurrent: streakCurrent,
+            language: AppLanguage.current
+        )
+        let response: AIChatReply = try await supabase.functions
+            .invoke("ai-chat", options: FunctionInvokeOptions(body: request))
+        if let error = response.error { throw CoachError.server(error) }
+        if let remaining = response.remaining {
+            await RateLimiterService.shared.syncRemaining(remaining, for: .aiChat)
+        }
         return response
     }
 }

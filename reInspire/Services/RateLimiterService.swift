@@ -8,6 +8,7 @@ enum AIFeature: String {
     case verifyReport     = "verify-report"
     case parseTasks       = "parse-tasks"
     case morningBrief     = "morning-brief"
+    case aiChat           = "ai-chat"
     case planGoal         = "plan-goal"
     case suggestCondition = "suggest-condition"
 
@@ -16,6 +17,7 @@ enum AIFeature: String {
         case .verifyReport:     return "verify-report"
         case .parseTasks:       return "parse-tasks-group"
         case .morningBrief:     return "coach-group"
+        case .aiChat:           return "ai-chat"
         case .planGoal:         return "plan-goal"
         case .suggestCondition: return "suggest-condition"
         }
@@ -31,6 +33,8 @@ enum AIFeature: String {
             switch plan { case .free: return 1;  case .premium: return 10; case .family: return 10; case .max: return 30 }
         case .morningBrief:
             switch plan { case .free: return 1;  case .premium: return 10; case .family: return 10; case .max: return 30 }
+        case .aiChat:
+            switch plan { case .free: return 10; case .premium: return 100; case .family: return 100; case .max: return 300 }
         case .planGoal:
             switch plan { case .free: return 3;  case .premium: return 15; case .family: return 15; case .max: return 50 }
         case .suggestCondition:
