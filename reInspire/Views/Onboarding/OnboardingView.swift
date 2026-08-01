@@ -56,7 +56,7 @@ struct LiquidGlassButton: View {
             Text(title)
                 .font(.system(size: fontSize * s, weight: .medium))
                 .frame(width: width * s, height: height * s)
-                .glassEffect(in: Capsule())
+                .adaptiveGlassEffect(in: Capsule())
         }
         .buttonStyle(PressableButtonStyle())
     }

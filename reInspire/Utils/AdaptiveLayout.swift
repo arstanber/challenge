@@ -38,6 +38,17 @@ extension View {
         if condition { transform(self) } else { self }
     }
 
+    /// Uses native Liquid Glass on iOS 26 and a system material fallback on
+    /// earlier supported releases.
+    @ViewBuilder
+    func adaptiveGlassEffect<S: Shape>(in shape: S) -> some View {
+        if #available(iOS 26.0, *) {
+            glassEffect(.regular, in: shape)
+        } else {
+            background(.ultraThinMaterial, in: shape)
+        }
+    }
+
     /// A shared Liquid Glass surface for cards and compact controls.
     ///
     /// The subtle tint keeps each surface tied to its semantic accent while
@@ -49,7 +60,7 @@ extension View {
         borderOpacity: Double = 0.12
     ) -> some View {
         background(tint.opacity(tintOpacity), in: shape)
-            .glassEffect(.regular, in: shape)
+            .adaptiveGlassEffect(in: shape)
             .overlay {
                 shape
                     .strokeBorder(.white.opacity(borderOpacity), lineWidth: 0.75)

@@ -62,7 +62,10 @@ private struct SwipeActionsModifier: ViewModifier {
                     }
                 }
                 .offset(x: offset)
-                .gesture(HorizontalPanGesture(onChanged: handleChanged, onEnded: handleEnded))
+                .modifier(CompatibleHorizontalSwipe(
+                    onChanged: handleChanged,
+                    onEnded: handleEnded
+                ))
         }
     }
 
@@ -104,10 +107,38 @@ private struct SwipeActionsModifier: ViewModifier {
     }
 }
 
+private struct CompatibleHorizontalSwipe: ViewModifier {
+    let onChanged: (CGFloat) -> Void
+    let onEnded: (CGFloat) -> Void
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if #available(iOS 18.0, *) {
+            content.gesture(HorizontalPanGesture(onChanged: onChanged, onEnded: onEnded))
+        } else {
+            content.simultaneousGesture(
+                DragGesture(minimumDistance: 12)
+                    .onChanged { value in
+                        guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                        onChanged(value.translation.width)
+                    }
+                    .onEnded { value in
+                        guard abs(value.translation.width) > abs(value.translation.height) else {
+                            onEnded(0)
+                            return
+                        }
+                        onEnded(value.translation.width)
+                    }
+            )
+        }
+    }
+}
+
 /// Horizontal-only pan recognizer. A SwiftUI `DragGesture` here would compete
 /// with the enclosing ScrollView and freeze vertical scrolling; this recognizer
 /// refuses to begin unless the drag is predominantly horizontal, so vertical
 /// swipes fall through to the list.
+@available(iOS 18.0, *)
 private struct HorizontalPanGesture: UIGestureRecognizerRepresentable {
     let onChanged: (CGFloat) -> Void
     let onEnded: (CGFloat) -> Void

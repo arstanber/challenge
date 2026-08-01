@@ -22,7 +22,7 @@ struct AIChatView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                AppColors.background.ignoresSafeArea()
+                Color(.systemGroupedBackground).ignoresSafeArea()
                 VStack(spacing: 0) {
                     conversation
                     composer
@@ -99,7 +99,7 @@ struct AIChatView: View {
                     send()
                 } label: {
                     HStack {
-                        Text(suggestion).font(.manrope(.semibold, size: 14))
+                        Text(suggestion).font(.manrope(.semiBold, size: 14))
                         Spacer()
                         Image(systemName: "arrow.up.right")
                     }

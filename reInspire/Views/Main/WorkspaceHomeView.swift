@@ -109,7 +109,7 @@ struct WorkspaceHomeView: View {
                         .font(.system(size: 28, weight: .semibold))
                         .foregroundColor(.black)
                         .frame(width: 68, height: 68)
-                        .glassEffect(in: Circle())
+                        .adaptiveGlassEffect(in: Circle())
                 }
                 .buttonStyle(PressableButtonStyle())
                 .padding(.trailing, 24)

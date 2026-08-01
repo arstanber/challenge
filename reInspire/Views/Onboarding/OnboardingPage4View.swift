@@ -131,7 +131,7 @@ private struct P4NotificationCard: View {
         .padding(12 * scale)
         .frame(maxWidth: .infinity, alignment: .leading)
         // Native iOS Liquid Glass (matches the onboarding CTA button).
-        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .adaptiveGlassEffect(in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         .shadow(color: Color.black.opacity(0.05), radius: 6, x: 0, y: 2)
     }
 }

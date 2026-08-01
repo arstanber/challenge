@@ -58,6 +58,13 @@ struct AIChatTurn: Codable, Identifiable {
         self.content = content
     }
 
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = UUID()
+        role = try container.decode(String.self, forKey: .role)
+        content = try container.decode(String.self, forKey: .content)
+    }
+
     private enum CodingKeys: String, CodingKey { case role, content }
 }
 
