@@ -228,6 +228,11 @@
 				kk,
 				fr,
 				ar,
+				es,
+				ja,
+				ko,
+				pt,
+				"zh-Hans",
 				Base,
 			);
 			mainGroup = F5D1B5922FC8554600C764F3;
@@ -491,6 +496,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = reInspire.;
 				INFOPLIST_KEY_NSCameraUsageDescription = "reInspire needs camera access to take photos for your activity reports.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "reInspire uses the microphone so you can add tasks by speaking.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "reInspire needs permission to save photos.";
@@ -538,6 +544,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = reInspire.;
 				INFOPLIST_KEY_NSCameraUsageDescription = "reInspire needs camera access to take photos for your activity reports.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "reInspire uses the microphone so you can add tasks by speaking.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "reInspire needs permission to save photos.";

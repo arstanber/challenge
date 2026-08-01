@@ -103,6 +103,31 @@ enum ArPlural {
     }
 }
 
+enum EsPlural {
+    static func days(_ n: Int) -> String { "\(n) día\(n == 1 ? "" : "s")" }
+    static func remainingDays(_ n: Int) -> String { "faltan \(days(n))" }
+}
+
+enum JaPlural {
+    static func days(_ n: Int) -> String { "\(n)日" }
+    static func remainingDays(_ n: Int) -> String { "あと\(days(n))" }
+}
+
+enum KoPlural {
+    static func days(_ n: Int) -> String { "\(n)일" }
+    static func remainingDays(_ n: Int) -> String { "\(days(n)) 남음" }
+}
+
+enum PtPlural {
+    static func days(_ n: Int) -> String { "\(n) dia\(n == 1 ? "" : "s")" }
+    static func remainingDays(_ n: Int) -> String { "faltam \(days(n))" }
+}
+
+enum ZhHansPlural {
+    static func days(_ n: Int) -> String { "\(n)天" }
+    static func remainingDays(_ n: Int) -> String { "还剩\(days(n))" }
+}
+
 /// Unified plural picker -- routes to the right language's forms based on
 /// `AppLanguage.current`, so callers don't branch by hand.
 enum Plural {
@@ -113,6 +138,11 @@ enum Plural {
         case "kk": return KkPlural.days(n)
         case "fr": return FrPlural.days(n)
         case "ar": return ArPlural.days(n)
+        case "es": return EsPlural.days(n)
+        case "ja": return JaPlural.days(n)
+        case "ko": return KoPlural.days(n)
+        case "pt": return PtPlural.days(n)
+        case "zh-Hans": return ZhHansPlural.days(n)
         default:   return EnPlural.days(n)
         }
     }
@@ -124,6 +154,11 @@ enum Plural {
         case "kk": return KkPlural.remainingDays(n)
         case "fr": return FrPlural.remainingDays(n)
         case "ar": return ArPlural.remainingDays(n)
+        case "es": return EsPlural.remainingDays(n)
+        case "ja": return JaPlural.remainingDays(n)
+        case "ko": return KoPlural.remainingDays(n)
+        case "pt": return PtPlural.remainingDays(n)
+        case "zh-Hans": return ZhHansPlural.remainingDays(n)
         default:   return EnPlural.remainingDays(n)
         }
     }
