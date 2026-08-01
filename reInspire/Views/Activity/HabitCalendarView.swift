@@ -14,6 +14,8 @@ struct HabitCalendarView: View {
     @State private var shareRequest: ShareRequest?
     @State private var counterValue = ""
     @State private var timerService = ActivityTimerService.shared
+    @State private var selectedPage = 0
+    @State private var showMaxPaywall = false
 
     // Honors the "Начало недели" setting (Mon/Sun-first grid).
     private let cal = AppPrefs.calendar
@@ -43,24 +45,24 @@ struct HabitCalendarView: View {
         ZStack {
             Color(.systemBackground).ignoresSafeArea()
 
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 28) {
-                    header.appearEffect(delay: 0.05)
-                    if needsPhoto { photoRequirementBanner.appearEffect(delay: 0.1) }
-                    statsRow.appearEffect(delay: 0.15)
-                    monthCalendar.appearEffect(delay: 0.25)
-                }
-                .padding(.horizontal, 22)
-                .padding(.top, 12)
-                .padding(.bottom, 170)
-                .readableWidth()
+            TabView(selection: $selectedPage) {
+                calendarPage
+                    .tag(0)
+
+                ActivityLearningView(
+                    activity: vm.activity,
+                    isMax: AuthService.shared.currentUser?.plan == .max,
+                    isActive: selectedPage == 1,
+                    openMaxPaywall: { showMaxPaywall = true }
+                )
+                .padding(.top, 58)
+                .tag(1)
             }
+            .tabViewStyle(.page(indexDisplayMode: .never))
 
             VStack {
                 topBar
                 Spacer()
-                todayBar
-                    .readableWidth()
             }
         }
         .task {
@@ -88,6 +90,34 @@ struct HabitCalendarView: View {
         .sheet(item: $shareRequest) { req in
             ShareComposerView(kind: req.kind, name: req.name)
         }
+        .sheet(isPresented: $showMaxPaywall) {
+            NavigationStack {
+                PremiumView(initialSelection: Constants.Store.maxAnnualID)
+            }
+        }
+    }
+
+    private var calendarPage: some View {
+        ZStack {
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 28) {
+                    header.appearEffect(delay: 0.05)
+                    if needsPhoto { photoRequirementBanner.appearEffect(delay: 0.1) }
+                    statsRow.appearEffect(delay: 0.15)
+                    monthCalendar.appearEffect(delay: 0.25)
+                }
+                .padding(.horizontal, 22)
+                .padding(.top, 12)
+                .padding(.bottom, 170)
+                .readableWidth()
+            }
+
+            VStack {
+                Spacer()
+                todayBar
+                    .readableWidth()
+            }
+        }
     }
 
     // MARK: Top bar
@@ -101,7 +131,32 @@ struct HabitCalendarView: View {
                     .frame(width: 38, height: 38)
                     .background(Circle().fill(Color.primary.opacity(0.08)))
             }
+
             Spacer()
+
+            Button {
+                Haptics.selection()
+                withAnimation(.snappy) {
+                    selectedPage = selectedPage == 0 ? 1 : 0
+                }
+            } label: {
+                Label(
+                    selectedPage == 0 ? "Обучение" : "Задание",
+                    systemImage: selectedPage == 0 ? "graduationcap.fill" : "checkmark.circle.fill"
+                )
+                .font(.manrope(.bold, size: 13))
+                .foregroundStyle(selectedPage == 0 ? .purple : accent)
+                .padding(.horizontal, 13)
+                .frame(height: 38)
+                .background(
+                    Capsule()
+                        .fill((selectedPage == 0 ? Color.purple : accent).opacity(0.12))
+                )
+            }
+            .buttonStyle(.plain)
+
+            Spacer()
+
             Button {
                 Haptics.tap()
                 shareRequest = ShareRequest(
