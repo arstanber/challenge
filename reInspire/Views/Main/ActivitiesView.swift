@@ -71,7 +71,7 @@ struct ActivitiesView: View {
                                                 Haptics.warning()
                                                 deletingActivity = activity
                                             } label: {
-                                                Label("Удалить", systemImage: "trash")
+                                                Label("Удалить", image: "nav_deleted")
                                             }
                                         }
                                     }
@@ -292,9 +292,17 @@ struct EmptyActivitiesView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            Image(systemName: isParentTab ? "person.2.circle" : "flame.circle")
-                .font(.system(size: 60))
-                .foregroundStyle(.orange.opacity(0.5))
+            if isParentTab {
+                Image(systemName: "person.2.circle")
+                    .font(.system(size: 60))
+                    .foregroundStyle(.orange.opacity(0.5))
+            } else {
+                Image("nav_tasks")
+                    .resizable()
+                    .renderingMode(.template)
+                    .foregroundStyle(.orange.opacity(0.5))
+                    .frame(width: 60, height: 60)
+            }
             Text(isParentTab ? "No assignments from parents yet" : "Start your first challenge")
                 .font(.headline)
                 .foregroundStyle(.secondary)

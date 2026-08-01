@@ -177,8 +177,11 @@ private struct DoneTaskRow: View {
 private struct DoneEmptyState: View {
     var body: some View {
         VStack(spacing: 12) {
-            Image(systemName: "checkmark.circle")
-                .font(.system(size: 48))
+            Image("nav_done")
+                .resizable()
+                .renderingMode(.template)
+                .scaledToFit()
+                .frame(width: 48, height: 48)
                 .foregroundColor(.black.opacity(0.2))
             Text("No completed tasks yet")
                 .font(.system(size: 17, weight: .medium))

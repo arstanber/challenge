@@ -1158,7 +1158,7 @@ private struct TaskCardView: View {
                         Button { onAddSubtask(task) } label: { Label("Добавить подзадачу", systemImage: "plus.circle") }
                     }
                     Button { onTomorrow(task) } label: { Label("На завтра", systemImage: "calendar") }
-                    Button(role: .destructive) { onDelete(task) } label: { Label("Удалить", systemImage: "trash") }
+                    Button(role: .destructive) { onDelete(task) } label: { Label("Удалить", image: "nav_deleted") }
                 }
                 .swipeCardActions(
                     onComplete: isGoal ? nil : { handleToggle() },
@@ -1459,7 +1459,7 @@ private struct SubTaskRow: View {
         .contentShape(Rectangle())
         .contextMenu {
             Button { onEdit(subtask) } label: { Label("Изменить", systemImage: "pencil") }
-            Button(role: .destructive) { onDelete(subtask) } label: { Label("Удалить", systemImage: "trash") }
+            Button(role: .destructive) { onDelete(subtask) } label: { Label("Удалить", image: "nav_deleted") }
         }
     }
 

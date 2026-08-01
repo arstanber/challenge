@@ -92,71 +92,18 @@ private struct GlassIconButton: View {
     private var iconContent: some View {
         switch iconType {
         case .aiSparkle:
-            ZStack {
-                SparkleShape(pointCount: 4, innerRatio: 0.4)
-                    .fill(Color(red: 0.0, green: 0.282, blue: 0.886))
-                    .frame(width: 10, height: 10)
-                    .offset(x: -6, y: -6)
-                SparkleShape(pointCount: 4, innerRatio: 0.35)
-                    .fill(Color.black)
-                    .frame(width: 22, height: 22)
-                    .offset(x: 2, y: 2)
-            }
+            Image("planner_ai")
+                .resizable()
+                .frame(width: 32, height: 31)
         case .bySaying:
-            ZStack {
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(Color(red: 0.0, green: 0.282, blue: 0.886))
-                    .frame(width: 20, height: 4)
-                    .offset(y: 9)
-                Text("i")
-                    .font(.system(size: 20, weight: .medium))
-                    .italic()
-                    .foregroundColor(.black)
-                    .offset(y: -2)
-                Circle()
-                    .fill(Color(red: 0.0, green: 0.282, blue: 0.886))
-                    .frame(width: 5, height: 5)
-                    .offset(y: -13)
-            }
+            Image("planner_voice")
+                .resizable()
+                .frame(width: 20, height: 28)
         case .byYourself:
-            ZStack {
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(Color(red: 0.0, green: 0.282, blue: 0.886))
-                    .frame(width: 22, height: 4)
-                    .offset(y: 9)
-                Text("A")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundColor(.black)
-                    .offset(y: -2)
-            }
+            Image("planner_manual")
+                .resizable()
+                .frame(width: 29, height: 28)
         }
-    }
-}
-
-// MARK: - Sparkle shape
-
-private struct SparkleShape: Shape {
-    var pointCount: Int = 4
-    var innerRatio: CGFloat = 0.35
-
-    func path(in rect: CGRect) -> Path {
-        let center = CGPoint(x: rect.midX, y: rect.midY)
-        let outerRadius = min(rect.width, rect.height) / 2
-        let innerRadius = outerRadius * innerRatio
-        let angleStep = (2 * CGFloat.pi) / CGFloat(pointCount * 2)
-
-        var path = Path()
-        for i in 0..<(pointCount * 2) {
-            let angle = CGFloat(i) * angleStep - CGFloat.pi / 2
-            let radius = i.isMultiple(of: 2) ? outerRadius : innerRadius
-            let point = CGPoint(
-                x: center.x + radius * cos(angle),
-                y: center.y + radius * sin(angle)
-            )
-            if i == 0 { path.move(to: point) } else { path.addLine(to: point) }
-        }
-        path.closeSubpath()
-        return path
     }
 }
 
