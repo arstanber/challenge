@@ -8,6 +8,7 @@ import Foundation
 /// strings: the server buckets days in each participant's own timezone, so
 /// the client treats them as opaque day labels and never re-buckets.
 struct Duel: Codable, Identifiable, Hashable {
+    enum CommitmentKind: String, Codable, CaseIterable { case none, days, socialForfeit = "social_forfeit" }
     enum Status: String, Codable {
         case pending, active, finished, cancelled
     }
@@ -29,6 +30,9 @@ struct Duel: Codable, Identifiable, Hashable {
     /// has more (default 0 for older payloads before the v2 scoring migration).
     let challengerTasks: Int
     let opponentTasks: Int
+    let commitmentKind: CommitmentKind
+    let stakeDays: Int?
+    let forfeitText: String?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -46,6 +50,9 @@ struct Duel: Codable, Identifiable, Hashable {
         case opponentDone = "opponent_done"
         case challengerTasks = "challenger_tasks"
         case opponentTasks = "opponent_tasks"
+        case commitmentKind = "commitment_kind"
+        case stakeDays = "stake_days"
+        case forfeitText = "forfeit_text"
     }
 
     init(from decoder: Decoder) throws {
@@ -65,6 +72,9 @@ struct Duel: Codable, Identifiable, Hashable {
         opponentDone = try c.decodeIfPresent([String].self, forKey: .opponentDone) ?? []
         challengerTasks = try c.decodeIfPresent(Int.self, forKey: .challengerTasks) ?? 0
         opponentTasks = try c.decodeIfPresent(Int.self, forKey: .opponentTasks) ?? 0
+        commitmentKind = try c.decodeIfPresent(CommitmentKind.self, forKey: .commitmentKind) ?? .none
+        stakeDays = try c.decodeIfPresent(Int.self, forKey: .stakeDays)
+        forfeitText = try c.decodeIfPresent(String.self, forKey: .forfeitText)
     }
 
     // MARK: Day helpers

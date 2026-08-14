@@ -73,8 +73,10 @@ struct DuelsView: View {
         .task { await service.load() }
         .refreshable { await service.load() }
         .sheet(isPresented: $showCreate) {
-            DuelCreateSheet { days in createDuel(days: days) }
-                .presentationDetents([.medium])
+            DuelCreateSheet(availableDays: service.commitmentDays) { days, kind, stake, forfeit in
+                createDuel(days: days, commitment: kind, stake: stake, forfeit: forfeit)
+            }
+                .presentationDetents([.large])
         }
         .sheet(isPresented: $showNearby) {
             DuelNearbyConnectView { await service.load() }
@@ -134,9 +136,9 @@ struct DuelsView: View {
         .padding(.vertical, 12)
     }
 
-    private func createDuel(days: Int) {
+    private func createDuel(days: Int, commitment: Duel.CommitmentKind, stake: Int?, forfeit: String?) {
         Task {
-            if let code = await service.createDuel(days: days) {
+            if let code = await service.createDuel(days: days, commitment: commitment, stakeDays: stake, forfeitText: forfeit) {
                 Haptics.success()
                 createdCode = CreatedCode(code: code)
             }
@@ -267,9 +269,13 @@ private struct DuelInviteSheet: View {
 // MARK: - Create sheet (length picker)
 
 private struct DuelCreateSheet: View {
-    let onCreate: (Int) -> Void
+    let availableDays: Int
+    let onCreate: (Int, Duel.CommitmentKind, Int?, String?) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var days = 7
+    @State private var commitment: Duel.CommitmentKind = .none
+    @State private var stakeDays = 1
+    @State private var forfeitText = ""
 
     private let quick = [7, 14, 30, 60]
 
@@ -280,6 +286,28 @@ private struct DuelCreateSheet: View {
             Text("Соревнуйтесь, кто за это время выполнит больше дел.")
                 .font(.subheadline).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
+
+            Picker("Обязательство", selection: $commitment) {
+                Text("Без обязательства").tag(Duel.CommitmentKind.none)
+                Text("Дни серии").tag(Duel.CommitmentKind.days)
+                Text("Социальный фант").tag(Duel.CommitmentKind.socialForfeit)
+            }
+            .pickerStyle(.segmented)
+
+            if commitment == .days {
+                VStack(alignment: .leading, spacing: 8) {
+                    Stepper("Поставить дней: \(stakeDays)", value: $stakeDays,
+                            in: 1...max(1, min(3, availableDays - 1)))
+                    Text("Доступно: \(availableDays). После вызова останется минимум один день. Победитель получает дни обоих участников.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            } else if commitment == .socialForfeit {
+                TextField("Например: пробеги 3 км и пришли фото", text: $forfeitText, axis: .vertical)
+                    .lineLimit(2...4)
+                    .textFieldStyle(.roundedBorder)
+                Text("Проигравший получит задачу «Выполни фант». Результат подтверждается фото и его можно опубликовать.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
 
             HStack(spacing: 12) {
                 Text("Дней:").font(.headline)
@@ -312,7 +340,9 @@ private struct DuelCreateSheet: View {
             }
 
             Button {
-                onCreate(days); dismiss()
+                onCreate(days, commitment,
+                         commitment == .days ? stakeDays : nil,
+                         commitment == .socialForfeit ? forfeitText : nil)
             } label: {
                 Text("Бросить вызов")
                     .fontWeight(.semibold)
@@ -320,6 +350,8 @@ private struct DuelCreateSheet: View {
             }
             .buttonStyle(.borderedProminent)
             .tint(Color(hex: "0048E2"))
+            .disabled(commitment == .days && availableDays < 2 ||
+                      commitment == .socialForfeit && forfeitText.trimmingCharacters(in: .whitespacesAndNewlines).count < 3)
 
             Button("Отмена") { dismiss() }
                 .foregroundStyle(.secondary)

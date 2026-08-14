@@ -16,6 +16,7 @@ final class DuelService {
 
     private(set) var duels: [Duel] = []
     private(set) var isLoading = false
+    private(set) var commitmentDays = 1
     var errorMessage: String?
 
     private init() {}
@@ -28,6 +29,7 @@ final class DuelService {
         isLoading = true
         defer { isLoading = false }
         do {
+            commitmentDays = try await supabase.rpc("my_commitment_days").execute().value
             duels = try await supabase.rpc("get_my_duels").execute().value
             if await finalizeOverdue() {
                 duels = try await supabase.rpc("get_my_duels").execute().value
@@ -54,7 +56,7 @@ final class DuelService {
         for duel in duels where duel.isOverdue {
             do {
                 let row: FinishedRow = try await supabase
-                    .rpc("finish_duel_if_due", params: ["p_duel_id": duel.id.uuidString])
+                    .rpc("settle_duel_commitment", params: ["p_duel_id": duel.id.uuidString])
                     .execute()
                     .value
                 guard row.status == .finished else { continue }
@@ -119,17 +121,33 @@ final class DuelService {
     // MARK: - Mutations
 
     /// Creates a duel and returns its invite code for sharing.
-    func createDuel(days: Int = 7) async -> String? {
+    func createDuel(days: Int = 7, commitment: Duel.CommitmentKind = .none,
+                    stakeDays: Int? = nil, forfeitText: String? = nil) async -> String? {
+        struct Parameters: Encodable {
+            let days: Int
+            let kind: String
+            let stakeDays: Int?
+            let forfeitText: String?
+            enum CodingKeys: String, CodingKey {
+                case days = "p_days"
+                case kind = "p_kind"
+                case stakeDays = "p_stake_days"
+                case forfeitText = "p_forfeit_text"
+            }
+        }
         struct CreatedRow: Decodable {
             let inviteCode: String
             enum CodingKeys: String, CodingKey { case inviteCode = "invite_code" }
         }
         do {
             let row: CreatedRow = try await supabase
-                .rpc("create_duel", params: ["p_days": days])
+                .rpc("create_duel_commitment", params: Parameters(
+                    days: days, kind: commitment.rawValue,
+                    stakeDays: stakeDays, forfeitText: forfeitText
+                ))
                 .execute()
                 .value
-            AnalyticsService.shared.track(.duelCreated, ["days": days])
+            AnalyticsService.shared.track(.duelCreated, ["days": days, "commitment": commitment.rawValue])
             await load()
             return row.inviteCode
         } catch {
@@ -150,7 +168,7 @@ final class DuelService {
         }
         do {
             let row: JoinedRow = try await supabase
-                .rpc("join_duel", params: ["p_code": code.trimmingCharacters(in: .whitespacesAndNewlines)])
+                .rpc("join_duel_commitment", params: ["p_code": code.trimmingCharacters(in: .whitespacesAndNewlines)])
                 .execute()
                 .value
             AnalyticsService.shared.track(.duelJoined)
