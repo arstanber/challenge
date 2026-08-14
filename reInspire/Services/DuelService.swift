@@ -60,6 +60,9 @@ final class DuelService {
                 guard row.status == .finished else { continue }
                 finalizedAny = true
                 AnalyticsService.shared.track(.duelFinished)
+                if row.winnerId == myUserId {
+                    ReviewRequestManager.shared.registerDuelVictory()
+                }
                 await notifyOpponentAboutFinish(duel: duel, winnerId: row.winnerId)
             } catch {
                 logger.error("finish_duel_if_due failed for \(duel.id): \(error)")

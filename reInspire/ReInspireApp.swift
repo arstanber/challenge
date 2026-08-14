@@ -92,7 +92,7 @@ struct RootView: View {
             Task { @MainActor in
                 // Let the success screen or camera dismiss before StoreKit
                 // presents its native rating sheet.
-                try? await Task.sleep(for: .seconds(1.2))
+                try? await Task.sleep(for: .seconds(1.5))
                 requestReview()
             }
         }

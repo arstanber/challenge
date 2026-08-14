@@ -169,7 +169,6 @@ final class TaskEngine {
         markDoneLocally(activity.id)
         await insertCheckinReport(activityId: activity.id, queueOnFailure: true)
         await refreshStreaks()
-        ReviewRequestManager.shared.registerSuccessfulCompletion()
     }
 
     /// Local-only optimistic tick (used while a photo report is being handled
@@ -331,6 +330,7 @@ final class TaskEngine {
     /// streak_current/streak_best columns on activities).
     func refreshStreaks() async {
         do {
+            let previousCurrent = globalStreakCurrent
             let payload: StreakPayload = try await supabase
                 .rpc("refresh_my_streaks")
                 .execute()
@@ -343,6 +343,12 @@ final class TaskEngine {
             yesterdayFrozen = payload.yesterdayFrozen ?? false
             yesterdayAutoFrozen = payload.yesterdayAutoFrozen ?? false
             streaksLoaded = true
+            // `previousCurrent` may come from the persisted server snapshot on
+            // cold launch, so a break that happened while the app was closed
+            // still suppresses a review request for the next 48 hours.
+            if previousCurrent > 0, payload.globalCurrent == 0 {
+                ReviewRequestManager.shared.registerStreakBreak()
+            }
             activityStreaks = Dictionary(
                 uniqueKeysWithValues: payload.activities.map { ($0.id, (current: $0.streakCurrent, best: $0.streakBest)) }
             )
