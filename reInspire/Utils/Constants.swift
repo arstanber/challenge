@@ -54,10 +54,33 @@ enum Constants {
         static let maxMonthlyID     = "reMaxMonthly"
         static let maxAnnualID      = "reMaxAnnually"
 
-        static let allProductIDs: Set<String> = [
+        /// Products retained for existing subscribers and restore. Removing a
+        /// product from the paywall must never remove it from this set.
+        static let legacyCompatibleProductIDs: Set<String> = [
             premiumMonthlyID, premiumAnnualID, premiumForeverID,
             familyMonthlyID, familyAnnualID, maxMonthlyID, maxAnnualID
         ]
+
+        /// Safe fallback when RevenueCat has no reachable current Offering.
+        /// The Offering remains the source of truth whenever it is available.
+        static let fallbackSellableProductIDs: Set<String> = [
+            premiumMonthlyID, premiumAnnualID, familyAnnualID
+        ]
+
+        static let allProductIDs = legacyCompatibleProductIDs
+
+        static func plan(forProductID id: String) -> UserPlan? {
+            switch id {
+            case premiumMonthlyID, premiumAnnualID, premiumForeverID:
+                return .premium
+            case familyMonthlyID, familyAnnualID:
+                return .family
+            case maxMonthlyID, maxAnnualID:
+                return .max
+            default:
+                return nil
+            }
+        }
 
         // Backward-compatible aliases (older call sites)
         static let monthlyProductID = premiumMonthlyID

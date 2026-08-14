@@ -24,7 +24,8 @@ private struct PaywallOption: Identifiable {
     let id: String          // product id
     let title: String
     let period: String      // "/год", "/мес", ""
-    let monthlyForSavings: String?  // monthly product id to compute the savings badge
+    let isFeatured: Bool
+    let trialText: String?
 }
 
 // MARK: - Paywall (dark)
@@ -48,33 +49,19 @@ struct PremiumView: View {
         .init(icon: "snowflake",           text: String(localized: "Заморозка серии и бонусы"))
     ]
 
-    private var proOptions: [PaywallOption] {
-        [
-            .init(id: Constants.Store.premiumAnnualID, title: String(localized: "Год"), period: String(localized: "/год"),
-                  monthlyForSavings: Constants.Store.premiumMonthlyID),
-            .init(id: Constants.Store.premiumMonthlyID, title: String(localized: "Месяц"), period: String(localized: "/мес"),
-                  monthlyForSavings: nil),
-            .init(id: Constants.Store.premiumForeverID, title: String(localized: "Навсегда"), period: "",
-                  monthlyForSavings: nil)
-        ]
-    }
-
-    private var familyOptions: [PaywallOption] {
-        [
-            .init(id: Constants.Store.familyAnnualID, title: String(localized: "Год"), period: String(localized: "/год"),
-                  monthlyForSavings: Constants.Store.familyMonthlyID),
-            .init(id: Constants.Store.familyMonthlyID, title: String(localized: "Месяц"), period: String(localized: "/мес"),
-                  monthlyForSavings: nil)
-        ]
-    }
-
-    private var maxOptions: [PaywallOption] {
-        [
-            .init(id: Constants.Store.maxAnnualID, title: String(localized: "Год"), period: String(localized: "/год"),
-                  monthlyForSavings: Constants.Store.maxMonthlyID),
-            .init(id: Constants.Store.maxMonthlyID, title: String(localized: "Месяц"), period: String(localized: "/мес"),
-                  monthlyForSavings: nil)
-        ]
+    /// The RevenueCat Offering owns which products appear and in what order.
+    /// App Store Connect owns their localized names, periods, prices and trial.
+    private var options: [PaywallOption] {
+        store.catalog.compactMap { item in
+            guard let product = store.product(for: item.productID) else { return nil }
+            return .init(
+                id: item.productID,
+                title: product.localizedTitle,
+                period: periodText(product.subscriptionPeriod),
+                isFeatured: item.isFeatured,
+                trialText: trialText(product.introductoryDiscount)
+            )
+        }
     }
 
     var body: some View {
@@ -96,20 +83,7 @@ struct PremiumView: View {
 
                         featureList.padding(.top, 4)
 
-                        sectionLabel("reInspire Pro")
-                        ForEach(proOptions) { optionRow($0) }
-
-                        sectionLabel("reInspire Max").padding(.top, 4)
-                        Text("Всё из Pro + максимум AI-проверок и коннектор Strava.")
-                            .font(.system(size: 14))
-                            .foregroundColor(PaywallStyle.subtitle)
-                        ForEach(maxOptions) { optionRow($0) }
-
-                        sectionLabel("reInspire Family").padding(.top, 4)
-                        Text("Премиум для всей семьи (до 5 человек).")
-                            .font(.system(size: 14))
-                            .foregroundColor(PaywallStyle.subtitle)
-                        ForEach(familyOptions) { optionRow($0) }
+                        ForEach(options) { optionRow($0) }
 
                         if let err = store.errorMessage {
                             Text(err).font(.footnote).foregroundColor(PaywallStyle.accentRed)
@@ -133,6 +107,9 @@ struct PremiumView: View {
         // otherwise a single early failure leaves the rows skeletoned forever.
         .task {
             if store.products.isEmpty { await store.loadProducts() }
+            if !options.contains(where: { $0.id == selected }), let first = options.first {
+                selected = first.id
+            }
         }
     }
 
@@ -165,12 +142,6 @@ struct PremiumView: View {
         }
         .frame(height: PaywallStyle.heroHeight)
         .clipped()
-    }
-
-    private func sectionLabel(_ title: String) -> some View {
-        Text(title)
-            .font(.system(size: 22, weight: .semibold))
-            .foregroundColor(.white)
     }
 
     // MARK: Features
@@ -209,16 +180,22 @@ struct PremiumView: View {
                         Image(systemName: "checkmark").font(.system(size: 9, weight: .bold)).foregroundColor(.white)
                     }
                 }
-                Text(option.title)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.white)
-                if let badge = savingsBadge(for: option) {
-                    Text(badge)
-                        .font(.system(size: 13))
-                        .foregroundColor(PaywallStyle.accentRed)
-                        .padding(.horizontal, 8).padding(.vertical, 4)
-                        .background(Capsule().fill(PaywallStyle.accentRed.opacity(0.12)))
-                        .overlay(Capsule().strokeBorder(PaywallStyle.accentRed.opacity(0.5), lineWidth: 1))
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 7) {
+                        Text(option.title)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.white)
+                        if let badge = savingsBadge(for: option) {
+                            Text(badge)
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(PaywallStyle.accentRed)
+                        }
+                    }
+                    if let trialText = option.trialText {
+                        Text(trialText)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.green)
+                    }
                 }
                 Spacer()
                 HStack(spacing: 0) {
@@ -236,7 +213,7 @@ struct PremiumView: View {
                 }
             }
             .padding(.horizontal, 16)
-            .frame(height: 60)
+            .frame(minHeight: 64)
             .background(
                 RoundedRectangle(cornerRadius: 12)
                     .fill(isSelected ? PaywallStyle.accentRed.opacity(0.05) : PaywallStyle.cardWhite)
@@ -319,17 +296,46 @@ struct PremiumView: View {
         store.product(for: productID)?.localizedPriceString
     }
 
-    /// "Выгода X%" for a yearly option vs 12× its monthly counterpart.
-    /// Returns nil until both real store prices are available.
+    /// The featured package is remote config. When Pro monthly and annual are
+    /// both present, show the calculated saving using real App Store prices.
     private func savingsBadge(for option: PaywallOption) -> String? {
-        guard let monthlyID = option.monthlyForSavings,
+        guard option.isFeatured else { return nil }
+        guard option.id == Constants.Store.premiumAnnualID,
               let annual = store.product(for: option.id)?.price,
-              let monthly = store.product(for: monthlyID)?.price else { return nil }
+              let monthly = store.product(for: Constants.Store.premiumMonthlyID)?.price else {
+            return "★"
+        }
         let a = NSDecimalNumber(decimal: annual).doubleValue
         let m = NSDecimalNumber(decimal: monthly).doubleValue
         guard m > 0 else { return nil }
         let pct = Int(((m * 12 - a) / (m * 12) * 100).rounded())
         return pct > 0 ? String(localized: "Выгода \(pct)%") : nil
+    }
+
+    private func periodText(_ period: SubscriptionPeriod?) -> String {
+        guard let period else { return "" }
+        switch (period.value, period.unit) {
+        case (1, .month): return String(localized: "/мес")
+        case (1, .year): return String(localized: "/год")
+        default: return ""
+        }
+    }
+
+    private func trialText(_ discount: StoreProductDiscount?) -> String? {
+        guard let discount, discount.paymentMode == .freeTrial else { return nil }
+        let formatter = DateComponentsFormatter()
+        formatter.unitsStyle = .full
+        formatter.maximumUnitCount = 1
+        let period = discount.subscriptionPeriod
+        let components: DateComponents
+        switch period.unit {
+        case .day: components = DateComponents(day: period.value)
+        case .week: components = DateComponents(weekOfMonth: period.value)
+        case .month: components = DateComponents(month: period.value)
+        case .year: components = DateComponents(year: period.value)
+        }
+        guard let duration = formatter.string(from: components) else { return nil }
+        return "\(duration) · \(discount.localizedPriceString)"
     }
 }
 

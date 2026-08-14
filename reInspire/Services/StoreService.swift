@@ -18,6 +18,15 @@ private let storeLogger = Logger(subsystem: "com.reinspire", category: "StoreSer
 final class StoreService {
     static let shared = StoreService()
 
+    struct CatalogItem: Identifiable {
+        let packageIdentifier: String?
+        let productID: String
+        let plan: UserPlan
+        let isFeatured: Bool
+
+        var id: String { productID }
+    }
+
     /// Products from the current offering, keyed by store product ID.
     private(set) var products: [String: StoreProduct] = [:]
 
@@ -25,6 +34,8 @@ final class StoreService {
     /// Purchasing a package (rather than a bare product) is what lets
     /// RevenueCat attribute the sale to an offering for paywall A/B tests.
     private(set) var packages: [String: Package] = [:]
+    /// Ordered exactly as configured in the active RevenueCat Offering.
+    private(set) var catalog: [CatalogItem] = []
 
     var isPurchasing = false
     var errorMessage: String?
@@ -65,6 +76,7 @@ final class StoreService {
         do {
             let (info, _) = try await Purchases.shared.logIn(userId.uuidString)
             await applyOptimisticPlan(from: info)
+            await reconcileLegacyStoreKitEntitlements()
         } catch {
             storeLogger.error("RevenueCat logIn failed: \(error)")
         }
@@ -112,6 +124,7 @@ final class StoreService {
     func loadProducts() async {
         var loadedProducts: [String: StoreProduct] = [:]
         var loadedPackages: [String: Package] = [:]
+        var loadedCatalog: [CatalogItem] = []
 
         if Purchases.isConfigured {
             do {
@@ -119,10 +132,22 @@ final class StoreService {
                 let offering = offerings.current
                     ?? offerings.offering(identifier: Constants.RevenueCat.defaultOffering)
                 if let offering {
+                    let featuredPackage = offering.metadata["featured_package"] as? String
+                    let configuredTiers = offering.metadata["package_tiers"] as? [String: Any] ?? [:]
                     for package in offering.availablePackages {
                         let id = package.storeProduct.productIdentifier
                         loadedProducts[id] = package.storeProduct
                         loadedPackages[id] = package
+                        let configuredPlan = (configuredTiers[package.identifier] as? String)
+                            .flatMap(UserPlan.init(rawValue:))
+                        if let plan = configuredPlan ?? Constants.Store.plan(forProductID: id) {
+                            loadedCatalog.append(.init(
+                                packageIdentifier: package.identifier,
+                                productID: id,
+                                plan: plan,
+                                isFeatured: package.identifier == featuredPackage
+                            ))
+                        }
                     }
                 } else {
                     storeLogger.error("No current RevenueCat offering configured")
@@ -131,24 +156,25 @@ final class StoreService {
                 storeLogger.error("offerings error: \(error)")
             }
 
-            // Products sold but not attached to the current offering.
-            let missing = Constants.Store.allProductIDs.subtracting(loadedProducts.keys)
-            if !missing.isEmpty {
-                for product in await Purchases.shared.products(Array(missing)) {
-                    loadedProducts[product.productIdentifier] = product
-                }
-            }
         }
 
-        // Last resort: ask StoreKit itself. Works with zero RevenueCat setup,
-        // so the paywall still shows live prices before the dashboard is wired.
-        let stillMissing = Constants.Store.allProductIDs.subtracting(loadedProducts.keys)
-        if !stillMissing.isEmpty {
+        // Last resort: ask StoreKit only for the three target products. Legacy
+        // products remain restorable but never reappear for new customers.
+        if loadedCatalog.isEmpty {
             do {
-                let skProducts = try await Product.products(for: stillMissing)
+                let skProducts = try await Product.products(for: Constants.Store.fallbackSellableProductIDs)
                 for skProduct in skProducts {
                     loadedProducts[skProduct.id] = StoreProduct(sk2Product: skProduct)
+                    if let plan = Constants.Store.plan(forProductID: skProduct.id) {
+                        loadedCatalog.append(.init(
+                            packageIdentifier: nil,
+                            productID: skProduct.id,
+                            plan: plan,
+                            isFeatured: skProduct.id == Constants.Store.premiumAnnualID
+                        ))
+                    }
                 }
+                loadedCatalog.sort { fallbackOrder($0.productID) < fallbackOrder($1.productID) }
             } catch {
                 storeLogger.error("StoreKit product fallback error: \(error)")
             }
@@ -156,12 +182,22 @@ final class StoreService {
 
         products = loadedProducts
         packages = loadedPackages
+        catalog = loadedCatalog
     }
 
     // Keep backward-compatible alias
     func loadProduct() async { await loadProducts() }
 
     func product(for id: String) -> StoreProduct? { products[id] }
+
+    private func fallbackOrder(_ id: String) -> Int {
+        switch id {
+        case Constants.Store.premiumAnnualID: return 0
+        case Constants.Store.premiumMonthlyID: return 1
+        case Constants.Store.familyAnnualID: return 2
+        default: return 99
+        }
+    }
 
     // MARK: - Purchase
 
@@ -236,6 +272,29 @@ final class StoreService {
     }
 
     // MARK: - Entitlements
+
+    /// Audits every active StoreKit 2 entitlement, including products removed
+    /// from the current Offering, then asks RevenueCat to sync the receipt. The
+    /// RevenueCat entitlement and webhook remain authoritative; this bridge is
+    /// what preserves access for subscribers on retired SKUs after an update.
+    private func reconcileLegacyStoreKitEntitlements() async {
+        var foundLegacyEntitlement = false
+        for await result in Transaction.currentEntitlements {
+            guard case .verified(let transaction) = result,
+                  transaction.revocationDate == nil,
+                  Constants.Store.legacyCompatibleProductIDs.contains(transaction.productID) else {
+                continue
+            }
+            foundLegacyEntitlement = true
+        }
+        guard foundLegacyEntitlement else { return }
+        do {
+            let info = try await Purchases.shared.syncPurchases()
+            await applyOptimisticPlan(from: info)
+        } catch {
+            storeLogger.error("Legacy StoreKit entitlement sync failed: \(error)")
+        }
+    }
 
     /// Highest plan unlocked by the active entitlements (max > family > premium).
     ///
